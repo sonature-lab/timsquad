@@ -116,14 +116,24 @@ SSOT (순차: PRD → 기획 → 설계)
 
 ## Installation
 
-```bash
-# 설치 스크립트 실행
-curl -fsSL https://raw.githubusercontent.com/your-repo/timsquad/main/install/install.sh | bash
+### npm (권장)
 
-# 또는 직접 클론
-git clone https://github.com/your-repo/timsquad.git
+```bash
+# 전역 설치
+npm install -g timsquad
+
+# 또는 npx로 직접 실행
+npx timsquad init -n my-app -t web-service -l 2
+```
+
+### Git Clone
+
+```bash
+git clone https://github.com/sonature-lab/timsquad.git
 cd timsquad
-./install/install.sh
+npm install
+npm run build
+npm link
 ```
 
 ---
@@ -177,12 +187,39 @@ claude
 
 ## CLI Commands
 
+### 기본 커맨드
+
 ```bash
-tsq init     # 프로젝트 초기화
-tsq status   # 현재 상태 확인
-tsq log      # 작업 로그 기록
-tsq feedback # 피드백 라우팅
-tsq retro    # 회고 실행
+tsq init [options]       # 프로젝트 초기화
+tsq status [options]     # 현재 상태 확인
+tsq log <subcommand>     # 작업 로그 관리
+tsq feedback <message>   # 피드백 라우팅
+tsq retro <subcommand>   # 회고 실행
+```
+
+### 작업 모드
+
+```bash
+tsq q "버튼 색상 변경"     # Quick Mode - 간단한 작업
+tsq f "결제 기능 추가"     # Full Mode - SSOT 체크 + Planner 라우팅
+```
+
+### Git 커맨드
+
+```bash
+tsq commit [message]     # 스테이징 + Co-Author 커밋
+tsq pr [title]           # 푸시 + PR 생성 (gh CLI 필요)
+tsq release [version]    # 태그 + GitHub Release 생성
+tsq sync                 # fetch + rebase
+```
+
+### 자동화 커맨드
+
+```bash
+tsq watch start          # SSOT 파일 변경 감시 시작
+tsq watch stop           # 감시 중지
+tsq metrics collect      # 메트릭 수집
+tsq metrics summary      # 메트릭 요약 표시
 ```
 
 ---
