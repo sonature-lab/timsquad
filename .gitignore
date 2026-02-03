@@ -15,6 +15,9 @@ Thumbs.db
 node_modules/
 npm-debug.log*
 
+# Build output
+dist/
+
 # Temp
 *.tmp
 *.temp
