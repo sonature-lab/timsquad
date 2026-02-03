@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TimSquad API Backend 워크플로우
+  API 서버, 마이크로서비스 전용 프로세스 정의
+-->
+<workflow type="api-backend" version="1.0">
+  <metadata>
+    <description>API 서버 개발 워크플로우</description>
+    <focus>API 설계, 데이터 모델링, 계약 기반 개발</focus>
+  </metadata>
+
+  <!-- ============================================================
+       Phase 정의
+       ============================================================ -->
+  <phases>
+    <!-- Planning Phase -->
+    <phase id="planning" order="1">
+      <name>API 설계</name>
+      <description>API 명세, 데이터 모델, 에러 코드 정의</description>
+
+      <tasks>
+        <task id="api-spec" required="true">
+          <name>API 명세 작성</name>
+          <agent>tsq-planner</agent>
+          <output>service-spec.md</output>
+          <checklist>
+            <item>엔드포인트 정의</item>
+            <item>Request/Response 스키마</item>
+            <item>인증 방식</item>
+            <item>버전 전략</item>
+          </checklist>
+        </task>
+
+        <task id="data-model" required="true">
+          <name>데이터 모델링</name>
+          <agent>tsq-dba</agent>
+          <output>data-design.md</output>
+          <checklist>
+            <item>ERD 작성</item>
+            <item>테이블 정의</item>
+            <item>인덱스 전략</item>
+            <item>관계 정의</item>
+          </checklist>
+        </task>
+
+        <task id="error-codes" required="true">
+          <name>에러 코드 정의</name>
+          <agent>tsq-planner</agent>
+          <output>error-codes.md</output>
+          <checklist>
+            <item>에러 코드 체계</item>
+            <item>HTTP 상태 코드 매핑</item>
+            <item>에러 메시지</item>
+          </checklist>
+        </task>
+      </tasks>
+
+      <validation>
+        <rule>모든 엔드포인트에 에러 케이스 정의</rule>
+        <rule>데이터 모델과 API 스키마 일치</rule>
+      </validation>
+
+      <exit-criteria>
+        <criterion>service-spec.md 완성</criterion>
+        <criterion>data-design.md 완성</criterion>
+        <criterion>error-codes.md 완성</criterion>
+        <criterion>사용자 승인</criterion>
+      </exit-criteria>
+    </phase>
+
+    <!-- Implementation Phase -->
+    <phase id="implementation" order="2">
+      <name>API 구현</name>
+      <description>엔드포인트 구현, DB 마이그레이션</description>
+
+      <tasks>
+        <task id="db-migration" required="true">
+          <name>DB 마이그레이션</name>
+          <agent>tsq-dba</agent>
+          <dependency>data-model</dependency>
+          <checklist>
+            <item>마이그레이션 스크립트</item>
+            <item>롤백 스크립트</item>
+            <item>시드 데이터</item>
+          </checklist>
+        </task>
+
+        <task id="api-implementation" required="true">
+          <name>API 엔드포인트 구현</name>
+          <agent>tsq-developer</agent>
+          <dependency>api-spec, db-migration</dependency>
+          <parallel-allowed>true</parallel-allowed>
+          <checklist>
+            <item>라우터 설정</item>
+            <item>컨트롤러 구현</item>
+            <item>서비스 레이어</item>
+            <item>입력 검증</item>
+            <item>에러 핸들링</item>
+          </checklist>
+        </task>
+
+        <task id="unit-tests" required="true">
+          <name>단위 테스트 작성</name>
+          <agent>tsq-developer</agent>
+          <dependency>api-implementation</dependency>
+        </task>
+      </tasks>
+
+      <validation>
+        <rule>service-spec.md와 구현 일치</rule>
+        <rule>모든 엔드포인트 테스트 존재</rule>
+      </validation>
+    </phase>
+
+    <!-- Testing Phase -->
+    <phase id="testing" order="3">
+      <name>API 테스트</name>
+      <description>통합 테스트, API 계약 테스트</description>
+
+      <tasks>
+        <task id="integration-test" required="true">
+          <name>통합 테스트</name>
+          <agent>tsq-qa</agent>
+          <checklist>
+            <item>API 호출 테스트</item>
+            <item>DB 연동 테스트</item>
+            <item>에러 시나리오</item>
+          </checklist>
+        </task>
+
+        <task id="contract-test" required="true">
+          <name>API 계약 테스트</name>
+          <agent>tsq-qa</agent>
+          <checklist>
+            <item>Request 스키마 검증</item>
+            <item>Response 스키마 검증</item>
+            <item>에러 응답 검증</item>
+          </checklist>
+        </task>
+
+        <task id="performance-test" required="false">
+          <name>성능 테스트</name>
+          <agent>tsq-qa</agent>
+          <checklist>
+            <item>응답 시간 측정</item>
+            <item>부하 테스트</item>
+          </checklist>
+        </task>
+      </tasks>
+
+      <validation>
+        <rule>테스트 커버리지 80% 이상</rule>
+        <rule>모든 API 엔드포인트 테스트 통과</rule>
+      </validation>
+    </phase>
+
+    <!-- Review Phase -->
+    <phase id="review" order="4">
+      <name>코드 리뷰</name>
+      <description>품질 검토, 보안 검토</description>
+
+      <tasks>
+        <task id="code-review" required="true">
+          <name>코드 리뷰</name>
+          <agent>tsq-qa</agent>
+          <checklist>
+            <item>API 응답 형식 일관성</item>
+            <item>에러 처리 완전성</item>
+            <item>코드 품질</item>
+          </checklist>
+        </task>
+
+        <task id="security-review" required="true">
+          <name>보안 검토</name>
+          <agent>tsq-security</agent>
+          <checklist>
+            <item>인증/인가 검증</item>
+            <item>입력 검증</item>
+            <item>SQL Injection 방지</item>
+            <item>Rate Limiting</item>
+          </checklist>
+        </task>
+      </tasks>
+
+      <approval>
+        <required>true</required>
+        <approvers>
+          <approver>tsq-qa</approver>
+          <approver>tsq-security</approver>
+        </approvers>
+      </approval>
+    </phase>
+  </phases>
+
+  <!-- ============================================================
+       API Backend 특화 규칙
+       ============================================================ -->
+  <rules>
+    <rule id="api-first">
+      <description>API 명세 먼저, 구현은 나중</description>
+      <enforcement>strict</enforcement>
+    </rule>
+
+    <rule id="contract-testing">
+      <description>모든 API는 계약 테스트 필수</description>
+      <enforcement>strict</enforcement>
+    </rule>
+
+    <rule id="error-handling">
+      <description>모든 에러는 error-codes.md에 정의된 형식</description>
+      <enforcement>strict</enforcement>
+    </rule>
+  </rules>
+</workflow>

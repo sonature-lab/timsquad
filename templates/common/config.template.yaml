@@ -1,0 +1,131 @@
+# TimSquad Project Configuration
+# 이 파일을 .timsquad/config.yaml로 복사하여 사용
+
+# ============================================================
+# 프로젝트 기본 정보
+# ============================================================
+project:
+  name: my-project
+  type: web-service      # web-service | api-backend | platform | fintech | infra
+  level: 2               # 1=MVP | 2=Standard | 3=Enterprise
+  description: ""
+
+# ============================================================
+# 개발 방법론
+# ============================================================
+methodology:
+  development: tdd       # tdd | bdd | none
+  process: agile         # agile | waterfall | kanban
+  branching: github-flow # gitflow | trunk-based | github-flow
+  review: required       # required | optional | none
+
+# ============================================================
+# 기술 스택
+# ============================================================
+stack:
+  # 공통
+  language: typescript   # typescript | javascript
+
+  # 프론트엔드
+  frontend:
+    enabled: true
+    framework: nextjs    # nextjs | react | vue | svelte | none
+    state: zustand       # zustand | redux | recoil | context | none
+    styling: tailwind    # tailwind | styled-components | css-modules | none
+    testing: vitest      # vitest | jest | none
+
+  # 백엔드
+  backend:
+    enabled: true
+    runtime: node        # node | python | go | java
+    framework: hono      # hono | express | fastify | nest | none
+    testing: vitest      # vitest | jest | pytest | none
+
+  # 데이터베이스
+  database:
+    primary: postgresql  # postgresql | mysql | mongodb | sqlite
+    orm: prisma          # prisma | typeorm | drizzle | none
+    cache: none          # redis | memcached | none
+
+  # 인프라
+  infrastructure:
+    hosting: vercel      # vercel | aws | gcp | self-hosted
+    container: false     # Docker 사용 여부
+    ci_cd: github        # github | gitlab | none
+
+# ============================================================
+# 에이전트 스킬 설정 (자동 로딩)
+# ============================================================
+skills:
+  # 기본 스킬 (항상 로드)
+  base:
+    - coding
+    - testing
+    - security
+
+  # 방법론에 따라 자동 로드
+  methodology:
+    tdd: [methodology/tdd]
+    bdd: [methodology/bdd]
+
+  # 스택에 따라 자동 로드
+  stack:
+    typescript: [typescript]
+    react: [frontend/react]
+    nextjs: [frontend/nextjs, frontend/react]
+    vue: [frontend/vue]
+    node: [backend/node]
+    python: [backend/python]
+    prisma: [database/prisma]
+    typeorm: [database/typeorm]
+
+# ============================================================
+# 에이전트별 커스텀 설정
+# ============================================================
+agents:
+  tsq-planner:
+    model: opus          # opus | sonnet | haiku
+    additional-skills: []
+
+  tsq-developer:
+    model: sonnet
+    additional-skills: []
+    # 프론트엔드/백엔드 분리 시
+    # variants:
+    #   frontend:
+    #     skills: [frontend/react, frontend/nextjs]
+    #   backend:
+    #     skills: [backend/node, database/prisma]
+
+  tsq-qa:
+    model: sonnet
+    additional-skills: []
+
+# ============================================================
+# 품질 기준
+# ============================================================
+quality:
+  test_coverage:
+    minimum: 80
+    recommended: 90
+
+  code_review:
+    required: true
+    approvers: 1
+
+  lint:
+    enabled: true
+    fix_on_save: true
+
+# ============================================================
+# SSOT 설정
+# ============================================================
+ssot:
+  # 프로젝트 레벨에 따른 필수 문서는 자동 결정
+  # 추가로 필요한 문서 지정
+  additional: []
+
+  # 문서 템플릿 커스터마이징
+  templates:
+    # 기본 템플릿 사용
+    use_default: true

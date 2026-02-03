@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TimSquad Service Spec Generator v1.0
+  API 명세서를 생성합니다. 프론트엔드-백엔드 계약서 역할.
+-->
+<generator name="service-spec" version="1.0" output=".timsquad/ssot/service-spec.md">
+  <metadata>
+    <description>서비스 명세서 (API Specification) 생성기</description>
+    <purpose>프론트엔드-백엔드 간 API 계약 정의</purpose>
+    <depends-on>prd.md, requirements.md</depends-on>
+  </metadata>
+
+  <instructions>
+    <![CDATA[
+    PRD의 기능 목록을 기반으로 API 엔드포인트를 정의합니다.
+
+    1. 각 기능별로 필요한 API 엔드포인트를 도출
+    2. HTTP 메서드, URL, Request/Response 스키마 정의
+    3. 에러 코드는 error-codes.md와 연동
+
+    정제 원칙:
+    - RESTful 컨벤션 준수
+    - URL: 소문자, 복수형 명사 (/users, /matches)
+    - 응답: { success, data, error } 통일 형식
+    ]]>
+  </instructions>
+
+  <!-- ============================================================
+       섹션 1: API 그룹 정의
+       ============================================================ -->
+  <section id="api_groups" title="API 그룹" repeatable="true">
+    <instructions>
+      기능 단위로 API를 그룹핑합니다.
+      예: Auth, Users, Matches, Messages
+    </instructions>
+
+    <field name="group_name" type="text" required="true">
+      <prompt>API 그룹 이름? (예: Auth, Users, Matches)</prompt>
+      <refinement>영문 대문자 시작, 단수/복수 일관성</refinement>
+    </field>
+
+    <field name="base_path" type="text" required="true">
+      <prompt>기본 경로? (예: /api/v1/auth)</prompt>
+      <auto-suggest>/api/v1/{{group_name | lowercase}}</auto-suggest>
+      <refinement>소문자, 복수형</refinement>
+    </field>
+
+    <field name="description" type="text" required="false">
+      <prompt>이 그룹의 역할?</prompt>
+    </field>
+  </section>
+
+  <!-- ============================================================
+       섹션 2: 엔드포인트 정의 (그룹별 반복)
+       ============================================================ -->
+  <section id="endpoints" title="엔드포인트" repeatable="true" parent="api_groups">
+    <context>현재 그룹: {{current_group.group_name}}</context>
+
+    <field name="name" type="text" required="true">
+      <prompt>엔드포인트 이름? (예: Login, GetProfile)</prompt>
+    </field>
+
+    <field name="method" type="select" required="true">
+      <prompt>HTTP 메서드?</prompt>
+      <options>
+        <option value="GET">GET - 조회</option>
+        <option value="POST">POST - 생성</option>
+        <option value="PUT">PUT - 전체 수정</option>
+        <option value="PATCH">PATCH - 부분 수정</option>
+        <option value="DELETE">DELETE - 삭제</option>
+      </options>
+    </field>
+
+    <field name="path" type="text" required="true">
+      <prompt>경로? (예: /login, /:id)</prompt>
+      <refinement>
+        - 파라미터는 :id 형식
+        - 소문자, 하이픈 구분
+      </refinement>
+    </field>
+
+    <field name="description" type="text" required="true">
+      <prompt>이 API의 역할?</prompt>
+    </field>
+
+    <field name="auth_required" type="boolean" required="true">
+      <prompt>인증 필요? (y/n)</prompt>
+      <default>true</default>
+    </field>
+
+    <field name="request_body" type="schema" required="false">
+      <prompt>Request Body 필드? (필드명:타입 형식, 여러 줄)</prompt>
+      <hint>
+        email:string
+        password:string
+      </hint>
+      <skip-if method="GET|DELETE" />
+    </field>
+
+    <field name="response_data" type="schema" required="true">
+      <prompt>Response data 필드?</prompt>
+      <hint>
+        user:object
+        token:string
+      </hint>
+    </field>
+
+    <field name="errors" type="list" required="false">
+      <prompt>발생 가능한 에러 코드? (예: AUTH_001, AUTH_002)</prompt>
+      <link-to>error-codes.md</link-to>
+    </field>
+  </section>
+
+  <!-- ============================================================
+       섹션 3: 공통 정의
+       ============================================================ -->
+  <section id="common" title="공통 정의">
+    <field name="base_url" type="text" required="true">
+      <prompt>API Base URL?</prompt>
+      <default>https://api.{{project_name}}.com</default>
+    </field>
+
+    <field name="version" type="text" required="true">
+      <prompt>API 버전?</prompt>
+      <default>v1</default>
+    </field>
+
+    <field name="auth_method" type="select" required="true">
+      <prompt>인증 방식?</prompt>
+      <options>
+        <option value="jwt">JWT Bearer Token</option>
+        <option value="session">Session Cookie</option>
+        <option value="api_key">API Key</option>
+      </options>
+      <default>jwt</default>
+    </field>
+  </section>
+
+  <!-- ============================================================
+       출력 템플릿
+       ============================================================ -->
+  <output-template>
+    <![CDATA[
+# {{project_name}} 서비스 명세서
+
+**생성일**: {{DATE}}
+**버전**: {{common.version}}
+**Base URL**: `{{common.base_url}}/{{common.version}}`
+
+---
+
+## 공통 사항
+
+### 인증
+- 방식: {{common.auth_method | upper}}
+{{#if common.auth_method == "jwt"}}
+- Header: `Authorization: Bearer <token>`
+{{/if}}
+
+### 응답 형식
+```json
+{
+  "success": true,
+  "data": { ... },
+  "error": null
+}
+```
+
+### 에러 응답
+```json
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "에러 메시지"
+  }
+}
+```
+
+---
+
+{{#each api_groups}}
+## {{@index + 1}}. {{group_name}}
+
+> {{description}}
+
+Base Path: `{{base_path}}`
+
+{{#each endpoints where group=group_name}}
+### {{@index + 1}}.{{@parent_index + 1}} {{name}}
+
+| 항목 | 값 |
+|-----|---|
+| **URL** | `{{method}} {{../base_path}}{{path}}` |
+| **설명** | {{description}} |
+| **인증** | {{#if auth_required}}필요{{else}}불필요{{/if}} |
+
+{{#if request_body}}
+#### Request Body
+
+| Field | Type | Required | Description |
+|-------|------|:--------:|-------------|
+{{#each request_body}}
+| {{name}} | {{type}} | {{#if required}}O{{else}}-{{/if}} | {{description}} |
+{{/each}}
+
+```json
+{
+{{#each request_body}}
+  "{{name}}": {{example}}{{#unless @last}},{{/unless}}
+{{/each}}
+}
+```
+{{/if}}
+
+#### Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+{{#each response_data}}
+| {{name}} | {{type}} | {{description}} |
+{{/each}}
+
+```json
+{
+  "success": true,
+  "data": {
+{{#each response_data}}
+    "{{name}}": {{example}}{{#unless @last}},{{/unless}}
+{{/each}}
+  }
+}
+```
+
+{{#if errors}}
+#### Errors
+
+| Code | Description |
+|------|-------------|
+{{#each errors}}
+| {{this}} | → error-codes.md 참조 |
+{{/each}}
+{{/if}}
+
+---
+
+{{/each}}
+{{/each}}
+
+## API 목록 요약
+
+| Group | Method | Endpoint | Description | Auth |
+|-------|--------|----------|-------------|:----:|
+{{#each api_groups}}
+{{#each endpoints where group=group_name}}
+| {{../group_name}} | {{method}} | {{../base_path}}{{path}} | {{name}} | {{#if auth_required}}🔒{{else}}-{{/if}} |
+{{/each}}
+{{/each}}
+
+---
+
+*Generated by TimSquad v2.0*
+    ]]>
+  </output-template>
+</generator>

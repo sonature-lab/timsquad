@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<directory-structure architecture="fsd" target="frontend">
+  <description>Feature-Sliced Design for React/Next.js Frontend</description>
+
+  <root name="src">
+    <!-- Layer 1: App -->
+    <dir name="app" layer="app">
+      <description>앱 초기화, 프로바이더, 전역 스타일, 라우팅</description>
+
+      <dir name="providers">
+        <description>React Context Providers 조합</description>
+        <file name="index.tsx" example="모든 프로바이더를 조합하는 컴포넌트" />
+        <file name="with-auth.tsx" />
+        <file name="with-theme.tsx" />
+        <file name="with-query.tsx" />
+      </dir>
+
+      <dir name="routing">
+        <description>라우팅 설정 (React Router / Next.js)</description>
+        <file name="index.tsx" />
+        <file name="routes.ts" />
+      </dir>
+
+      <dir name="styles">
+        <description>전역 스타일</description>
+        <file name="global.css" />
+        <file name="variables.css" />
+      </dir>
+
+      <file name="index.tsx" example="앱 진입점" />
+    </dir>
+
+    <!-- Layer 2: Pages -->
+    <dir name="pages" layer="pages">
+      <description>라우트별 페이지. widgets, features 조합</description>
+
+      <dir name="home">
+        <file name="ui.tsx" example="HomePage 컴포넌트" />
+        <file name="index.ts" example="export { HomePage } from './ui'" />
+      </dir>
+
+      <dir name="profile">
+        <dir name="ui">
+          <file name="ProfilePage.tsx" />
+          <file name="ProfileEditPage.tsx" />
+        </dir>
+        <file name="index.ts" />
+      </dir>
+
+      <dir name="order">
+        <dir name="ui">
+          <file name="OrderListPage.tsx" />
+          <file name="OrderDetailPage.tsx" />
+        </dir>
+        <file name="model.ts" example="페이지 로컬 상태" />
+        <file name="index.ts" />
+      </dir>
+    </dir>
+
+    <!-- Layer 3: Widgets -->
+    <dir name="widgets" layer="widgets">
+      <description>독립적인 UI 블록. 여러 features 조합 가능</description>
+
+      <dir name="header">
+        <dir name="ui">
+          <file name="Header.tsx" />
+          <file name="Navigation.tsx" />
+          <file name="UserMenu.tsx" />
+        </dir>
+        <file name="index.ts" />
+      </dir>
+
+      <dir name="sidebar">
+        <dir name="ui">
+          <file name="Sidebar.tsx" />
+          <file name="SidebarItem.tsx" />
+        </dir>
+        <file name="model.ts" example="sidebar 열림/닫힘 상태" />
+        <file name="index.ts" />
+      </dir>
+
+      <dir name="order-summary">
+        <description>주문 요약 위젯 (여러 features 조합)</description>
+        <dir name="ui">
+          <file name="OrderSummary.tsx" />
+        </dir>
+        <file name="index.ts" />
+      </dir>
+    </dir>
+
+    <!-- Layer 4: Features -->
+    <dir name="features" layer="features">
+      <description>사용자 시나리오. 비즈니스 기능 단위</description>
+
+      <dir name="auth">
+        <description>인증 기능 (로그인, 로그아웃, 회원가입)</description>
+        <dir name="ui">
+          <file name="LoginForm.tsx" />
+          <file name="SignupForm.tsx" />
+          <file name="LogoutButton.tsx" />
+        </dir>
+        <dir name="model">
+          <file name="auth.store.ts" example="인증 상태 관리" />
+          <file name="use-auth.ts" example="인증 관련 훅" />
+        </dir>
+        <dir name="api">
+          <file name="auth.api.ts" example="로그인/로그아웃 API 호출" />
+        </dir>
+        <file name="index.ts" example="export { LoginForm, useAuth, logout }" />
+      </dir>
+
+      <dir name="add-to-cart">
+        <description>장바구니 추가 기능</description>
+        <dir name="ui">
+          <file name="AddToCartButton.tsx" />
+        </dir>
+        <dir name="model">
+          <file name="use-add-to-cart.ts" />
+        </dir>
+        <dir name="api">
+          <file name="cart.api.ts" />
+        </dir>
+        <file name="index.ts" />
+      </dir>
+
+      <dir name="search">
+        <description>검색 기능</description>
+        <dir name="ui">
+          <file name="SearchInput.tsx" />
+          <file name="SearchResults.tsx" />
+        </dir>
+        <dir name="model">
+          <file name="search.store.ts" />
+          <file name="use-search.ts" />
+        </dir>
+        <dir name="api">
+          <file name="search.api.ts" />
+        </dir>
+        <file name="index.ts" />
+      </dir>
+
+      <dir name="checkout">
+        <description>결제 프로세스</description>
+        <dir name="ui">
+          <file name="CheckoutForm.tsx" />
+          <file name="PaymentMethod.tsx" />
+          <file name="OrderConfirmation.tsx" />
+        </dir>
+        <dir name="model">
+          <file name="checkout.store.ts" />
+          <file name="use-checkout.ts" />
+        </dir>
+        <dir name="api">
+          <file name="checkout.api.ts" />
+        </dir>
+        <dir name="lib">
+          <file name="validation.ts" />
+        </dir>
+        <file name="index.ts" />
+      </dir>
+    </dir>
+
+    <!-- Layer 5: Entities -->
+    <dir name="entities" layer="entities">
+      <description>비즈니스 엔티티. 데이터 모델 + 관련 UI</description>
+
+      <dir name="user">
+        <dir name="ui">
+          <file name="UserCard.tsx" />
+          <file name="UserAvatar.tsx" />
+        </dir>
+        <dir name="model">
+          <file name="user.types.ts" example="interface User { id: string; name: string; email: string; }" />
+          <file name="user.store.ts" />
+        </dir>
+        <dir name="api">
+          <file name="user.api.ts" />
+        </dir>
+        <file name="index.ts" example="export { UserCard, UserAvatar, type User }" />
+      </dir>
+
+      <dir name="product">
+        <dir name="ui">
+          <file name="ProductCard.tsx" />
+          <file name="ProductImage.tsx" />
+          <file name="ProductPrice.tsx" />
+        </dir>
+        <dir name="model">
+          <file name="product.types.ts" />
+        </dir>
+        <dir name="api">
+          <file name="product.api.ts" />
+        </dir>
+        <file name="index.ts" />
+      </dir>
+
+      <dir name="order">
+        <dir name="ui">
+          <file name="OrderCard.tsx" />
+          <file name="OrderStatus.tsx" />
+          <file name="OrderItemList.tsx" />
+        </dir>
+        <dir name="model">
+          <file name="order.types.ts" />
+        </dir>
+        <dir name="api">
+          <file name="order.api.ts" />
+        </dir>
+        <file name="index.ts" />
+      </dir>
+    </dir>
+
+    <!-- Layer 6: Shared -->
+    <dir name="shared" layer="shared">
+      <description>공유 리소스. 비즈니스 로직 없음</description>
+
+      <dir name="ui">
+        <description>UI Kit - 도메인 무관한 컴포넌트</description>
+        <file name="Button.tsx" />
+        <file name="Input.tsx" />
+        <file name="Modal.tsx" />
+        <file name="Card.tsx" />
+        <file name="Spinner.tsx" />
+        <file name="index.ts" />
+      </dir>
+
+      <dir name="lib">
+        <description>유틸리티 함수</description>
+        <file name="format-date.ts" />
+        <file name="format-currency.ts" />
+        <file name="cn.ts" example="className 병합 유틸" />
+        <file name="index.ts" />
+      </dir>
+
+      <dir name="api">
+        <description>API 기반 설정</description>
+        <file name="api-client.ts" example="axios/fetch 인스턴스" />
+        <file name="api-types.ts" />
+        <file name="index.ts" />
+      </dir>
+
+      <dir name="config">
+        <description>앱 설정</description>
+        <file name="env.ts" />
+        <file name="constants.ts" />
+        <file name="index.ts" />
+      </dir>
+
+      <dir name="types">
+        <description>공통 타입</description>
+        <file name="common.ts" />
+        <file name="index.ts" />
+      </dir>
+
+      <dir name="hooks">
+        <description>공통 훅</description>
+        <file name="use-debounce.ts" />
+        <file name="use-local-storage.ts" />
+        <file name="use-media-query.ts" />
+        <file name="index.ts" />
+      </dir>
+    </dir>
+  </root>
+
+  <import-rules>
+    <rule>상위 레이어만 하위 레이어를 import 가능</rule>
+    <rule>같은 레이어 내 슬라이스 간 import 금지</rule>
+    <rule>모든 import는 Public API (index.ts)를 통해서만</rule>
+
+    <allowed from="app" to="pages,widgets,features,entities,shared" />
+    <allowed from="pages" to="widgets,features,entities,shared" />
+    <allowed from="widgets" to="features,entities,shared" />
+    <allowed from="features" to="entities,shared" />
+    <allowed from="entities" to="shared" />
+    <allowed from="shared" to="없음" />
+
+    <forbidden>같은 레이어 내 cross-import (features/auth → features/checkout 금지)</forbidden>
+  </import-rules>
+
+  <path-aliases>
+    <alias name="@/app" path="src/app" />
+    <alias name="@/pages" path="src/pages" />
+    <alias name="@/widgets" path="src/widgets" />
+    <alias name="@/features" path="src/features" />
+    <alias name="@/entities" path="src/entities" />
+    <alias name="@/shared" path="src/shared" />
+  </path-aliases>
+</directory-structure>

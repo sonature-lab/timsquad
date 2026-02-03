@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pattern name="event-sourcing">
+  <metadata>
+    <full-name>Event Sourcing</full-name>
+    <applies-to>Clean Architecture, Hexagonal Architecture</applies-to>
+    <often-with>CQRS</often-with>
+    <complexity>very-high</complexity>
+  </metadata>
+
+  <description>
+    상태를 직접 저장하지 않고, 상태 변경 이벤트를 순차적으로 저장.
+    현재 상태는 이벤트를 재생(replay)하여 도출.
+  </description>
+
+  <when-to-use>
+    <use>완전한 감사 로그(audit trail) 필요</use>
+    <use>시간 여행(time travel) - 과거 상태 조회</use>
+    <use>복잡한 도메인 이벤트 추적</use>
+    <use>금융, 의료 등 규제 산업</use>
+    <avoid>단순 CRUD</avoid>
+    <avoid>이벤트 스키마 변경 빈번</avoid>
+  </when-to-use>
+
+  <core-concepts>
+    <concept name="event-store">
+      <description>이벤트를 append-only로 저장하는 저장소</description>
+    </concept>
+    <concept name="aggregate">
+      <description>이벤트를 발행하고, 이벤트로부터 상태 복원</description>
+    </concept>
+    <concept name="projection">
+      <description>이벤트 스트림을 읽어 Read Model 구축</description>
+    </concept>
+    <concept name="snapshot">
+      <description>성능 최적화를 위한 중간 상태 저장</description>
+    </concept>
+  </core-concepts>
+
+  <code-example language="typescript">
+    <title>Event Sourced Aggregate</title>
+    <code><![CDATA[
+// Domain Event
+class OrderPlaced extends DomainEvent {
+  constructor(
+    readonly orderId: string,
+    readonly customerId: string,
+    readonly items: OrderItem[]
+  ) { super(); }
+}
+
+// Aggregate
+class Order extends EventSourcedAggregate {
+  private status: OrderStatus;
+  private items: OrderItem[] = [];
+
+  // Command → Event
+  place(customerId: string, items: OrderItem[]): void {
+    this.apply(new OrderPlaced(this.id, customerId, items));
+  }
+
+  // Event → State (재생 시 호출)
+  onOrderPlaced(event: OrderPlaced): void {
+    this.status = 'placed';
+    this.items = event.items;
+  }
+
+  // Event Store에서 로드
+  static fromEvents(events: DomainEvent[]): Order {
+    const order = new Order();
+    events.forEach(e => order.applyFromHistory(e));
+    return order;
+  }
+}
+    ]]></code>
+  </code-example>
+
+  <trade-offs>
+    <pro>완전한 이력 보존</pro>
+    <pro>디버깅 용이 (이벤트 재생)</pro>
+    <pro>temporal query 가능</pro>
+    <con>복잡도 증가</con>
+    <con>이벤트 스키마 버전 관리 필요</con>
+    <con>eventual consistency</con>
+  </trade-offs>
+</pattern>

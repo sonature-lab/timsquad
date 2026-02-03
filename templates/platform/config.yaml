@@ -1,0 +1,254 @@
+# TimSquad Platform 프로젝트 설정
+# 프레임워크, SDK, 라이브러리 전용
+
+type: platform
+description: "프레임워크, SDK, 라이브러리, 플러그인 시스템"
+
+# ============================================================
+# 에이전트 설정
+# ============================================================
+agents:
+  # Planner는 API 설계와 문서화에 집중
+  planner:
+    model: opus
+    focus:
+      - api_design
+      - extensibility
+      - backward_compatibility
+      - documentation
+    ssot_priority:
+      - service-spec.md      # Public API
+      - integration-spec.md  # 확장 포인트
+      - glossary.md          # 용어 정의 중요
+
+  # Developer는 라이브러리 구현
+  developer:
+    model: sonnet
+    skills:
+      - coding
+      - testing
+      - typescript
+    focus:
+      - clean_code
+      - type_safety
+      - performance
+      - tree_shaking
+
+  # QA는 API 안정성에 집중
+  qa:
+    model: sonnet
+    focus:
+      - api_stability
+      - regression_testing
+      - compatibility_testing
+      - documentation_testing
+
+  # Security는 의존성 관리
+  security:
+    model: sonnet
+    focus:
+      - dependency_audit
+      - supply_chain
+      - api_security
+
+# ============================================================
+# SSOT 문서 설정
+# ============================================================
+ssot:
+  required:
+    - prd.md
+    - planning.md
+    - requirements.md
+    - service-spec.md       # Public API 명세
+    - glossary.md           # 용어 정의 필수
+    - integration-spec.md   # 확장 포인트, 훅
+
+  recommended:
+    - test-spec.md
+    - error-codes.md
+    - functional-spec.md
+
+  optional:
+    - ui-ux-spec.md
+    - data-design.md       # 내부 상태만
+    - deployment-spec.md   # npm publish 정도
+
+# ============================================================
+# 워크플로우 설정
+# ============================================================
+workflow:
+  phases:
+    planning:
+      focus:
+        - Public API 설계
+        - 확장 포인트 정의
+        - 버전 전략
+      deliverables:
+        - service-spec.md
+        - integration-spec.md
+        - glossary.md
+
+    implementation:
+      focus:
+        - 타입 안전한 구현
+        - 문서화 (TSDoc/JSDoc)
+        - 예제 코드
+      validation:
+        - type_check
+        - api_stability
+
+    testing:
+      focus:
+        - 단위 테스트 (100% public API)
+        - 타입 테스트
+        - 번들 크기 테스트
+      coverage_target: 90
+
+    documentation:
+      required: true
+      deliverables:
+        - API 레퍼런스
+        - Getting Started
+        - 예제 코드
+        - 마이그레이션 가이드
+
+    release:
+      checklist:
+        - 버전 번호 확인 (SemVer)
+        - CHANGELOG 업데이트
+        - Breaking Changes 문서화
+        - 타입 정의 확인
+
+# ============================================================
+# 코딩 규칙
+# ============================================================
+coding:
+  typescript:
+    strict: true
+    # 타입 내보내기 필수
+    export_types: required
+    # 제네릭 활용
+    generics: encouraged
+
+  api_design:
+    # 일관된 네이밍
+    naming:
+      functions: camelCase
+      classes: PascalCase
+      constants: UPPER_SNAKE_CASE
+      types: PascalCase
+
+    # 메서드 체이닝 지원
+    fluent_api: encouraged
+
+    # 옵션 객체 패턴
+    options_pattern: required
+
+  documentation:
+    # TSDoc 필수
+    tsdoc: required
+    # 모든 public API 문서화
+    public_api: 100%
+    # 예제 포함
+    examples: required
+
+  bundle:
+    # Tree-shaking 지원
+    tree_shaking: required
+    # ESM + CJS 지원
+    formats: ["esm", "cjs"]
+    # 타입 정의 포함
+    types: required
+    # 번들 크기 제한
+    size_limit: "50kb"  # gzipped
+
+# ============================================================
+# 버전 관리
+# ============================================================
+versioning:
+  strategy: semver
+
+  breaking_changes:
+    # Major 버전에서만
+    allowed_in: major
+    # 마이그레이션 가이드 필수
+    migration_guide: required
+    # Deprecation 기간
+    deprecation_period: "2 minor versions"
+
+  changelog:
+    format: "keep-a-changelog"
+    required: true
+
+# ============================================================
+# 테스트 규칙
+# ============================================================
+testing:
+  required:
+    - unit
+    - type_test
+    - api_stability
+
+  optional:
+    - integration
+    - browser_compatibility
+    - node_version_matrix
+
+  coverage:
+    minimum: 90
+    public_api: 100
+
+  type_testing:
+    tool: "tsd"  # 또는 expect-type
+    required: true
+
+  bundle_testing:
+    size_limit: required
+    tree_shaking_test: required
+
+# ============================================================
+# 품질 기준
+# ============================================================
+quality:
+  # 번들 크기
+  bundle_size:
+    max_gzipped: "50kb"
+    monitor: true
+
+  # 의존성
+  dependencies:
+    minimize: true
+    peer_deps: encouraged
+    audit: required
+
+  # 타입 안전성
+  type_safety:
+    strict_null_checks: true
+    no_any: true
+
+  # 문서화 품질
+  documentation:
+    api_coverage: 100%
+    examples: required
+    changelog: required
+
+# ============================================================
+# 릴리스 규칙
+# ============================================================
+release:
+  registry: npm
+
+  pre_release:
+    checklist:
+      - 모든 테스트 통과
+      - 타입 체크 통과
+      - 번들 크기 확인
+      - CHANGELOG 업데이트
+      - 버전 번호 확인
+
+  publish:
+    dry_run_first: true
+    tag:
+      latest: "stable releases"
+      next: "pre-releases"
+      beta: "beta versions"

@@ -1,0 +1,227 @@
+# TimSquad API Backend 프로젝트 설정
+# API 서버, 마이크로서비스 전용
+
+type: api-backend
+description: "API 서버, 마이크로서비스, REST/GraphQL 백엔드"
+
+# ============================================================
+# 에이전트 설정
+# ============================================================
+agents:
+  # Planner는 API 설계에 집중
+  planner:
+    model: opus
+    focus:
+      - api_design
+      - data_modeling
+      - error_handling
+    ssot_priority:
+      - service-spec.md
+      - data-design.md
+      - error-codes.md
+
+  # Developer는 백엔드 구현
+  developer:
+    model: sonnet
+    skills:
+      - coding
+      - testing
+      - backend/node  # 또는 적절한 백엔드 기술
+    focus:
+      - api_implementation
+      - database_queries
+      - validation
+
+  # DBA는 필수
+  dba:
+    model: sonnet
+    required: true
+    focus:
+      - schema_design
+      - query_optimization
+      - migration
+
+  # QA는 API 테스트에 집중
+  qa:
+    model: sonnet
+    focus:
+      - api_testing
+      - integration_testing
+      - load_testing
+
+  # Security 검토 권장
+  security:
+    model: sonnet
+    recommended: true
+    focus:
+      - authentication
+      - authorization
+      - input_validation
+
+# ============================================================
+# SSOT 문서 설정
+# ============================================================
+ssot:
+  required:
+    - prd.md
+    - planning.md
+    - requirements.md
+    - service-spec.md      # API 명세 필수
+    - data-design.md       # 데이터 설계 필수
+    - error-codes.md       # 에러 코드 필수
+
+  recommended:
+    - glossary.md
+    - test-spec.md
+    - env-config.md
+
+  optional:
+    - ui-ux-spec.md        # API만이므로 불필요
+    - deployment-spec.md
+    - integration-spec.md
+
+# ============================================================
+# 워크플로우 설정
+# ============================================================
+workflow:
+  phases:
+    planning:
+      focus:
+        - API 명세 설계
+        - 데이터 모델링
+        - 에러 코드 정의
+      deliverables:
+        - service-spec.md
+        - data-design.md
+        - error-codes.md
+
+    implementation:
+      focus:
+        - API 엔드포인트 구현
+        - 데이터베이스 마이그레이션
+        - 비즈니스 로직
+      parallel_allowed: true
+      validation:
+        - api_contract_test
+        - schema_validation
+
+    testing:
+      focus:
+        - 단위 테스트
+        - 통합 테스트
+        - API 계약 테스트
+      coverage_target: 80
+
+    review:
+      checklist:
+        - API 응답 형식 일관성
+        - 에러 처리 완전성
+        - 성능 (응답 시간)
+        - 보안 (인증/인가)
+
+# ============================================================
+# 코딩 규칙
+# ============================================================
+coding:
+  api:
+    # REST API 규칙
+    rest:
+      versioning: url  # /api/v1/
+      naming: kebab-case
+      response_format:
+        success: |
+          {
+            "success": true,
+            "data": { ... }
+          }
+        error: |
+          {
+            "success": false,
+            "error": {
+              "code": "ERR_CODE",
+              "message": "Human readable message"
+            }
+          }
+
+    # 상태 코드
+    http_status:
+      success: [200, 201, 204]
+      client_error: [400, 401, 403, 404, 409, 422]
+      server_error: [500, 502, 503]
+
+  database:
+    # ORM 사용 권장
+    orm_required: true
+    # 마이그레이션 필수
+    migration_required: true
+    # 트랜잭션 처리
+    transaction_policy: "explicit"
+
+  validation:
+    # 입력 검증 필수
+    input_validation: required
+    # 스키마 검증 도구
+    schema_validation: "zod"  # 또는 joi, yup
+
+# ============================================================
+# 테스트 규칙
+# ============================================================
+testing:
+  required:
+    - unit
+    - integration
+    - api_contract
+
+  optional:
+    - e2e
+    - load
+    - security
+
+  coverage:
+    minimum: 80
+    branches: 70
+
+  api_testing:
+    tools: ["supertest", "jest"]
+    mock_external: true
+
+# ============================================================
+# 보안 규칙
+# ============================================================
+security:
+  authentication:
+    methods: ["jwt", "api_key"]
+    token_expiry: "15m"
+    refresh_token: true
+
+  authorization:
+    model: "rbac"  # Role-Based Access Control
+
+  input:
+    sanitize: true
+    validate: true
+    rate_limit: true
+
+  headers:
+    required:
+      - "Content-Security-Policy"
+      - "X-Content-Type-Options"
+      - "X-Frame-Options"
+
+# ============================================================
+# 성능 기준
+# ============================================================
+performance:
+  response_time:
+    p50: "100ms"
+    p95: "500ms"
+    p99: "1s"
+
+  throughput:
+    minimum: "100 rps"
+
+  database:
+    query_timeout: "5s"
+    connection_pool:
+      min: 5
+      max: 20

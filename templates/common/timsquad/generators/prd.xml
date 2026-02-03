@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TimSquad PRD Generator v1.0
+  메인 세션이 이 템플릿을 읽고 사용자와 대화하며 PRD를 생성합니다.
+-->
+<generator name="prd" version="1.0" output=".timsquad/ssot/prd.md">
+  <metadata>
+    <description>제품 요구사항 정의서 (PRD) 생성기</description>
+    <purpose>프로젝트의 목적, 타겟, 핵심 기능을 정의</purpose>
+  </metadata>
+
+  <instructions>
+    <![CDATA[
+    이 생성기를 사용하여 PRD를 작성합니다.
+
+    1. 각 섹션의 필드를 순서대로 질문하세요
+    2. 사용자 답변을 정제하여 전문적인 문서 형식으로 변환하세요
+    3. 필수(required) 필드는 반드시 채워야 합니다
+    4. repeatable 섹션은 사용자가 "끝" 또는 빈 입력할 때까지 반복
+    5. 모든 입력이 완료되면 output-template을 사용해 문서 생성
+
+    정제 원칙:
+    - 구어체 → 문어체로 변환
+    - 모호한 표현 → 구체적 표현으로
+    - 20자 이내로 간결하게
+    - 전문 용어 적절히 사용
+    ]]>
+  </instructions>
+
+  <!-- ============================================================
+       섹션 1: 기본 정보
+       ============================================================ -->
+  <section id="basic" title="기본 정보">
+    <field name="project_name" type="text" required="true">
+      <prompt>프로젝트 이름이 뭔가요?</prompt>
+      <refinement>영문 소문자, 하이픈 허용 (예: smash-sg)</refinement>
+    </field>
+
+    <field name="one_liner" type="text" required="true">
+      <prompt>한 줄로 설명하면?</prompt>
+      <example>싱가폴/아세안 테니스 매칭 앱</example>
+      <refinement>
+        - 20자 이내
+        - "~앱", "~서비스", "~플랫폼" 형식
+        - 지역 + 도메인 + 핵심 가치 포함
+      </refinement>
+    </field>
+
+    <field name="target_user" type="text" required="true">
+      <prompt>주요 타겟 사용자는 누구인가요?</prompt>
+      <example>싱가폴 거주 테니스 동호인 (20-40대)</example>
+      <refinement>
+        - 지역 + 연령대 + 특성 포함
+        - 구체적인 페르소나로 정제
+      </refinement>
+    </field>
+
+    <field name="problem" type="text" required="true">
+      <prompt>해결하려는 핵심 문제는?</prompt>
+      <example>실력 맞는 테니스 파트너 찾기 어려움</example>
+      <refinement>
+        - 문제 중심으로 서술
+        - "~어려움", "~불편함", "~한계" 형식
+      </refinement>
+    </field>
+
+    <field name="solution" type="text" required="true">
+      <prompt>어떻게 해결하려고 하나요?</prompt>
+      <example>실력/위치/시간 기반 자동 매칭 시스템</example>
+      <refinement>
+        - 솔루션 중심으로 서술
+        - 핵심 메커니즘 포함
+      </refinement>
+    </field>
+  </section>
+
+  <!-- ============================================================
+       섹션 2: 핵심 기능
+       ============================================================ -->
+  <section id="features" title="핵심 기능" repeatable="true">
+    <instructions>
+      기능을 하나씩 입력받습니다.
+      빈 입력 또는 "끝"이 입력되면 종료합니다.
+      최소 3개 이상의 기능을 권장합니다.
+    </instructions>
+
+    <field name="name" type="text" required="true">
+      <prompt>기능 이름?</prompt>
+      <example>매칭, 채팅, 프로필</example>
+      <refinement>2-4글자 명사형</refinement>
+    </field>
+
+    <field name="description" type="text" required="false">
+      <prompt>간단한 설명? (생략 가능)</prompt>
+      <example>실력/위치/시간 기반 자동 매칭</example>
+      <refinement>한 줄로 핵심 동작 설명</refinement>
+    </field>
+
+    <field name="priority" type="select" required="true">
+      <prompt>우선순위? (m:must / s:should / c:could)</prompt>
+      <options>
+        <option value="must" shortcut="m">MVP 필수</option>
+        <option value="should" shortcut="s">있으면 좋음</option>
+        <option value="could" shortcut="c">나중에</option>
+      </options>
+      <default>must</default>
+    </field>
+  </section>
+
+  <!-- ============================================================
+       섹션 3: 기술 스택
+       ============================================================ -->
+  <section id="tech" title="기술 스택">
+    <field name="frontend" type="select" required="true">
+      <prompt>프론트엔드 프레임워크?</prompt>
+      <options>
+        <option value="nextjs" shortcut="1">Next.js (권장)</option>
+        <option value="react" shortcut="2">React</option>
+        <option value="vue" shortcut="3">Vue.js</option>
+        <option value="other" shortcut="4">기타</option>
+      </options>
+      <default>nextjs</default>
+    </field>
+
+    <field name="backend" type="select" required="true">
+      <prompt>백엔드/BaaS?</prompt>
+      <options>
+        <option value="supabase" shortcut="1">Supabase (권장)</option>
+        <option value="firebase" shortcut="2">Firebase</option>
+        <option value="custom" shortcut="3">커스텀 서버</option>
+      </options>
+      <default>supabase</default>
+    </field>
+
+    <field name="deploy" type="select" required="true">
+      <prompt>배포 플랫폼?</prompt>
+      <options>
+        <option value="vercel" shortcut="1">Vercel (권장)</option>
+        <option value="aws" shortcut="2">AWS</option>
+        <option value="cloudflare" shortcut="3">Cloudflare</option>
+        <option value="other" shortcut="4">기타</option>
+      </options>
+      <default>vercel</default>
+    </field>
+
+    <field name="database" type="select" required="false">
+      <prompt>데이터베이스? (백엔드 선택에 따라 자동 설정됨)</prompt>
+      <options>
+        <option value="postgresql">PostgreSQL</option>
+        <option value="mysql">MySQL</option>
+        <option value="mongodb">MongoDB</option>
+      </options>
+      <auto-fill>
+        <rule if="backend=supabase">postgresql</rule>
+        <rule if="backend=firebase">firestore</rule>
+      </auto-fill>
+    </field>
+  </section>
+
+  <!-- ============================================================
+       섹션 4: 성공 지표 (선택)
+       ============================================================ -->
+  <section id="metrics" title="성공 지표" optional="true">
+    <field name="primary_metric" type="text" required="false">
+      <prompt>핵심 성공 지표? (예: DAU, 매칭 성사율)</prompt>
+      <example>주간 매칭 성사율 70% 이상</example>
+    </field>
+
+    <field name="target_users" type="text" required="false">
+      <prompt>목표 사용자 수? (MVP 기준)</prompt>
+      <example>런칭 3개월 내 MAU 1,000명</example>
+    </field>
+  </section>
+
+  <!-- ============================================================
+       출력 템플릿
+       ============================================================ -->
+  <output-template>
+    <![CDATA[
+# {{basic.project_name}} PRD
+
+> {{basic.one_liner}}
+
+**생성일**: {{DATE}}
+**버전**: 1.0
+**상태**: Draft
+
+---
+
+## 1. 개요
+
+### 1.1 프로젝트 정보
+
+| 항목 | 내용 |
+|-----|------|
+| 프로젝트명 | {{basic.project_name}} |
+| 한 줄 설명 | {{basic.one_liner}} |
+| 타겟 사용자 | {{basic.target_user}} |
+
+### 1.2 문제 정의
+
+**해결하려는 문제:**
+{{basic.problem}}
+
+**제안하는 솔루션:**
+{{basic.solution}}
+
+---
+
+## 2. 핵심 기능
+
+| 우선순위 | 기능 | 설명 |
+|:-------:|------|------|
+{{#each features}}
+| {{priority | upper}} | {{name}} | {{description | default: "-"}} |
+{{/each}}
+
+### 2.1 MVP 범위 (MUST)
+
+{{#each features where priority="must"}}
+- **{{name}}**: {{description | default: "상세 정의 필요"}}
+{{/each}}
+
+### 2.2 확장 기능 (SHOULD/COULD)
+
+{{#each features where priority!="must"}}
+- **{{name}}** ({{priority | upper}}): {{description | default: "상세 정의 필요"}}
+{{/each}}
+
+---
+
+## 3. 기술 스택
+
+| 구분 | 선택 | 비고 |
+|-----|------|-----|
+| Frontend | {{tech.frontend | capitalize}} | |
+| Backend | {{tech.backend | capitalize}} | |
+| Database | {{tech.database | capitalize}} | {{tech.backend}} 기본 |
+| Deploy | {{tech.deploy | capitalize}} | |
+
+---
+
+## 4. 성공 지표
+
+{{#if metrics.primary_metric}}
+- **핵심 지표**: {{metrics.primary_metric}}
+{{/if}}
+{{#if metrics.target_users}}
+- **목표 사용자**: {{metrics.target_users}}
+{{/if}}
+{{#unless metrics.primary_metric}}
+- (추후 정의)
+{{/unless}}
+
+---
+
+## 5. 일정 (TBD)
+
+| 마일스톤 | 목표 | 상태 |
+|---------|-----|:----:|
+| PRD 완료 | - | ✅ |
+| 설계 완료 | - | ⬜ |
+| MVP 개발 | - | ⬜ |
+| 베타 런칭 | - | ⬜ |
+
+---
+
+## 6. 다음 단계
+
+1. [ ] requirements.md 작성
+2. [ ] service-spec.md 작성
+3. [ ] data-design.md 작성
+4. [ ] UI/UX 설계
+
+---
+
+*Generated by TimSquad v2.0*
+    ]]>
+  </output-template>
+</generator>

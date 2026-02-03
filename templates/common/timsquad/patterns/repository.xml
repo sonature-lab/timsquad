@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pattern name="repository">
+  <metadata>
+    <full-name>Repository Pattern</full-name>
+    <applies-to>모든 아키텍처</applies-to>
+    <complexity>low</complexity>
+  </metadata>
+
+  <description>
+    도메인과 데이터 매핑 레이어 사이를 중재하는 패턴.
+    컬렉션처럼 도메인 객체에 접근하는 인터페이스 제공.
+  </description>
+
+  <core-concepts>
+    <concept name="repository-interface">
+      <description>도메인 레이어에 정의. 영속성 세부사항 숨김</description>
+      <location>domain 또는 application 레이어</location>
+    </concept>
+    <concept name="repository-implementation">
+      <description>인프라 레이어에서 구현 (Prisma, TypeORM 등)</description>
+      <location>infrastructure 또는 adapter 레이어</location>
+    </concept>
+  </core-concepts>
+
+  <code-example language="typescript">
+    <title>Repository Interface + Implementation</title>
+    <code><![CDATA[
+// Domain Layer - Interface
+interface IUserRepository {
+  findById(id: UserId): Promise<User | null>;
+  findByEmail(email: Email): Promise<User | null>;
+  save(user: User): Promise<void>;
+  delete(id: UserId): Promise<void>;
+}
+
+// Infrastructure Layer - Implementation
+class PrismaUserRepository implements IUserRepository {
+  constructor(private prisma: PrismaClient) {}
+
+  async findById(id: UserId): Promise<User | null> {
+    const data = await this.prisma.user.findUnique({
+      where: { id: id.value }
+    });
+    return data ? UserMapper.toDomain(data) : null;
+  }
+
+  async save(user: User): Promise<void> {
+    const data = UserMapper.toPersistence(user);
+    await this.prisma.user.upsert({
+      where: { id: data.id },
+      create: data,
+      update: data
+    });
+  }
+}
+    ]]></code>
+  </code-example>
+
+  <rules>
+    <rule>Repository는 Aggregate Root 단위로 생성</rule>
+    <rule>Repository 인터페이스에 DB 용어 사용 금지 (findAll O, SELECT X)</rule>
+    <rule>복잡한 쿼리는 별도 Query Service로 분리</rule>
+  </rules>
+</pattern>

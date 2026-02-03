@@ -1,0 +1,203 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TimSquad Retrospective Metrics",
+  "description": "회고 시스템 메트릭 스키마 정의",
+  "version": "1.0.0",
+
+  "definitions": {
+    "agentMetrics": {
+      "type": "object",
+      "properties": {
+        "tasks_completed": {
+          "type": "integer",
+          "description": "완료한 작업 수"
+        },
+        "success_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "성공률 (%)"
+        },
+        "avg_revision_count": {
+          "type": "number",
+          "description": "평균 수정 횟수"
+        },
+        "metrics": {
+          "type": "object",
+          "description": "에이전트별 세부 메트릭"
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "종합 점수"
+        },
+        "trend": {
+          "type": "string",
+          "pattern": "^[+-]?[0-9]+(\\.[0-9]+)?$",
+          "description": "이전 대비 변화 (예: +2.1, -0.5)"
+        }
+      },
+      "required": ["tasks_completed", "success_rate", "score"]
+    },
+
+    "feedbackStats": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer"
+        },
+        "by_level": {
+          "type": "object",
+          "properties": {
+            "level_1": { "type": "integer" },
+            "level_2": { "type": "integer" },
+            "level_3": { "type": "integer" }
+          }
+        },
+        "by_type": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" }
+        },
+        "resolution_time_avg_minutes": {
+          "type": "number"
+        }
+      }
+    },
+
+    "pattern": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(FP|SP)-[0-9]{3}$",
+          "description": "패턴 ID (FP=실패, SP=성공)"
+        },
+        "name": {
+          "type": "string"
+        },
+        "frequency": {
+          "type": "integer",
+          "description": "발생 빈도"
+        },
+        "description": {
+          "type": "string"
+        },
+        "cause": {
+          "type": "string",
+          "description": "원인 (실패 패턴)"
+        },
+        "factor": {
+          "type": "string",
+          "description": "성공 요인 (성공 패턴)"
+        },
+        "suggestion": {
+          "type": "string",
+          "description": "개선 제안"
+        },
+        "agents_affected": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["id", "name", "frequency"]
+    },
+
+    "improvement": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^IMP-[0-9]{3}$"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["prompt", "template", "skill", "process"]
+        },
+        "target": {
+          "type": "string",
+          "description": "수정 대상 파일/에이전트"
+        },
+        "description": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["proposed", "approved", "applied", "rejected"]
+        },
+        "applied_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "pattern_refs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "관련 패턴 ID들"
+        }
+      },
+      "required": ["id", "type", "target", "status"]
+    }
+  },
+
+  "type": "object",
+  "properties": {
+    "cycle": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "사이클 번호"
+    },
+    "period": {
+      "type": "object",
+      "properties": {
+        "start": { "type": "string", "format": "date" },
+        "end": { "type": "string", "format": "date" }
+      },
+      "required": ["start", "end"]
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "total_tasks": { "type": "integer" },
+        "success_rate": { "type": "number" },
+        "avg_revision_count": { "type": "number" },
+        "level_3_feedback_count": { "type": "integer" }
+      }
+    },
+    "agents": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/agentMetrics" }
+    },
+    "feedback": {
+      "$ref": "#/definitions/feedbackStats"
+    },
+    "patterns": {
+      "type": "object",
+      "properties": {
+        "failure": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/pattern" }
+        },
+        "success": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/pattern" }
+        }
+      }
+    },
+    "improvements": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/improvement" }
+    },
+    "next_cycle_goals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "goal": { "type": "string" },
+          "metric": { "type": "string" },
+          "target": { "type": "string" }
+        }
+      }
+    }
+  },
+  "required": ["cycle", "period", "summary", "agents"]
+}

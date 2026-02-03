@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow extends="common/process/workflow-base.xml">
+  <metadata>
+    <name>web-service-workflow</name>
+    <description>웹 서비스 프로젝트용 워크플로우</description>
+    <type>web-service</type>
+    <version>1.0</version>
+  </metadata>
+
+  <!-- 레벨별 워크플로우 프리셋 -->
+  <presets>
+    <preset id="mvp" level="1" description="MVP - 빠른 개발">
+      <phases include="planning,implementation,review,complete"/>
+      <skip-phases>security</skip-phases>
+      <simplified-rules>
+        <rule>보안 검토 생략 가능 (Level 3 Enterprise에서 수행)</rule>
+        <rule>UI/UX 명세 생략 가능</rule>
+        <rule>테스트 커버리지 60% 허용</rule>
+      </simplified-rules>
+    </preset>
+
+    <preset id="standard" level="2" description="표준 - 균형 잡힌 개발">
+      <phases include="planning,implementation,review,complete"/>
+      <optional-phases>security</optional-phases>
+      <rules>
+        <rule>UI/UX 명세 필수</rule>
+        <rule>테스트 커버리지 80% 필수</rule>
+        <rule>코드 리뷰 필수</rule>
+      </rules>
+    </preset>
+
+    <preset id="enterprise" level="3" description="엔터프라이즈 - 완전한 프로세스">
+      <phases include="planning,implementation,review,security,complete"/>
+      <mandatory>
+        <item>모든 Phase 통과 필수</item>
+        <item>보안 검토 필수</item>
+        <item>테스트 커버리지 90% 필수</item>
+      </mandatory>
+    </preset>
+  </presets>
+
+  <!-- Web Service 특화 Phase 확장 -->
+  <phase-extensions>
+    <!-- 기획 Phase 확장 -->
+    <extend-phase id="planning">
+      <additional-tasks>
+        <task id="ui-ux">UI/UX 설계 (와이어프레임, 사용자 플로우)</task>
+        <task id="api-design">프론트-백 API 계약 정의</task>
+      </additional-tasks>
+
+      <additional-outputs>
+        <output>ssot/ui-ux-spec.md</output>
+        <output>ssot/screen-flow.md</output>
+      </additional-outputs>
+
+      <agent-assignment>
+        <task ref="ui-ux" agent="tsq-designer" fallback="tsq-planner"/>
+        <task ref="api-design" agent="tsq-planner" mode="architect"/>
+      </agent-assignment>
+    </extend-phase>
+
+    <!-- 구현 Phase 확장: Frontend/Backend 분리 -->
+    <extend-phase id="implementation">
+      <parallel-tracks>
+        <track id="frontend" agent="tsq-frontend" fallback="tsq-developer">
+          <description>프론트엔드 구현</description>
+          <prerequisites>
+            <check>ssot/ui-ux-spec.md</check>
+            <check>ssot/service-spec.md (API 명세)</check>
+          </prerequisites>
+          <tasks>
+            <task id="components">UI 컴포넌트 구현</task>
+            <task id="pages">페이지 구현</task>
+            <task id="state">상태 관리</task>
+            <task id="api-integration">API 연동</task>
+          </tasks>
+          <exit-criteria>
+            <criterion>모든 화면 구현 완료</criterion>
+            <criterion>API 연동 테스트 통과</criterion>
+            <criterion>반응형 디자인 확인</criterion>
+          </exit-criteria>
+        </track>
+
+        <track id="backend" agent="tsq-backend" fallback="tsq-developer">
+          <description>백엔드 구현</description>
+          <prerequisites>
+            <check>ssot/service-spec.md</check>
+            <check>ssot/data-design.md</check>
+          </prerequisites>
+          <tasks>
+            <task id="models">데이터 모델 구현</task>
+            <task id="api">API 엔드포인트 구현</task>
+            <task id="business-logic">비즈니스 로직 구현</task>
+            <task id="auth">인증/인가 구현</task>
+          </tasks>
+          <exit-criteria>
+            <criterion>API 테스트 통과</criterion>
+            <criterion>DB 마이그레이션 완료</criterion>
+            <criterion>인증 플로우 검증</criterion>
+          </exit-criteria>
+        </track>
+
+        <track id="integration" depends-on="frontend,backend">
+          <description>통합 테스트</description>
+          <tasks>
+            <task id="e2e">E2E 테스트 작성</task>
+            <task id="integration-test">프론트-백 통합 테스트</task>
+          </tasks>
+        </track>
+      </parallel-tracks>
+
+      <!-- 방법론별 변형 -->
+      <methodology-variants>
+        <variant methodology="tdd">
+          <task-order>test → implement → refactor</task-order>
+          <enforcement>테스트 없이 구현 코드 PR 금지</enforcement>
+        </variant>
+        <variant methodology="bdd">
+          <task-order>feature-spec → step-definition → implement</task-order>
+          <prerequisite>Gherkin 시나리오 작성 완료</prerequisite>
+        </variant>
+      </methodology-variants>
+    </extend-phase>
+
+    <!-- 검증 Phase 확장 -->
+    <extend-phase id="review">
+      <additional-checklists>
+        <checklist name="UI/UX 검증">
+          <item>디자인 명세 일치</item>
+          <item>반응형 동작 확인</item>
+          <item>접근성(a11y) 기본 체크</item>
+          <item>로딩 상태 처리</item>
+          <item>에러 상태 UI</item>
+        </checklist>
+
+        <checklist name="API 검증">
+          <item>service-spec.md와 구현 일치</item>
+          <item>에러 응답 형식 통일</item>
+          <item>API 버저닝 적용</item>
+          <item>Rate Limiting 확인</item>
+        </checklist>
+
+        <checklist name="성능 기본">
+          <item>First Contentful Paint &lt; 1.5s</item>
+          <item>Largest Contentful Paint &lt; 2.5s</item>
+          <item>API 응답 시간 &lt; 500ms (P95)</item>
+          <item>번들 사이즈 체크</item>
+        </checklist>
+      </additional-checklists>
+    </extend-phase>
+  </phase-extensions>
+
+  <!-- Web Service 특화 에스컬레이션 규칙 -->
+  <escalation-extensions>
+    <rule trigger="UI/UX 불일치" route="tsq-designer" fallback="tsq-planner">
+      화면 설계와 구현이 맞지 않으면 Designer에게 확인
+    </rule>
+    <rule trigger="API 계약 불일치" route="tsq-planner" mode="architect">
+      프론트-백 API 명세 불일치 시 Planner(Architect)가 조율
+    </rule>
+    <rule trigger="성능 이슈" route="tsq-developer">
+      성능 기준 미달 시 Developer가 최적화
+    </rule>
+  </escalation-extensions>
+
+  <!-- 배포 설정 -->
+  <deployment>
+    <environments>
+      <env name="development" auto-deploy="true"/>
+      <env name="staging" requires-review="true"/>
+      <env name="production" requires-approval="true"/>
+    </environments>
+
+    <ci-cd>
+      <provider>github-actions</provider>
+      <checks>
+        <check>lint</check>
+        <check>type-check</check>
+        <check>unit-tests</check>
+        <check>build</check>
+      </checks>
+    </ci-cd>
+  </deployment>
+</workflow>

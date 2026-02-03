@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<directory-structure architecture="hexagonal" target="backend">
+  <description>Hexagonal Architecture (Ports and Adapters) for Node.js Backend</description>
+
+  <root name="src">
+    <!-- Domain (Core Center) -->
+    <dir name="domain" layer="center">
+      <description>비즈니스 핵심. 외부 의존성 완전 제거</description>
+
+      <dir name="model">
+        <description>도메인 모델 (Aggregate Root, Entity, Value Object)</description>
+
+        <dir name="user">
+          <file name="user.ts" example="Aggregate Root" />
+          <file name="user-id.ts" example="Value Object (Branded Type)" />
+          <file name="email.ts" example="Value Object with validation" />
+          <file name="password.ts" example="Value Object (hashed)" />
+        </dir>
+
+        <dir name="order">
+          <file name="order.ts" />
+          <file name="order-id.ts" />
+          <file name="order-item.ts" />
+          <file name="order-status.ts" example="enum OrderStatus" />
+        </dir>
+
+        <dir name="product">
+          <file name="product.ts" />
+          <file name="product-id.ts" />
+          <file name="money.ts" example="Value Object for price" />
+        </dir>
+      </dir>
+
+      <dir name="service">
+        <description>도메인 서비스 (여러 엔티티에 걸친 로직)</description>
+        <file name="pricing.service.ts" />
+        <file name="inventory.service.ts" />
+      </dir>
+
+      <dir name="event">
+        <description>도메인 이벤트</description>
+        <file name="domain-event.ts" />
+        <file name="user-registered.event.ts" />
+        <file name="order-placed.event.ts" />
+        <file name="payment-completed.event.ts" />
+      </dir>
+
+      <dir name="error">
+        <description>도메인 에러</description>
+        <file name="domain-error.ts" />
+        <file name="validation-error.ts" />
+        <file name="not-found-error.ts" />
+        <file name="business-rule-error.ts" />
+      </dir>
+    </dir>
+
+    <!-- Application (Inner Ring - Use Cases + Ports) -->
+    <dir name="application" layer="inner-ring">
+      <description>애플리케이션 서비스와 포트 정의</description>
+
+      <dir name="port">
+        <description>포트 인터페이스 (애플리케이션 경계)</description>
+
+        <dir name="inbound">
+          <description>인바운드 포트 (Primary Ports / Driving)</description>
+          <note>외부에서 애플리케이션을 호출하기 위한 인터페이스</note>
+
+          <dir name="user">
+            <file name="register-user.port.ts" example="interface RegisterUserUseCase { execute(cmd: RegisterUserCommand): Promise&lt;UserId&gt;; }" />
+            <file name="get-user.port.ts" />
+            <file name="update-user.port.ts" />
+          </dir>
+
+          <dir name="order">
+            <file name="create-order.port.ts" />
+            <file name="cancel-order.port.ts" />
+            <file name="get-order.port.ts" />
+          </dir>
+        </dir>
+
+        <dir name="outbound">
+          <description>아웃바운드 포트 (Secondary Ports / Driven)</description>
+          <note>애플리케이션이 외부 리소스에 접근하기 위한 인터페이스</note>
+
+          <file name="user-repository.port.ts" example="interface UserRepository { findById(id: UserId): Promise&lt;User | null&gt;; save(user: User): Promise&lt;void&gt;; }" />
+          <file name="order-repository.port.ts" />
+          <file name="product-repository.port.ts" />
+          <file name="payment-gateway.port.ts" />
+          <file name="email-sender.port.ts" />
+          <file name="event-publisher.port.ts" />
+        </dir>
+      </dir>
+
+      <dir name="service">
+        <description>애플리케이션 서비스 (유스케이스 구현)</description>
+
+        <dir name="user">
+          <file name="register-user.service.ts" example="RegisterUserUseCase 구현" />
+          <file name="get-user.service.ts" />
+          <file name="update-user.service.ts" />
+        </dir>
+
+        <dir name="order">
+          <file name="create-order.service.ts" />
+          <file name="cancel-order.service.ts" />
+          <file name="get-order.service.ts" />
+        </dir>
+      </dir>
+
+      <dir name="command">
+        <description>Command 객체 (유스케이스 입력)</description>
+        <file name="register-user.command.ts" />
+        <file name="create-order.command.ts" />
+        <file name="update-user.command.ts" />
+      </dir>
+
+      <dir name="query">
+        <description>Query 객체 (조회 입력)</description>
+        <file name="get-user.query.ts" />
+        <file name="get-order.query.ts" />
+        <file name="list-orders.query.ts" />
+      </dir>
+
+      <dir name="dto">
+        <description>Result DTO (유스케이스 출력)</description>
+        <file name="user-result.dto.ts" />
+        <file name="order-result.dto.ts" />
+      </dir>
+    </dir>
+
+    <!-- Adapters (Outer Ring) -->
+    <dir name="adapter" layer="outer-ring">
+      <description>포트 구현 (Primary + Secondary Adapters)</description>
+
+      <dir name="inbound">
+        <description>Primary Adapters (Driving Adapters)</description>
+        <note>외부에서 애플리케이션으로 들어오는 진입점</note>
+
+        <dir name="http">
+          <description>HTTP REST API 어댑터</description>
+          <file name="user.controller.ts" />
+          <file name="order.controller.ts" />
+          <file name="health.controller.ts" />
+
+          <dir name="dto">
+            <description>HTTP 요청/응답 DTO</description>
+            <file name="register-user.request.ts" />
+            <file name="create-order.request.ts" />
+            <file name="user.response.ts" />
+            <file name="order.response.ts" />
+          </dir>
+
+          <dir name="mapper">
+            <description>HTTP DTO ↔ Command/Query 매퍼</description>
+            <file name="user.mapper.ts" />
+            <file name="order.mapper.ts" />
+          </dir>
+        </dir>
+
+        <dir name="grpc">
+          <description>gRPC 어댑터 (선택적)</description>
+          <file name="user.grpc.ts" />
+          <file name="order.grpc.ts" />
+        </dir>
+
+        <dir name="cli">
+          <description>CLI 어댑터 (선택적)</description>
+          <file name="migrate.cli.ts" />
+          <file name="seed.cli.ts" />
+        </dir>
+
+        <dir name="message">
+          <description>메시지 컨슈머 어댑터</description>
+          <file name="order-event.consumer.ts" />
+          <file name="payment-event.consumer.ts" />
+        </dir>
+      </dir>
+
+      <dir name="outbound">
+        <description>Secondary Adapters (Driven Adapters)</description>
+        <note>애플리케이션에서 외부로 나가는 구현</note>
+
+        <dir name="persistence">
+          <description>영속성 어댑터 (Repository 구현)</description>
+
+          <dir name="prisma">
+            <file name="prisma-user.repository.ts" example="UserRepository 구현" />
+            <file name="prisma-order.repository.ts" />
+            <file name="prisma-product.repository.ts" />
+          </dir>
+
+          <dir name="mapper">
+            <description>DB 모델 ↔ 도메인 모델 매퍼</description>
+            <file name="user.mapper.ts" />
+            <file name="order.mapper.ts" />
+          </dir>
+        </dir>
+
+        <dir name="external">
+          <description>외부 서비스 어댑터</description>
+          <file name="stripe-payment.adapter.ts" />
+          <file name="sendgrid-email.adapter.ts" />
+          <file name="aws-s3-storage.adapter.ts" />
+        </dir>
+
+        <dir name="message">
+          <description>메시지 퍼블리셔 어댑터</description>
+          <file name="kafka-event.publisher.ts" />
+          <file name="redis-event.publisher.ts" />
+        </dir>
+      </dir>
+    </dir>
+
+    <!-- Infrastructure (Edge) -->
+    <dir name="infrastructure" layer="edge">
+      <description>프레임워크 설정 및 조립</description>
+
+      <dir name="http">
+        <description>HTTP 서버 설정</description>
+        <file name="app.ts" example="Hono 앱 인스턴스" />
+        <file name="routes.ts" />
+        <file name="middleware.ts" />
+        <file name="error-handler.ts" />
+      </dir>
+
+      <dir name="database">
+        <description>데이터베이스 설정</description>
+        <file name="prisma.ts" />
+        <dir name="migrations" />
+      </dir>
+
+      <dir name="config">
+        <description>환경 설정</description>
+        <file name="env.ts" />
+        <file name="constants.ts" />
+      </dir>
+
+      <dir name="di">
+        <description>의존성 주입 컨테이너</description>
+        <file name="container.ts" example="어댑터와 서비스 조립" />
+        <file name="tokens.ts" example="DI 토큰 정의" />
+      </dir>
+
+      <dir name="logging">
+        <file name="logger.ts" />
+      </dir>
+
+      <dir name="monitoring">
+        <file name="metrics.ts" />
+        <file name="tracing.ts" />
+      </dir>
+    </dir>
+
+    <!-- Entry Point -->
+    <file name="index.ts" layer="infrastructure">
+      <description>애플리케이션 진입점</description>
+    </file>
+  </root>
+
+  <import-rules>
+    <rule from="domain" to="없음">domain은 외부 의존성 없음</rule>
+    <rule from="application" to="domain">포트는 domain 타입만 사용</rule>
+    <rule from="adapter" to="application,domain">어댑터는 포트 구현, 도메인 사용</rule>
+    <rule from="infrastructure" to="all">infrastructure는 모든 레이어 조립</rule>
+  </import-rules>
+
+  <testing-structure>
+    <dir name="__tests__">
+      <dir name="unit">
+        <description>유닛 테스트 (도메인, 서비스)</description>
+        <dir name="domain" />
+        <dir name="application" />
+      </dir>
+
+      <dir name="integration">
+        <description>통합 테스트 (어댑터)</description>
+        <dir name="adapter">
+          <dir name="inbound" note="컨트롤러 테스트" />
+          <dir name="outbound" note="리포지토리 테스트" />
+        </dir>
+      </dir>
+
+      <dir name="e2e">
+        <description>E2E 테스트</description>
+      </dir>
+
+      <dir name="fixtures">
+        <description>테스트 픽스처</description>
+        <file name="user.fixture.ts" />
+        <file name="order.fixture.ts" />
+      </dir>
+
+      <dir name="mocks">
+        <description>목 어댑터</description>
+        <file name="mock-user-repository.ts" />
+        <file name="mock-payment-gateway.ts" />
+      </dir>
+    </dir>
+  </testing-structure>
+</directory-structure>

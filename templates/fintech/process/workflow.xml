@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow extends="common/process/workflow-base.xml">
+  <metadata>
+    <name>fintech-workflow</name>
+    <description>금융/결제 시스템용 보안 강화 워크플로우</description>
+    <type>fintech</type>
+    <version>1.0</version>
+    <security-level>high</security-level>
+  </metadata>
+
+  <!-- Fintech는 단일 프리셋: 항상 최고 보안 -->
+  <presets>
+    <preset id="secure" level="3" description="보안 강화 - 모든 검증 필수" default="true">
+      <phases include="planning,implementation,review,security,audit,complete"/>
+      <mandatory>
+        <item>모든 Phase User 승인 필요</item>
+        <item>보안 검토 필수 (매 Phase)</item>
+        <item>감사 로그 기록 필수</item>
+        <item>Consensus 사용 (주요 결정)</item>
+        <item>테스트 커버리지 95% 이상</item>
+      </mandatory>
+      <forbidden>
+        <item>보안 검토 생략</item>
+        <item>하드코딩된 시크릿</item>
+        <item>평문 민감 데이터 저장</item>
+        <item>감사 로그 없는 트랜잭션</item>
+      </forbidden>
+    </preset>
+  </presets>
+
+  <!-- Fintech 특화 Phase 확장 -->
+  <phase-extensions>
+    <!-- 기획 Phase: 보안 설계 포함 -->
+    <extend-phase id="planning">
+      <additional-tasks>
+        <task id="threat-model">위협 모델링 (STRIDE)</task>
+        <task id="security-design">보안 아키텍처 설계</task>
+        <task id="compliance-check">컴플라이언스 요건 확인</task>
+        <task id="data-classification">데이터 분류 및 보호 등급</task>
+      </additional-tasks>
+
+      <additional-outputs>
+        <output>ssot/security-spec.md</output>
+        <output>ssot/compliance-spec.md</output>
+        <output>ssot/threat-model.md</output>
+        <output>ssot/data-classification.md</output>
+      </additional-outputs>
+
+      <agent-assignment>
+        <task ref="threat-model" agent="tsq-security" required="true"/>
+        <task ref="security-design" agent="tsq-security" required="true"/>
+        <task ref="compliance-check" agent="tsq-auditor" fallback="tsq-security"/>
+      </agent-assignment>
+
+      <!-- 주요 결정 Consensus 필수 -->
+      <consensus-required>
+        <decision>인증 방식 선택</decision>
+        <decision>암호화 전략</decision>
+        <decision>데이터 저장 위치</decision>
+        <decision>외부 연동 방식</decision>
+      </consensus-required>
+
+      <exit-criteria>
+        <criterion>보안 설계 문서 완성</criterion>
+        <criterion>위협 모델 작성 완료</criterion>
+        <criterion>컴플라이언스 요건 확인</criterion>
+        <criterion>Security Agent 승인</criterion>
+        <criterion>User 승인</criterion>
+      </exit-criteria>
+    </extend-phase>
+
+    <!-- 구현 Phase: 보안 코딩 필수 -->
+    <extend-phase id="implementation">
+      <security-requirements>
+        <requirement>모든 입력 검증 (Whitelist)</requirement>
+        <requirement>파라미터화된 쿼리만 사용</requirement>
+        <requirement>민감 데이터 암호화</requirement>
+        <requirement>시크릿 환경변수/Vault 사용</requirement>
+        <requirement>감사 로그 구현</requirement>
+      </security-requirements>
+
+      <parallel-tracks>
+        <track id="core-services" agent="tsq-developer">
+          <description>핵심 서비스 구현</description>
+          <tasks>
+            <task id="domain">도메인 모델 구현 (DDD)</task>
+            <task id="business">비즈니스 로직 구현</task>
+            <task id="validation">입력 검증 레이어</task>
+          </tasks>
+          <security-checkpoint>
+            <check agent="tsq-security">비즈니스 로직 보안 검토</check>
+          </security-checkpoint>
+        </track>
+
+        <track id="auth-service" agent="tsq-developer" security-critical="true">
+          <description>인증/인가 구현 (보안 중요)</description>
+          <tasks>
+            <task id="auth">인증 시스템 구현</task>
+            <task id="mfa">MFA 구현</task>
+            <task id="session">세션 관리</task>
+            <task id="rbac">권한 관리 (RBAC)</task>
+          </tasks>
+          <mandatory-review agent="tsq-security"/>
+        </track>
+
+        <track id="data-layer" agent="tsq-developer">
+          <description>데이터 계층 구현</description>
+          <tasks>
+            <task id="encryption">데이터 암호화 구현</task>
+            <task id="audit-log">감사 로그 구현</task>
+            <task id="backup">백업/복구 로직</task>
+          </tasks>
+          <mandatory-review agent="tsq-security"/>
+        </track>
+
+        <track id="transaction" agent="tsq-developer" security-critical="true">
+          <description>트랜잭션/결제 구현</description>
+          <tasks>
+            <task id="tx-logic">트랜잭션 로직</task>
+            <task id="idempotency">멱등성 보장</task>
+            <task id="reconciliation">정산 로직</task>
+          </tasks>
+          <mandatory-review agent="tsq-security"/>
+          <consensus-required>true</consensus-required>
+        </track>
+      </parallel-tracks>
+
+      <methodology-variants>
+        <variant methodology="tdd" enforced="true">
+          <task-order>test → implement → security-review → refactor</task-order>
+          <enforcement>보안 테스트 포함 필수</enforcement>
+        </variant>
+        <variant methodology="ddd" enforced="true">
+          <bounded-contexts>필수 정의</bounded-contexts>
+          <anti-corruption-layer>외부 연동 시 필수</anti-corruption-layer>
+        </variant>
+      </methodology-variants>
+
+      <exit-criteria>
+        <criterion>모든 보안 요건 충족</criterion>
+        <criterion>감사 로그 검증 완료</criterion>
+        <criterion>테스트 커버리지 95% 이상</criterion>
+        <criterion>Security Agent 코드 리뷰 통과</criterion>
+      </exit-criteria>
+    </extend-phase>
+
+    <!-- 검증 Phase: 강화된 보안 검증 -->
+    <extend-phase id="review">
+      <additional-checklists>
+        <checklist name="보안 코딩 검증" priority="critical">
+          <item>SQL Injection 방지 확인</item>
+          <item>XSS 방지 확인</item>
+          <item>CSRF 토큰 사용 확인</item>
+          <item>인증/인가 로직 검증</item>
+          <item>세션 관리 검증</item>
+          <item>암호화 구현 검증</item>
+          <item>시크릿 관리 검증</item>
+        </checklist>
+
+        <checklist name="감사 로그 검증" priority="critical">
+          <item>모든 트랜잭션 로깅</item>
+          <item>로그 변조 방지</item>
+          <item>민감 정보 마스킹</item>
+          <item>로그 보관 정책 준수</item>
+        </checklist>
+
+        <checklist name="컴플라이언스 검증">
+          <item>PCI-DSS 요건 충족</item>
+          <item>GDPR 요건 충족</item>
+          <item>데이터 분류 정책 준수</item>
+          <item>접근 제어 정책 준수</item>
+        </checklist>
+
+        <checklist name="장애 대응">
+          <item>에러 핸들링 검증</item>
+          <item>Fallback 로직 검증</item>
+          <item>Circuit Breaker 검증</item>
+          <item>복구 절차 검증</item>
+        </checklist>
+      </additional-checklists>
+
+      <mandatory-reviewers>
+        <reviewer agent="tsq-qa">기능 검증</reviewer>
+        <reviewer agent="tsq-security">보안 검증</reviewer>
+      </mandatory-reviewers>
+    </extend-phase>
+
+    <!-- 보안 Phase: 심층 보안 검토 -->
+    <extend-phase id="security">
+      <enhanced-tasks>
+        <task id="pentest-plan">펜테스트 계획 수립</task>
+        <task id="vulnerability-scan">취약점 스캔 (자동화)</task>
+        <task id="code-audit">보안 코드 감사</task>
+        <task id="crypto-review">암호화 구현 검토</task>
+        <task id="compliance-audit">컴플라이언스 감사</task>
+      </enhanced-tasks>
+
+      <tools>
+        <tool name="SAST">정적 분석 (SonarQube, Semgrep)</tool>
+        <tool name="DAST">동적 분석 (OWASP ZAP)</tool>
+        <tool name="SCA">의존성 분석 (Snyk, npm audit)</tool>
+        <tool name="Secrets">시크릿 스캔 (gitleaks, trufflehog)</tool>
+      </tools>
+
+      <severity-actions>
+        <action severity="Critical" deadline="immediate">
+          즉시 수정 필수. 배포 차단.
+        </action>
+        <action severity="High" deadline="24h">
+          24시간 내 수정. 배포 보류.
+        </action>
+        <action severity="Medium" deadline="7d">
+          7일 내 수정. 조건부 배포 가능.
+        </action>
+        <action severity="Low" deadline="30d">
+          30일 내 수정. 배포 가능.
+        </action>
+      </severity-actions>
+
+      <exit-criteria>
+        <criterion>Critical/High 취약점 0건</criterion>
+        <criterion>Medium 취약점 해결 계획 수립</criterion>
+        <criterion>펜테스트 완료 (또는 계획 승인)</criterion>
+        <criterion>Security Agent 최종 승인</criterion>
+        <criterion>User 승인</criterion>
+      </exit-criteria>
+    </extend-phase>
+
+    <!-- 감사 Phase (Fintech 전용) -->
+    <new-phase id="audit" after="security">
+      <primary-agent>tsq-auditor</primary-agent>
+      <fallback-agent>tsq-security</fallback-agent>
+      <description>컴플라이언스 및 감사 준비</description>
+
+      <tasks>
+        <task id="compliance-report">컴플라이언스 리포트 작성</task>
+        <task id="audit-trail">감사 추적 검증</task>
+        <task id="documentation">규제 문서 완성</task>
+        <task id="evidence">증적 자료 수집</task>
+      </tasks>
+
+      <deliverables>
+        <deliverable>컴플라이언스 체크리스트</deliverable>
+        <deliverable>보안 감사 리포트</deliverable>
+        <deliverable>증적 자료 패키지</deliverable>
+      </deliverables>
+
+      <exit-criteria>
+        <criterion>컴플라이언스 요건 100% 충족</criterion>
+        <criterion>감사 증적 완비</criterion>
+        <criterion>User 최종 승인</criterion>
+      </exit-criteria>
+    </new-phase>
+  </phase-extensions>
+
+  <!-- Fintech 특화 에스컬레이션 (엄격) -->
+  <escalation-extensions>
+    <rule trigger="보안 취약점 발견" route="tsq-security" action="즉시 중단">
+      모든 작업 중단. 취약점 해결 후 재개.
+    </rule>
+    <rule trigger="컴플라이언스 위반" route="User" action="즉시 보고">
+      규제 위반 가능성 즉시 사용자에게 보고.
+    </rule>
+    <rule trigger="트랜잭션 로직 변경" route="tsq-security" action="Consensus">
+      금융 로직 변경 시 Consensus 필수.
+    </rule>
+    <rule trigger="인증 로직 변경" route="tsq-security" action="Consensus">
+      인증/인가 변경 시 Consensus 필수.
+    </rule>
+  </escalation-extensions>
+
+  <!-- User 승인 필요 지점 (강화) -->
+  <user-checkpoints-extended>
+    <checkpoint phase="planning" event="보안 설계 완료" required="true"/>
+    <checkpoint phase="implementation" event="인증 모듈 완료" required="true"/>
+    <checkpoint phase="implementation" event="트랜잭션 모듈 완료" required="true"/>
+    <checkpoint phase="review" event="보안 검토 완료" required="true"/>
+    <checkpoint phase="security" event="취약점 스캔 완료" required="true"/>
+    <checkpoint phase="audit" event="컴플라이언스 검증 완료" required="true"/>
+    <checkpoint phase="complete" event="배포 승인" required="true"/>
+  </user-checkpoints-extended>
+
+  <!-- 배포 설정 (엄격) -->
+  <deployment>
+    <environments>
+      <env name="development" auto-deploy="false"/>
+      <env name="staging" requires-review="true" requires-security="true"/>
+      <env name="production" requires-approval="true" requires-security-sign-off="true"/>
+    </environments>
+
+    <ci-cd>
+      <provider>github-actions</provider>
+      <checks>
+        <check>lint</check>
+        <check>type-check</check>
+        <check>unit-tests</check>
+        <check>integration-tests</check>
+        <check>security-scan</check>
+        <check>dependency-audit</check>
+        <check>secrets-scan</check>
+        <check>build</check>
+      </checks>
+      <required-approvals>2</required-approvals>
+      <security-gate>true</security-gate>
+    </ci-cd>
+
+    <rollback>
+      <strategy>blue-green</strategy>
+      <auto-rollback-on>
+        <trigger>error-rate > 1%</trigger>
+        <trigger>latency-p99 > 2s</trigger>
+        <trigger>security-alert</trigger>
+      </auto-rollback-on>
+    </rollback>
+  </deployment>
+</workflow>

@@ -1,0 +1,327 @@
+# TimSquad Infrastructure 프로젝트 설정
+# DevOps, 인프라, 자동화 전용
+
+type: infra
+description: "DevOps, IaC, CI/CD 파이프라인, 모니터링, 자동화"
+
+# ============================================================
+# 에이전트 설정
+# ============================================================
+agents:
+  # Planner는 인프라 아키텍처에 집중
+  planner:
+    model: opus
+    focus:
+      - infrastructure_architecture
+      - cost_optimization
+      - high_availability
+      - disaster_recovery
+    ssot_priority:
+      - deployment-spec.md
+      - env-config.md
+      - security-spec.md
+
+  # Developer는 IaC 구현
+  developer:
+    model: sonnet
+    skills:
+      - coding
+      - terraform  # 또는 적절한 IaC
+    focus:
+      - iac_implementation
+      - automation_scripts
+      - ci_cd_pipelines
+
+  # Security는 필수
+  security:
+    model: sonnet
+    required: true
+    focus:
+      - network_security
+      - access_control
+      - secrets_management
+      - compliance
+
+  # QA는 인프라 테스트
+  qa:
+    model: sonnet
+    focus:
+      - infrastructure_testing
+      - chaos_engineering
+      - load_testing
+
+# ============================================================
+# SSOT 문서 설정
+# ============================================================
+ssot:
+  required:
+    - prd.md
+    - planning.md
+    - requirements.md
+    - deployment-spec.md    # 배포 아키텍처 필수
+    - env-config.md         # 환경 설정 필수
+    - security-spec.md      # 보안 설정 필수
+
+  recommended:
+    - integration-spec.md   # 외부 연동
+    - error-codes.md        # 알람 코드
+
+  optional:
+    - ui-ux-spec.md
+    - data-design.md
+    - functional-spec.md
+
+# ============================================================
+# 워크플로우 설정
+# ============================================================
+workflow:
+  phases:
+    planning:
+      focus:
+        - 인프라 아키텍처 설계
+        - 비용 산정
+        - 보안 요구사항
+        - DR 전략
+      deliverables:
+        - deployment-spec.md
+        - security-spec.md
+        - env-config.md
+
+    implementation:
+      focus:
+        - IaC 코드 작성
+        - CI/CD 파이프라인
+        - 모니터링 설정
+      validation:
+        - terraform_validate
+        - security_scan
+        - cost_estimate
+
+    testing:
+      focus:
+        - 인프라 테스트
+        - 보안 스캔
+        - 장애 복구 테스트
+      environments:
+        - dev
+        - staging
+
+    deployment:
+      strategy: "blue-green"  # 또는 canary
+      rollback: required
+      approval:
+        staging: auto
+        production: manual
+
+# ============================================================
+# IaC 규칙
+# ============================================================
+iac:
+  tool: terraform  # 또는 pulumi, cdk
+
+  terraform:
+    version: ">= 1.5.0"
+
+    # 모듈화
+    modules:
+      required: true
+      naming: "terraform-{provider}-{name}"
+
+    # 상태 관리
+    state:
+      backend: "s3"  # 또는 적절한 백엔드
+      locking: true
+      encryption: true
+
+    # 네이밍 규칙
+    naming:
+      resources: "snake_case"
+      variables: "snake_case"
+      outputs: "snake_case"
+
+    # 필수 태그
+    required_tags:
+      - Environment
+      - Project
+      - ManagedBy
+      - Owner
+
+  validation:
+    - terraform_fmt
+    - terraform_validate
+    - tflint
+    - checkov  # 보안 스캔
+
+# ============================================================
+# CI/CD 규칙
+# ============================================================
+cicd:
+  platform: github_actions  # 또는 gitlab, jenkins
+
+  pipelines:
+    # 인프라 파이프라인
+    infrastructure:
+      triggers:
+        - push_to_main
+        - pull_request
+      stages:
+        - validate
+        - plan
+        - apply  # production은 수동 승인
+
+    # 애플리케이션 배포
+    application:
+      triggers:
+        - tag_push
+        - manual
+      stages:
+        - build
+        - test
+        - deploy_staging
+        - approval
+        - deploy_production
+
+  security:
+    # 시크릿 스캔
+    secret_scanning: required
+    # SAST
+    sast: required
+    # 의존성 스캔
+    dependency_scan: required
+
+# ============================================================
+# 보안 규칙
+# ============================================================
+security:
+  network:
+    # VPC 분리
+    vpc_isolation: required
+    # 프라이빗 서브넷
+    private_subnets: required
+    # NAT Gateway
+    nat_gateway: true
+    # 보안 그룹
+    security_groups:
+      least_privilege: required
+      no_0_0_0_0: true
+
+  access:
+    # IAM 정책
+    iam:
+      least_privilege: required
+      mfa: required
+      role_based: true
+
+    # 시크릿 관리
+    secrets:
+      manager: "aws_secrets_manager"  # 또는 vault
+      rotation: required
+      encryption: required
+
+  compliance:
+    # 감사 로깅
+    audit_logging: required
+    # 암호화
+    encryption_at_rest: required
+    encryption_in_transit: required
+
+# ============================================================
+# 모니터링 규칙
+# ============================================================
+monitoring:
+  metrics:
+    tool: cloudwatch  # 또는 prometheus, datadog
+
+    required:
+      - cpu_utilization
+      - memory_utilization
+      - disk_usage
+      - network_io
+      - error_rate
+      - latency
+
+  logging:
+    tool: cloudwatch_logs  # 또는 elk, splunk
+    retention: "30d"
+    centralized: true
+
+  alerting:
+    channels:
+      - slack
+      - pagerduty
+      - email
+
+    severity:
+      critical:
+        response_time: "5m"
+        escalation: "15m"
+      warning:
+        response_time: "30m"
+      info:
+        notification_only: true
+
+  dashboards:
+    required:
+      - infrastructure_overview
+      - cost_dashboard
+      - security_dashboard
+
+# ============================================================
+# 비용 관리
+# ============================================================
+cost:
+  tracking:
+    enabled: true
+    tags_required: true
+    budget_alerts: true
+
+  optimization:
+    right_sizing: true
+    reserved_instances: recommended
+    spot_instances: optional
+
+  reporting:
+    frequency: weekly
+    breakdown_by:
+      - service
+      - environment
+      - team
+
+# ============================================================
+# DR (재해 복구)
+# ============================================================
+disaster_recovery:
+  rpo: "1h"   # Recovery Point Objective
+  rto: "4h"   # Recovery Time Objective
+
+  backup:
+    frequency: daily
+    retention: "30d"
+    cross_region: true
+
+  failover:
+    strategy: "active-passive"  # 또는 active-active
+    automated: true
+    testing_frequency: quarterly
+
+# ============================================================
+# 환경 설정
+# ============================================================
+environments:
+  development:
+    auto_deploy: true
+    cost_tier: minimal
+    ha: false
+
+  staging:
+    auto_deploy: true
+    cost_tier: medium
+    ha: false
+    production_like: true
+
+  production:
+    auto_deploy: false
+    approval_required: true
+    cost_tier: full
+    ha: true
+    multi_az: true

@@ -1,0 +1,151 @@
+# TimSquad Fintech Template Configuration
+# fintech 타입 기본 설정 (거래소, 결제 시스템 등)
+
+template:
+  name: fintech
+  description: 금융/결제 시스템을 위한 보안 강화 템플릿
+  version: 2.0.0
+
+# ============================================================
+# 프로젝트 기본값
+# ============================================================
+project:
+  type: fintech
+  level: 3  # fintech는 기본 Enterprise 레벨
+
+# ============================================================
+# 개발 방법론 기본값
+# ============================================================
+methodology:
+  development: tdd
+  process: agile
+  branching: gitflow  # 더 엄격한 브랜치 관리
+  review: required
+  security-review: required  # 보안 리뷰 필수
+
+# ============================================================
+# 권장 기술 스택
+# ============================================================
+stack:
+  language: typescript
+
+  frontend:
+    enabled: true
+    framework: nextjs
+    state: zustand
+    styling: tailwind
+    testing: vitest
+
+  backend:
+    enabled: true
+    runtime: node
+    framework: hono
+    testing: vitest
+
+  database:
+    primary: postgresql
+    orm: prisma
+    cache: redis
+    encryption: true  # 저장 데이터 암호화
+
+  infrastructure:
+    hosting: aws  # 컴플라이언스 친화적
+    container: true
+    ci_cd: github
+    secrets: vault  # 시크릿 관리 필수
+
+# ============================================================
+# 스킬 자동 로딩 규칙
+# ============================================================
+skills:
+  base:
+    - coding
+    - testing
+    - security  # 보안 필수
+    - planning
+    - architecture
+
+  # fintech 타입 추가 스킬
+  type-specific:
+    - typescript
+    - backend/node
+    - database/prisma
+    - methodology/tdd
+    - methodology/ddd  # 복잡한 도메인 필수
+
+# ============================================================
+# 추가 SSOT 문서 (필수)
+# ============================================================
+ssot:
+  additional:
+    - security-spec.md      # 보안 명세 필수
+    - compliance-spec.md    # 컴플라이언스 명세
+    - audit-log-spec.md     # 감사 로그 명세
+    - error-codes.md        # 에러 코드 (상세)
+
+# ============================================================
+# 추가 에이전트
+# ============================================================
+additional_agents:
+  - name: tsq-security
+    description: 보안 전문가 (필수 참여)
+    base: tsq-security
+    mandatory: true
+
+  - name: tsq-auditor
+    description: 감사/컴플라이언스 전문가
+    skills: [security, compliance]
+
+# ============================================================
+# Consensus 설정 (fintech 필수)
+# ============================================================
+consensus:
+  enabled: true
+  required_for:
+    - architecture_choice
+    - security_design
+    - data_model
+    - api_design
+    - authentication_design
+    - encryption_strategy
+    - compliance_decision
+
+# ============================================================
+# 보안 설정
+# ============================================================
+security:
+  mandatory:
+    - owasp_top_10_check
+    - secrets_scan
+    - dependency_audit
+    - penetration_test_plan
+
+  encryption:
+    at_rest: required
+    in_transit: required
+    key_management: vault
+
+  authentication:
+    mfa: required
+    session_timeout: 15m
+    password_policy: strict
+
+  audit:
+    all_transactions: true
+    retention_days: 365
+    tamper_proof: true
+
+# ============================================================
+# 컴플라이언스
+# ============================================================
+compliance:
+  standards:
+    - pci-dss    # 결제 카드 관련
+    - gdpr       # 개인정보
+    - sox        # 재무 보고 (필요시)
+
+  requirements:
+    - data_classification
+    - access_control_matrix
+    - incident_response_plan
+    - disaster_recovery_plan
