@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TimSquad Retrospective State
+
+  회고 사이클 상태를 실시간으로 추적합니다.
+  XPath로 특정 노드에 효율적으로 접근 가능합니다.
+
+  주요 XPath:
+  - /retrospective-state/current-cycle/@number
+  - /retrospective-state/current-cycle/status
+  - /retrospective-state/metrics/agents/agent[@id='tsq-developer']/score
+  - /retrospective-state/patterns/failure/pattern[@status='active']
+-->
+<retrospective-state>
+  <metadata>
+    <project>{{PROJECT_NAME}}</project>
+    <created>{{TIMESTAMP}}</created>
+    <last-updated>{{TIMESTAMP}}</last-updated>
+    <version>1.0</version>
+  </metadata>
+
+  <!-- ============================================================
+       현재 회고 사이클
+       ============================================================ -->
+  <current-cycle number="0">
+    <status>inactive</status>
+    <!-- 상태: inactive | collecting | analyzing | reporting | applying | completed -->
+
+    <period>
+      <start></start>
+      <end></end>
+    </period>
+
+    <phase-at-start></phase-at-start>
+    <phase-at-end></phase-at-end>
+
+    <progress>
+      <step id="collect" status="pending">로그/메트릭 수집</step>
+      <step id="analyze" status="pending">패턴 분석</step>
+      <step id="report" status="pending">리포트 작성</step>
+      <step id="review" status="pending">검토/승인</step>
+      <step id="apply" status="pending">개선 적용</step>
+    </progress>
+  </current-cycle>
+
+  <!-- ============================================================
+       수집된 메트릭 (현재 사이클)
+       ============================================================ -->
+  <metrics>
+    <summary>
+      <total-tasks>0</total-tasks>
+      <success-rate>0</success-rate>
+      <avg-revision-count>0</avg-revision-count>
+      <level3-feedback-count>0</level3-feedback-count>
+    </summary>
+
+    <agents>
+      <!--
+      <agent id="tsq-planner">
+        <tasks-completed>0</tasks-completed>
+        <success-rate>0</success-rate>
+        <avg-revisions>0</avg-revisions>
+        <score>0</score>
+        <trend>0</trend>
+        <competency-scores>
+          <competency name="documentation">0</competency>
+          <competency name="architecture">0</competency>
+          <competency name="communication">0</competency>
+        </competency-scores>
+      </agent>
+
+      <agent id="tsq-developer">
+        <tasks-completed>0</tasks-completed>
+        <success-rate>0</success-rate>
+        <avg-revisions>0</avg-revisions>
+        <score>0</score>
+        <trend>0</trend>
+        <competency-scores>
+          <competency name="coding">0</competency>
+          <competency name="testing">0</competency>
+          <competency name="debugging">0</competency>
+        </competency-scores>
+      </agent>
+      -->
+    </agents>
+
+    <feedback>
+      <total>0</total>
+      <by-level>
+        <level-1>0</level-1>
+        <level-2>0</level-2>
+        <level-3>0</level-3>
+      </by-level>
+      <avg-resolution-time unit="minutes">0</avg-resolution-time>
+    </feedback>
+  </metrics>
+
+  <!-- ============================================================
+       식별된 패턴 (현재 사이클)
+       ============================================================ -->
+  <patterns>
+    <failure>
+      <!--
+      <pattern id="FP-001" status="active">
+        <name>SSOT 미참조 구현</name>
+        <category>DM</category>
+        <occurrences>3</occurrences>
+        <first-seen>2026-02-01</first-seen>
+        <last-seen>2026-02-03</last-seen>
+        <affected-agents>
+          <agent>tsq-developer</agent>
+        </affected-agents>
+        <cause>구현 전 SSOT 확인 단계 생략</cause>
+        <suggested-improvement ref="IMP-001"/>
+      </pattern>
+      -->
+    </failure>
+
+    <success>
+      <!--
+      <pattern id="SP-001" status="validated">
+        <name>SSOT 먼저, 코드 나중</name>
+        <category>DC</category>
+        <occurrences>5</occurrences>
+        <success-rate>95</success-rate>
+        <related-agents>
+          <agent>tsq-planner</agent>
+          <agent>tsq-developer</agent>
+        </related-agents>
+        <factor>명확한 계약서 역할</factor>
+        <standardization-status>applied</standardization-status>
+      </pattern>
+      -->
+    </success>
+  </patterns>
+
+  <!-- ============================================================
+       제안된 개선 사항 (현재 사이클)
+       ============================================================ -->
+  <improvements>
+    <!--
+    <improvement id="IMP-001" status="proposed">
+      <type>prompt</type>
+      <target>tsq-developer.md</target>
+      <description>SSOT 참조 체크리스트 추가</description>
+      <related-pattern ref="FP-001"/>
+      <proposed-at>2026-02-03T10:00:00</proposed-at>
+      <proposed-by>tsq-retro</proposed-by>
+      <reviewed-at></reviewed-at>
+      <reviewed-by></reviewed-by>
+      <applied-at></applied-at>
+      <diff>
+        <![CDATA[
+        + ## 작업 전 체크리스트
+        + - [ ] service-spec.md 확인
+        + - [ ] data-design.md 확인
+        + - [ ] error-codes.md 확인
+        ]]>
+      </diff>
+    </improvement>
+    -->
+  </improvements>
+
+  <!-- ============================================================
+       이전 사이클 요약 (최근 5개)
+       ============================================================ -->
+  <history>
+    <!--
+    <cycle number="1" status="completed">
+      <period start="2026-01-15" end="2026-01-28"/>
+      <summary>
+        <total-tasks>45</total-tasks>
+        <success-rate>87.5</success-rate>
+        <patterns-identified>3</patterns-identified>
+        <improvements-applied>2</improvements-applied>
+      </summary>
+      <report-path>.timsquad/retrospective/cycles/cycle-1.md</report-path>
+    </cycle>
+    -->
+  </history>
+
+  <!-- ============================================================
+       다음 사이클 목표
+       ============================================================ -->
+  <next-cycle-goals>
+    <!--
+    <goal id="1">
+      <metric>success_rate</metric>
+      <target>90%</target>
+      <current-baseline>87.5%</current-baseline>
+    </goal>
+    <goal id="2">
+      <metric>level3_feedback_count</metric>
+      <target>&lt; 3</target>
+      <current-baseline>5</current-baseline>
+    </goal>
+    -->
+  </next-cycle-goals>
+
+  <!-- ============================================================
+       세션 노트
+       ============================================================ -->
+  <session-notes>
+    <!--
+    <note timestamp="2026-02-03T10:00:00" agent="tsq-retro">
+      Cycle 1 분석 시작. 로그 45건 수집됨.
+    </note>
+    -->
+  </session-notes>
+</retrospective-state>

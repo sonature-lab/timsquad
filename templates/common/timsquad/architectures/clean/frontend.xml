@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<directory-structure architecture="clean" target="frontend">
+  <description>Clean Architecture for React/Next.js Frontend</description>
+
+  <root name="src">
+    <!-- Domain Layer (Core) -->
+    <dir name="domain" layer="entities">
+      <description>순수 비즈니스 로직. 프레임워크 의존성 없음</description>
+
+      <dir name="models">
+        <description>도메인 모델 (엔티티, Value Objects)</description>
+        <file name="user.ts" example="interface User { id: UserId; email: Email; name: string; }" />
+        <file name="order.ts" />
+        <file name="product.ts" />
+      </dir>
+
+      <dir name="value-objects">
+        <description>불변 값 객체 (Branded Types)</description>
+        <file name="user-id.ts" example="type UserId = string &amp; { readonly __brand: 'UserId' };" />
+        <file name="email.ts" />
+        <file name="money.ts" />
+      </dir>
+
+      <dir name="rules">
+        <description>비즈니스 규칙 (순수 함수)</description>
+        <file name="order-rules.ts" example="function canCancelOrder(order: Order): boolean" />
+        <file name="pricing-rules.ts" />
+      </dir>
+    </dir>
+
+    <!-- Application Layer (Use Cases) -->
+    <dir name="application" layer="use-cases">
+      <description>애플리케이션 로직. 유스케이스 정의</description>
+
+      <dir name="ports">
+        <description>외부 의존성 인터페이스 (의존성 역전)</description>
+        <file name="user-repository.ts" example="interface IUserRepository { findById(id: UserId): Promise&lt;User | null&gt;; }" />
+        <file name="order-repository.ts" />
+        <file name="payment-gateway.ts" />
+      </dir>
+
+      <dir name="use-cases">
+        <description>유스케이스 구현</description>
+        <dir name="user">
+          <file name="get-user.ts" />
+          <file name="update-profile.ts" />
+        </dir>
+        <dir name="order">
+          <file name="create-order.ts" />
+          <file name="cancel-order.ts" />
+        </dir>
+      </dir>
+
+      <dir name="dto">
+        <description>Data Transfer Objects</description>
+        <file name="user-dto.ts" />
+        <file name="order-dto.ts" />
+      </dir>
+    </dir>
+
+    <!-- Adapters Layer (Interface) -->
+    <dir name="adapters" layer="adapters">
+      <description>외부와 내부를 연결</description>
+
+      <dir name="repositories">
+        <description>포트 구현 (API 호출)</description>
+        <file name="api-user-repository.ts" />
+        <file name="api-order-repository.ts" />
+      </dir>
+
+      <dir name="presenters">
+        <description>뷰 모델 변환</description>
+        <file name="user-presenter.ts" />
+        <file name="order-presenter.ts" />
+      </dir>
+
+      <dir name="mappers">
+        <description>DTO ↔ 도메인 모델 변환</description>
+        <file name="user-mapper.ts" />
+        <file name="order-mapper.ts" />
+      </dir>
+    </dir>
+
+    <!-- Infrastructure Layer (External) -->
+    <dir name="infrastructure" layer="infrastructure">
+      <description>프레임워크 종속 코드</description>
+
+      <dir name="api">
+        <description>HTTP 클라이언트</description>
+        <file name="api-client.ts" />
+        <file name="interceptors.ts" />
+      </dir>
+
+      <dir name="storage">
+        <description>로컬 스토리지, 캐시</description>
+        <file name="local-storage.ts" />
+        <file name="query-cache.ts" />
+      </dir>
+
+      <dir name="di">
+        <description>의존성 주입 설정</description>
+        <file name="container.ts" />
+        <file name="providers.tsx" />
+      </dir>
+    </dir>
+
+    <!-- UI Layer (React Components) -->
+    <dir name="ui" layer="presentation">
+      <description>React 컴포넌트 (프레임워크 레이어)</description>
+
+      <dir name="components">
+        <description>재사용 가능한 UI 컴포넌트</description>
+        <dir name="common">
+          <file name="Button.tsx" />
+          <file name="Input.tsx" />
+          <file name="Modal.tsx" />
+        </dir>
+      </dir>
+
+      <dir name="pages">
+        <description>페이지 컴포넌트</description>
+        <file name="HomePage.tsx" />
+        <file name="UserPage.tsx" />
+        <file name="OrderPage.tsx" />
+      </dir>
+
+      <dir name="hooks">
+        <description>React 훅 (유스케이스 연결)</description>
+        <file name="useUser.ts" example="유스케이스를 호출하는 커스텀 훅" />
+        <file name="useOrder.ts" />
+      </dir>
+
+      <dir name="contexts">
+        <description>React Context (전역 상태)</description>
+        <file name="AuthContext.tsx" />
+        <file name="ThemeContext.tsx" />
+      </dir>
+    </dir>
+  </root>
+
+  <import-rules>
+    <rule from="domain" to="없음">domain은 어디에도 의존하지 않음</rule>
+    <rule from="application" to="domain">application은 domain만 import</rule>
+    <rule from="adapters" to="application,domain">adapters는 application, domain import 가능</rule>
+    <rule from="infrastructure" to="adapters,application,domain">infrastructure는 모든 내부 레이어 import 가능</rule>
+    <rule from="ui" to="application,domain,adapters">ui는 infrastructure 직접 import 금지 (DI 통해 주입)</rule>
+  </import-rules>
+</directory-structure>

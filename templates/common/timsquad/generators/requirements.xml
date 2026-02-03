@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TimSquad Requirements Generator v1.0
+  PRD를 기반으로 상세 요구사항을 정의합니다.
+-->
+<generator name="requirements" version="1.0" output=".timsquad/ssot/requirements.md">
+  <metadata>
+    <description>요구사항 정의서 생성기</description>
+    <purpose>PRD의 기능을 상세 요구사항으로 분해</purpose>
+    <depends-on>prd.md</depends-on>
+  </metadata>
+
+  <instructions>
+    <![CDATA[
+    PRD를 먼저 읽고, 각 기능별로 상세 요구사항을 정의합니다.
+
+    1. prd.md에서 기능 목록을 읽어옵니다
+    2. 각 기능별로 유저 스토리와 상세 요구사항을 질문합니다
+    3. 비기능 요구사항(성능, 보안 등)도 정의합니다
+
+    정제 원칙:
+    - 유저 스토리: "~로서, ~하고 싶다, ~하기 위해" 형식
+    - 요구사항: "시스템은 ~해야 한다" 형식
+    - 테스트 가능한 수준으로 구체화
+    ]]>
+  </instructions>
+
+  <!-- ============================================================
+       섹션 1: PRD 참조
+       ============================================================ -->
+  <section id="prd_ref" title="PRD 참조" auto-load="true">
+    <source>.timsquad/ssot/prd.md</source>
+    <extract>
+      <field name="features" from="## 2. 핵심 기능" />
+      <field name="target_user" from="타겟 사용자" />
+    </extract>
+  </section>
+
+  <!-- ============================================================
+       섹션 2: 기능 요구사항 (기능별 반복)
+       ============================================================ -->
+  <section id="functional" title="기능 요구사항" repeatable="true" iterate-from="prd_ref.features">
+    <context>
+      현재 기능: {{current_feature.name}}
+      설명: {{current_feature.description}}
+    </context>
+
+    <field name="user_story" type="text" required="true">
+      <prompt>"{{current_feature.name}}" 기능의 유저 스토리를 말해주세요</prompt>
+      <hint>예: 사용자로서, 실력 맞는 상대를 찾고 싶다</hint>
+      <refinement>
+        "{{prd_ref.target_user}}로서, ~하고 싶다, ~하기 위해" 형식으로 정제
+      </refinement>
+    </field>
+
+    <field name="acceptance_criteria" type="list" required="true">
+      <prompt>이 기능이 완료되었다고 할 수 있는 조건은? (여러 개 입력, 빈 줄로 종료)</prompt>
+      <hint>
+        - 매칭 요청 시 3초 내 결과 표시
+        - 최소 3명의 추천 상대 표시
+      </hint>
+      <refinement>
+        - "~할 수 있다", "~된다" 형식
+        - 측정 가능한 기준 포함
+      </refinement>
+    </field>
+
+    <field name="edge_cases" type="list" required="false">
+      <prompt>예외 상황이나 엣지 케이스가 있나요?</prompt>
+      <hint>
+        - 매칭 상대가 없는 경우
+        - 동시에 여러 요청이 온 경우
+      </hint>
+    </field>
+  </section>
+
+  <!-- ============================================================
+       섹션 3: 비기능 요구사항
+       ============================================================ -->
+  <section id="non_functional" title="비기능 요구사항">
+    <field name="performance" type="text" required="false">
+      <prompt>성능 요구사항이 있나요? (응답 시간, 동시 사용자 등)</prompt>
+      <example>API 응답 시간 500ms 이내, 동시 접속 1,000명 지원</example>
+      <default>API 응답 시간 1초 이내</default>
+    </field>
+
+    <field name="security" type="list" required="false">
+      <prompt>보안 요구사항이 있나요?</prompt>
+      <example>
+        - 개인정보 암호화 저장
+        - JWT 기반 인증
+      </example>
+      <default>
+        - HTTPS 필수
+        - 비밀번호 해시 저장
+        - JWT 인증
+      </default>
+    </field>
+
+    <field name="availability" type="text" required="false">
+      <prompt>가용성 요구사항? (예: 99.9% uptime)</prompt>
+      <default>99% uptime (MVP 기준)</default>
+    </field>
+
+    <field name="scalability" type="text" required="false">
+      <prompt>확장성 요구사항?</prompt>
+      <default>수평 확장 가능한 구조</default>
+    </field>
+  </section>
+
+  <!-- ============================================================
+       섹션 4: 제약사항
+       ============================================================ -->
+  <section id="constraints" title="제약사항">
+    <field name="tech_constraints" type="list" required="false">
+      <prompt>기술적 제약사항이 있나요?</prompt>
+      <example>
+        - iOS/Android 앱 없음 (웹 전용)
+        - 실시간 기능은 Supabase Realtime 사용
+      </example>
+    </field>
+
+    <field name="business_constraints" type="list" required="false">
+      <prompt>비즈니스 제약사항이 있나요?</prompt>
+      <example>
+        - MVP는 싱가폴 지역만
+        - 초기 무료, 추후 프리미엄 모델
+      </example>
+    </field>
+  </section>
+
+  <!-- ============================================================
+       출력 템플릿
+       ============================================================ -->
+  <output-template>
+    <![CDATA[
+# {{project_name}} 요구사항 정의서
+
+**생성일**: {{DATE}}
+**버전**: 1.0
+**PRD 참조**: [prd.md](./prd.md)
+
+---
+
+## 1. 기능 요구사항
+
+{{#each functional}}
+### 1.{{@index + 1}} {{feature_name}}
+
+**유저 스토리:**
+> {{user_story}}
+
+**인수 조건:**
+{{#each acceptance_criteria}}
+- [ ] {{this}}
+{{/each}}
+
+{{#if edge_cases}}
+**엣지 케이스:**
+{{#each edge_cases}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+---
+
+{{/each}}
+
+## 2. 비기능 요구사항
+
+### 2.1 성능
+{{non_functional.performance}}
+
+### 2.2 보안
+{{#each non_functional.security}}
+- {{this}}
+{{/each}}
+
+### 2.3 가용성
+{{non_functional.availability}}
+
+### 2.4 확장성
+{{non_functional.scalability}}
+
+---
+
+## 3. 제약사항
+
+### 3.1 기술적 제약
+{{#each constraints.tech_constraints}}
+- {{this}}
+{{/each}}
+{{#unless constraints.tech_constraints}}
+- (없음)
+{{/unless}}
+
+### 3.2 비즈니스 제약
+{{#each constraints.business_constraints}}
+- {{this}}
+{{/each}}
+{{#unless constraints.business_constraints}}
+- (없음)
+{{/unless}}
+
+---
+
+## 4. 요구사항 추적 매트릭스
+
+| ID | 기능 | 우선순위 | 상태 |
+|----|-----|:-------:|:----:|
+{{#each functional}}
+| REQ-{{@index + 1 | pad:3}} | {{feature_name}} | {{priority}} | ⬜ |
+{{/each}}
+
+---
+
+*Generated by TimSquad v2.0*
+    ]]>
+  </output-template>
+</generator>

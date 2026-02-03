@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TimSquad Data Design Generator v1.0
+  데이터베이스 설계 (ERD, 테이블 정의)를 생성합니다.
+-->
+<generator name="data-design" version="1.0" output=".timsquad/ssot/data-design.md">
+  <metadata>
+    <description>데이터 설계서 생성기</description>
+    <purpose>ERD, 테이블 정의, 인덱스 전략</purpose>
+    <depends-on>prd.md, service-spec.md</depends-on>
+  </metadata>
+
+  <instructions>
+    <![CDATA[
+    기능과 API를 기반으로 필요한 테이블을 도출합니다.
+
+    1. 핵심 엔티티 식별 (User, Match 등)
+    2. 각 테이블의 컬럼 정의
+    3. 관계(FK) 설정
+    4. 인덱스 전략
+
+    정제 원칙:
+    - 테이블명: 소문자, 복수형 (users, matches)
+    - 컬럼명: snake_case
+    - PK: id (UUID 또는 auto increment)
+    - 타임스탬프: created_at, updated_at 필수
+    ]]>
+  </instructions>
+
+  <!-- ============================================================
+       섹션 1: 테이블 정의
+       ============================================================ -->
+  <section id="tables" title="테이블 정의" repeatable="true">
+    <field name="name" type="text" required="true">
+      <prompt>테이블 이름? (예: users, matches, messages)</prompt>
+      <refinement>소문자, 복수형, snake_case</refinement>
+    </field>
+
+    <field name="description" type="text" required="true">
+      <prompt>이 테이블의 역할?</prompt>
+    </field>
+
+    <field name="columns" type="table" required="true">
+      <prompt>컬럼을 정의하세요 (이름:타입:설명 형식, 여러 줄)</prompt>
+      <auto-include>
+        <column name="id" type="uuid" pk="true">Primary Key</column>
+        <column name="created_at" type="timestamp">생성 시각</column>
+        <column name="updated_at" type="timestamp">수정 시각</column>
+      </auto-include>
+      <hint>
+        email:varchar(255):이메일 주소
+        nickname:varchar(50):닉네임
+        skill_level:integer:실력 레벨 (1-10)
+      </hint>
+      <types>
+        <type name="uuid">UUID</type>
+        <type name="varchar">VARCHAR(n)</type>
+        <type name="text">TEXT</type>
+        <type name="integer">INTEGER</type>
+        <type name="bigint">BIGINT</type>
+        <type name="boolean">BOOLEAN</type>
+        <type name="timestamp">TIMESTAMP</type>
+        <type name="date">DATE</type>
+        <type name="jsonb">JSONB</type>
+        <type name="decimal">DECIMAL(p,s)</type>
+      </types>
+    </field>
+
+    <field name="indexes" type="list" required="false">
+      <prompt>인덱스가 필요한 컬럼? (검색, 정렬에 자주 사용되는)</prompt>
+      <hint>email (unique), skill_level, created_at</hint>
+    </field>
+  </section>
+
+  <!-- ============================================================
+       섹션 2: 관계 정의
+       ============================================================ -->
+  <section id="relations" title="관계 정의" repeatable="true">
+    <field name="from_table" type="text" required="true">
+      <prompt>FK가 있는 테이블?</prompt>
+    </field>
+
+    <field name="to_table" type="text" required="true">
+      <prompt>참조하는 테이블?</prompt>
+    </field>
+
+    <field name="relation_type" type="select" required="true">
+      <prompt>관계 유형?</prompt>
+      <options>
+        <option value="1:1">1:1 (One to One)</option>
+        <option value="1:N">1:N (One to Many)</option>
+        <option value="N:M">N:M (Many to Many)</option>
+      </options>
+    </field>
+
+    <field name="fk_column" type="text" required="true">
+      <prompt>FK 컬럼명?</prompt>
+      <auto-suggest>{{to_table | singular}}_id</auto-suggest>
+    </field>
+
+    <field name="on_delete" type="select" required="false">
+      <prompt>삭제 시 동작?</prompt>
+      <options>
+        <option value="CASCADE">CASCADE - 함께 삭제</option>
+        <option value="SET NULL">SET NULL - NULL로 설정</option>
+        <option value="RESTRICT">RESTRICT - 삭제 방지</option>
+      </options>
+      <default>CASCADE</default>
+    </field>
+  </section>
+
+  <!-- ============================================================
+       섹션 3: Enum 정의
+       ============================================================ -->
+  <section id="enums" title="Enum 정의" repeatable="true" optional="true">
+    <field name="name" type="text" required="true">
+      <prompt>Enum 이름? (예: match_status, user_role)</prompt>
+    </field>
+
+    <field name="values" type="list" required="true">
+      <prompt>가능한 값들?</prompt>
+      <hint>pending, accepted, rejected, completed</hint>
+    </field>
+  </section>
+
+  <!-- ============================================================
+       섹션 4: 인덱스 전략
+       ============================================================ -->
+  <section id="index_strategy" title="인덱스 전략">
+    <field name="composite_indexes" type="list" required="false">
+      <prompt>복합 인덱스가 필요한 경우? (테이블.컬럼1,컬럼2)</prompt>
+      <hint>matches.user_id,status</hint>
+    </field>
+
+    <field name="full_text" type="list" required="false">
+      <prompt>전문 검색이 필요한 컬럼?</prompt>
+      <hint>users.bio, messages.content</hint>
+    </field>
+  </section>
+
+  <!-- ============================================================
+       출력 템플릿
+       ============================================================ -->
+  <output-template>
+    <![CDATA[
+# {{project_name}} 데이터 설계서
+
+**생성일**: {{DATE}}
+**버전**: 1.0
+**DBMS**: {{tech.database | default: "PostgreSQL"}}
+
+---
+
+## 1. ERD 개요
+
+```
+{{#each tables}}
+[{{name}}]
+{{/each}}
+
+관계:
+{{#each relations}}
+{{from_table}} {{relation_type}} {{to_table}} ({{fk_column}})
+{{/each}}
+```
+
+---
+
+## 2. 테이블 정의
+
+{{#each tables}}
+### 2.{{@index + 1}} {{name}}
+
+> {{description}}
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|:--------:|---------|-------------|
+| id | UUID | NO | gen_random_uuid() | PK |
+{{#each columns}}
+| {{name}} | {{type}} | {{#if nullable}}YES{{else}}NO{{/if}} | {{default | default: "-"}} | {{description}} |
+{{/each}}
+| created_at | TIMESTAMP | NO | now() | 생성 시각 |
+| updated_at | TIMESTAMP | NO | now() | 수정 시각 |
+
+{{#if indexes}}
+**인덱스:**
+{{#each indexes}}
+- `idx_{{../name}}_{{this}}` ON ({{this}})
+{{/each}}
+{{/if}}
+
+```sql
+CREATE TABLE {{name}} (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+{{#each columns}}
+    {{name}} {{type}}{{#unless nullable}} NOT NULL{{/unless}}{{#if default}} DEFAULT {{default}}{{/if}},
+{{/each}}
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+{{#each indexes}}
+CREATE INDEX idx_{{../name}}_{{this}} ON {{../name}}({{this}});
+{{/each}}
+```
+
+---
+
+{{/each}}
+
+## 3. 관계 (Foreign Keys)
+
+| From | To | Type | FK Column | On Delete |
+|------|-----|:----:|-----------|-----------|
+{{#each relations}}
+| {{from_table}} | {{to_table}} | {{relation_type}} | {{fk_column}} | {{on_delete}} |
+{{/each}}
+
+```sql
+{{#each relations}}
+ALTER TABLE {{from_table}}
+ADD CONSTRAINT fk_{{from_table}}_{{to_table}}
+FOREIGN KEY ({{fk_column}}) REFERENCES {{to_table}}(id)
+ON DELETE {{on_delete}};
+
+{{/each}}
+```
+
+---
+
+{{#if enums}}
+## 4. Enum 정의
+
+{{#each enums}}
+### {{name}}
+
+```sql
+CREATE TYPE {{name}} AS ENUM (
+{{#each values}}
+    '{{this}}'{{#unless @last}},{{/unless}}
+{{/each}}
+);
+```
+
+{{/each}}
+{{/if}}
+
+---
+
+## 5. 인덱스 전략
+
+### 5.1 단일 컬럼 인덱스
+{{#each tables}}
+{{#if indexes}}
+- `{{name}}`: {{#each indexes}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+{{/each}}
+
+{{#if index_strategy.composite_indexes}}
+### 5.2 복합 인덱스
+{{#each index_strategy.composite_indexes}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+{{#if index_strategy.full_text}}
+### 5.3 전문 검색 인덱스
+{{#each index_strategy.full_text}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+---
+
+## 6. 마이그레이션 순서
+
+1. Enum 타입 생성
+2. 테이블 생성 (의존성 없는 것 먼저)
+{{#each tables}}
+   - {{name}}
+{{/each}}
+3. Foreign Key 추가
+4. 인덱스 생성
+
+---
+
+*Generated by TimSquad v2.0*
+    ]]>
+  </output-template>
+</generator>

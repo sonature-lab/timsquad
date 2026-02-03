@@ -1,0 +1,136 @@
+# TimSquad Web Service Template Configuration
+# web-service 타입 기본 설정
+
+template:
+  name: web-service
+  description: SaaS, 웹앱을 위한 템플릿
+  version: 2.0.0
+
+# ============================================================
+# 프로젝트 기본값 (덮어쓰기 가능)
+# ============================================================
+project:
+  type: web-service
+  level: 2
+
+# ============================================================
+# 개발 방법론 기본값
+# ============================================================
+methodology:
+  development: tdd
+  process: agile
+  branching: github-flow
+  review: required
+
+# ============================================================
+# 권장 기술 스택
+# ============================================================
+stack:
+  language: typescript
+
+  frontend:
+    enabled: true
+    framework: nextjs
+    state: zustand
+    styling: tailwind
+    testing: vitest
+
+  backend:
+    enabled: true
+    runtime: node
+    framework: hono
+    testing: vitest
+
+  database:
+    primary: postgresql
+    orm: prisma
+    cache: none
+
+  infrastructure:
+    hosting: vercel
+    container: false
+    ci_cd: github
+
+# ============================================================
+# 스킬 자동 로딩 규칙
+# ============================================================
+skills:
+  base:
+    - coding
+    - testing
+    - security
+    - planning
+    - architecture
+
+  # web-service 타입 추가 스킬
+  type-specific:
+    - typescript
+    - frontend/react
+    - frontend/nextjs
+    - backend/node
+    - database/prisma
+    - methodology/tdd
+
+# ============================================================
+# 추가 SSOT 문서
+# ============================================================
+ssot:
+  additional:
+    - ui-ux-spec.md
+
+# ============================================================
+# 추가 에이전트
+# ============================================================
+additional_agents:
+  - name: tsq-frontend
+    description: 프론트엔드 전문 개발자
+    base: tsq-developer
+    skills: [frontend/react, frontend/nextjs, typescript]
+
+  - name: tsq-backend
+    description: 백엔드 전문 개발자
+    base: tsq-developer
+    skills: [backend/node, database/prisma, typescript]
+
+# ============================================================
+# 레벨별 권장 사항
+# ============================================================
+level_recommendations:
+  1:  # MVP
+    focus:
+      - 핵심 기능 구현
+      - 기본 인증
+      - 최소 UI
+    skip:
+      - 성능 최적화
+      - 상세 모니터링
+      - 복잡한 권한 체계
+    suggested_stack:
+      frontend:
+        framework: nextjs
+        styling: tailwind
+      backend:
+        enabled: false  # Next.js API Routes 사용
+      database:
+        orm: prisma
+        primary: sqlite  # 개발 편의
+
+  2:  # Standard
+    focus:
+      - 완전한 기능
+      - 테스트 커버리지 80%+
+      - UI/UX 품질
+      - 기본 모니터링
+    skip:
+      - 엔터프라이즈 보안
+      - 멀티 리전
+
+  3:  # Enterprise
+    focus:
+      - 전체 기능
+      - 테스트 커버리지 90%+
+      - 보안 강화 (OWASP)
+      - 상세 모니터링
+      - 문서화 완성
+    additional_agents:
+      - tsq-security

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<directory-structure architecture="clean" target="backend">
+  <description>Clean Architecture for Node.js/Hono Backend</description>
+
+  <root name="src">
+    <!-- Domain Layer (Core) -->
+    <dir name="domain" layer="entities">
+      <description>순수 비즈니스 로직. 프레임워크 의존성 완전 제거</description>
+
+      <dir name="entities">
+        <description>도메인 엔티티</description>
+        <file name="user.entity.ts" example="class User { constructor(private readonly props: UserProps) {} }" />
+        <file name="order.entity.ts" />
+        <file name="product.entity.ts" />
+      </dir>
+
+      <dir name="value-objects">
+        <description>불변 값 객체 (Branded Types)</description>
+        <file name="user-id.vo.ts" />
+        <file name="email.vo.ts" />
+        <file name="money.vo.ts" />
+      </dir>
+
+      <dir name="errors">
+        <description>도메인 에러</description>
+        <file name="domain-error.ts" example="abstract class DomainError extends Error {}" />
+        <file name="invalid-email.error.ts" />
+        <file name="order-not-found.error.ts" />
+      </dir>
+
+      <dir name="events">
+        <description>도메인 이벤트</description>
+        <file name="domain-event.ts" />
+        <file name="user-created.event.ts" />
+        <file name="order-placed.event.ts" />
+      </dir>
+
+      <dir name="rules">
+        <description>비즈니스 규칙 (순수 함수)</description>
+        <file name="order.rules.ts" />
+        <file name="pricing.rules.ts" />
+      </dir>
+    </dir>
+
+    <!-- Application Layer (Use Cases) -->
+    <dir name="application" layer="use-cases">
+      <description>애플리케이션 서비스. 유스케이스 오케스트레이션</description>
+
+      <dir name="ports">
+        <description>포트 인터페이스 (의존성 역전의 핵심)</description>
+
+        <dir name="inbound">
+          <description>인바운드 포트 (유스케이스 인터페이스)</description>
+          <file name="create-user.port.ts" />
+          <file name="get-order.port.ts" />
+        </dir>
+
+        <dir name="outbound">
+          <description>아웃바운드 포트 (외부 의존성 인터페이스)</description>
+          <file name="user-repository.port.ts" example="interface IUserRepository { save(user: User): Promise&lt;void&gt;; }" />
+          <file name="order-repository.port.ts" />
+          <file name="payment-gateway.port.ts" />
+          <file name="email-sender.port.ts" />
+        </dir>
+      </dir>
+
+      <dir name="use-cases">
+        <description>유스케이스 구현</description>
+
+        <dir name="user">
+          <file name="create-user.use-case.ts" />
+          <file name="get-user.use-case.ts" />
+          <file name="update-user.use-case.ts" />
+        </dir>
+
+        <dir name="order">
+          <file name="create-order.use-case.ts" />
+          <file name="cancel-order.use-case.ts" />
+          <file name="get-order.use-case.ts" />
+        </dir>
+      </dir>
+
+      <dir name="dto">
+        <description>Command/Query DTO</description>
+        <file name="create-user.dto.ts" />
+        <file name="create-order.dto.ts" />
+      </dir>
+
+      <dir name="services">
+        <description>애플리케이션 서비스 (유스케이스 조합)</description>
+        <file name="user.service.ts" />
+        <file name="order.service.ts" />
+      </dir>
+    </dir>
+
+    <!-- Adapters Layer (Interface) -->
+    <dir name="adapters" layer="adapters">
+      <description>외부와 내부를 연결하는 어댑터</description>
+
+      <dir name="inbound">
+        <description>인바운드 어댑터 (API 진입점)</description>
+
+        <dir name="http">
+          <description>HTTP 컨트롤러 (Hono Routes)</description>
+          <file name="user.controller.ts" />
+          <file name="order.controller.ts" />
+          <file name="health.controller.ts" />
+        </dir>
+
+        <dir name="validators">
+          <description>요청 검증 (Zod 스키마)</description>
+          <file name="user.validator.ts" />
+          <file name="order.validator.ts" />
+        </dir>
+
+        <dir name="presenters">
+          <description>응답 포맷터</description>
+          <file name="user.presenter.ts" />
+          <file name="order.presenter.ts" />
+        </dir>
+      </dir>
+
+      <dir name="outbound">
+        <description>아웃바운드 어댑터 (외부 서비스)</description>
+
+        <dir name="persistence">
+          <description>리포지토리 구현 (Prisma)</description>
+          <file name="prisma-user.repository.ts" />
+          <file name="prisma-order.repository.ts" />
+        </dir>
+
+        <dir name="external">
+          <description>외부 API 어댑터</description>
+          <file name="stripe-payment.adapter.ts" />
+          <file name="sendgrid-email.adapter.ts" />
+        </dir>
+
+        <dir name="mappers">
+          <description>영속성 ↔ 도메인 매퍼</description>
+          <file name="user.mapper.ts" />
+          <file name="order.mapper.ts" />
+        </dir>
+      </dir>
+    </dir>
+
+    <!-- Infrastructure Layer (External) -->
+    <dir name="infrastructure" layer="infrastructure">
+      <description>프레임워크 설정 및 인프라</description>
+
+      <dir name="http">
+        <description>Hono 앱 설정</description>
+        <file name="app.ts" example="Hono 인스턴스 생성 및 미들웨어 설정" />
+        <file name="routes.ts" example="라우트 등록" />
+        <file name="middleware.ts" />
+      </dir>
+
+      <dir name="database">
+        <description>DB 연결</description>
+        <file name="prisma.ts" example="PrismaClient 싱글톤" />
+        <file name="migrations/" />
+      </dir>
+
+      <dir name="config">
+        <description>환경 설정</description>
+        <file name="env.ts" example="Zod로 환경변수 검증" />
+        <file name="constants.ts" />
+      </dir>
+
+      <dir name="di">
+        <description>의존성 주입 컨테이너</description>
+        <file name="container.ts" />
+        <file name="types.ts" example="DI 토큰 정의" />
+      </dir>
+
+      <dir name="logging">
+        <description>로깅</description>
+        <file name="logger.ts" />
+      </dir>
+    </dir>
+
+    <!-- Entry Point -->
+    <file name="index.ts" layer="infrastructure">
+      <description>애플리케이션 진입점</description>
+    </file>
+  </root>
+
+  <import-rules>
+    <rule from="domain" to="없음">domain은 외부 의존성 금지. 순수 TypeScript만</rule>
+    <rule from="application" to="domain">application은 domain만 import. 프레임워크 금지</rule>
+    <rule from="adapters" to="application,domain">adapters는 포트를 구현하고 유스케이스 호출</rule>
+    <rule from="infrastructure" to="all">infrastructure는 모든 레이어 조립</rule>
+  </import-rules>
+
+  <testing-structure>
+    <dir name="__tests__">
+      <dir name="unit">
+        <description>유닛 테스트 (도메인, 유스케이스)</description>
+        <dir name="domain" />
+        <dir name="application" />
+      </dir>
+      <dir name="integration">
+        <description>통합 테스트 (어댑터)</description>
+        <dir name="adapters" />
+      </dir>
+      <dir name="e2e">
+        <description>E2E 테스트 (API)</description>
+      </dir>
+    </dir>
+  </testing-structure>
+</directory-structure>

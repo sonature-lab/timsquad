@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ssot-schema>
+  <metadata>
+    <description>SSOT 문서 필수 필드 및 형식 정의</description>
+    <version>1.0</version>
+  </metadata>
+
+  <!-- ============================================================
+       문서 공통 규칙
+       ============================================================ -->
+  <common-rules>
+    <rule id="COMMON-001">
+      <name>YAML Frontmatter 필수</name>
+      <description>모든 SSOT 문서는 YAML frontmatter를 포함해야 함</description>
+      <required-fields>
+        <field name="title" type="string">문서 제목</field>
+        <field name="version" type="semver">버전 (예: 1.0.0)</field>
+        <field name="last_updated" type="date">최종 수정일 (ISO 8601)</field>
+        <field name="author" type="string">작성자/에이전트</field>
+        <field name="status" type="enum">draft | review | approved</field>
+      </required-fields>
+      <example>
+        <![CDATA[
+---
+title: 서비스 명세서
+version: 1.0.0
+last_updated: 2026-02-03
+author: tsq-planner
+status: approved
+---
+        ]]>
+      </example>
+    </rule>
+
+    <rule id="COMMON-002">
+      <name>변경 이력 섹션</name>
+      <description>문서 끝에 변경 이력 섹션 필수</description>
+      <template>
+        <![CDATA[
+## 변경 이력
+
+| 버전 | 날짜 | 작성자 | 변경 내용 |
+|------|------|--------|----------|
+| 1.0.0 | 2026-02-03 | tsq-planner | 초기 작성 |
+        ]]>
+      </template>
+    </rule>
+
+    <rule id="COMMON-003">
+      <name>상호 참조</name>
+      <description>관련 문서 참조 시 상대 경로 사용</description>
+      <example>→ [service-spec.md](./service-spec.md) 참조</example>
+    </rule>
+  </common-rules>
+
+  <!-- ============================================================
+       문서별 스키마
+       ============================================================ -->
+  <documents>
+    <!-- PRD -->
+    <document id="prd" file="prd.md" required-level="1">
+      <description>제품 요구사항 정의서</description>
+      <purpose>왜 만드는지, 목표, 성공 지표</purpose>
+
+      <required-sections>
+        <section id="overview">
+          <name>개요</name>
+          <fields>
+            <field name="한 줄 정의" required="true"/>
+            <field name="배경" required="true"/>
+            <field name="목표" required="true"/>
+          </fields>
+        </section>
+
+        <section id="target-users">
+          <name>타겟 사용자</name>
+          <fields>
+            <field name="Primary" required="true"/>
+            <field name="Secondary" required="false"/>
+          </fields>
+        </section>
+
+        <section id="success-metrics">
+          <name>성공 지표</name>
+          <fields>
+            <field name="정량적 지표" required="true"/>
+            <field name="정성적 지표" required="false"/>
+          </fields>
+        </section>
+
+        <section id="scope">
+          <name>범위</name>
+          <fields>
+            <field name="포함 (In Scope)" required="true"/>
+            <field name="제외 (Out of Scope)" required="true"/>
+          </fields>
+        </section>
+      </required-sections>
+
+      <validation>
+        <rule>목표는 측정 가능해야 함 (SMART)</rule>
+        <rule>범위가 명확해야 함</rule>
+      </validation>
+    </document>
+
+    <!-- Requirements -->
+    <document id="requirements" file="requirements.md" required-level="1">
+      <description>기능/비기능 요건 정의</description>
+
+      <required-sections>
+        <section id="functional">
+          <name>기능 요건</name>
+          <format>
+            <![CDATA[
+### FR-{번호}: {요건 제목}
+
+- **설명**: {상세 설명}
+- **우선순위**: Must | Should | Could | Won't
+- **수용 조건**: {충족 조건 목록}
+            ]]>
+          </format>
+          <rules>
+            <rule>각 요건에 고유 ID 부여 (FR-001, FR-002...)</rule>
+            <rule>우선순위 명시 필수</rule>
+            <rule>수용 조건 명시 필수</rule>
+          </rules>
+        </section>
+
+        <section id="non-functional">
+          <name>비기능 요건</name>
+          <format>
+            <![CDATA[
+### NFR-{번호}: {요건 제목}
+
+- **카테고리**: 성능 | 보안 | 가용성 | 확장성
+- **설명**: {상세 설명}
+- **측정 기준**: {구체적 수치}
+            ]]>
+          </format>
+        </section>
+      </required-sections>
+    </document>
+
+    <!-- Service Spec -->
+    <document id="service-spec" file="service-spec.md" required-level="1">
+      <description>API 명세서 (프론트-백 계약서)</description>
+
+      <required-sections>
+        <section id="api-overview">
+          <name>API 개요</name>
+          <fields>
+            <field name="Base URL" required="true"/>
+            <field name="인증 방식" required="true"/>
+            <field name="공통 헤더" required="true"/>
+            <field name="응답 형식" required="true"/>
+          </fields>
+        </section>
+
+        <section id="endpoints">
+          <name>엔드포인트</name>
+          <format>
+            <![CDATA[
+## {도메인}
+
+### {서비스명}
+
+| 항목 | 값 |
+|-----|---|
+| **URL** | `{METHOD} /api/v1/{path}` |
+| **설명** | {설명} |
+| **인증** | Required | Optional | None |
+
+#### Request
+
+| Field | Type | Required | Description |
+|-------|------|:--------:|-------------|
+| {field} | {type} | O/X | {설명} |
+
+#### Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| {field} | {type} | {설명} |
+
+#### Errors
+→ [error-codes.md](./error-codes.md) 참조: {에러코드 목록}
+            ]]>
+          </format>
+          <rules>
+            <rule>모든 엔드포인트에 HTTP 메서드 명시</rule>
+            <rule>Request/Response 필드 타입 명시</rule>
+            <rule>에러 코드는 error-codes.md 참조</rule>
+          </rules>
+        </section>
+      </required-sections>
+
+      <validation>
+        <rule>URL 형식: /api/v{version}/{resource}</rule>
+        <rule>타입은 TypeScript/JSON 표준 타입 사용</rule>
+        <rule>Required 필드 명확히 표시</rule>
+      </validation>
+    </document>
+
+    <!-- Error Codes -->
+    <document id="error-codes" file="error-codes.md" required-level="2">
+      <description>에러 코드 통합 문서</description>
+
+      <required-sections>
+        <section id="error-format">
+          <name>에러 응답 형식</name>
+          <format>
+            <![CDATA[
+```json
+{
+  "success": false,
+  "error": {
+    "code": "AUTH_001",
+    "message": "Invalid credentials",
+    "details": {}
+  }
+}
+```
+            ]]>
+          </format>
+        </section>
+
+        <section id="error-table">
+          <name>에러 코드 목록</name>
+          <format>
+            <![CDATA[
+## {도메인}
+
+| Code | HTTP | Message | 설명 |
+|------|------|---------|-----|
+| {DOMAIN}_{번호} | {상태코드} | {메시지} | {설명} |
+            ]]>
+          </format>
+          <rules>
+            <rule>코드 형식: {DOMAIN}_{3자리숫자}</rule>
+            <rule>HTTP 상태 코드 명시</rule>
+            <rule>사용자에게 보여줄 메시지와 내부 설명 분리</rule>
+          </rules>
+        </section>
+      </required-sections>
+
+      <code-format>
+        <pattern>{DOMAIN}_{NUMBER}</pattern>
+        <domain-examples>AUTH, USER, ORDER, PAYMENT</domain-examples>
+        <number-range>001-999</number-range>
+      </code-format>
+    </document>
+
+    <!-- Data Design -->
+    <document id="data-design" file="data-design.md" required-level="1">
+      <description>데이터 설계서</description>
+
+      <required-sections>
+        <section id="erd">
+          <name>ERD</name>
+          <description>Mermaid 또는 이미지로 ERD 표현</description>
+          <format>
+            <![CDATA[
+```mermaid
+erDiagram
+    User ||--o{ Order : places
+    Order ||--|{ OrderItem : contains
+```
+            ]]>
+          </format>
+        </section>
+
+        <section id="tables">
+          <name>테이블 정의</name>
+          <format>
+            <![CDATA[
+### {테이블명}
+
+| 컬럼 | 타입 | 제약조건 | 설명 |
+|-----|------|---------|-----|
+| id | UUID | PK | 고유 식별자 |
+| created_at | TIMESTAMP | NOT NULL, DEFAULT NOW() | 생성일시 |
+            ]]>
+          </format>
+          <rules>
+            <rule>PK/FK 명시</rule>
+            <rule>NOT NULL, UNIQUE 등 제약조건 명시</rule>
+            <rule>인덱스 정의 포함</rule>
+          </rules>
+        </section>
+
+        <section id="indexes">
+          <name>인덱스 정의</name>
+          <format>
+            <![CDATA[
+| 테이블 | 인덱스명 | 컬럼 | 타입 | 목적 |
+|-------|---------|-----|------|-----|
+| users | idx_users_email | email | UNIQUE | 이메일 조회 |
+            ]]>
+          </format>
+        </section>
+      </required-sections>
+    </document>
+
+    <!-- ADR -->
+    <document id="adr" file="adr/ADR-{번호}.md" required-level="2">
+      <description>아키텍처 결정 기록</description>
+
+      <file-naming>
+        <pattern>ADR-{3자리숫자}-{kebab-case-제목}.md</pattern>
+        <example>ADR-001-use-postgresql.md</example>
+      </file-naming>
+
+      <required-sections>
+        <section id="header">
+          <name>헤더</name>
+          <fields>
+            <field name="번호" required="true"/>
+            <field name="제목" required="true"/>
+            <field name="상태" required="true">Proposed | Accepted | Deprecated | Superseded</field>
+            <field name="날짜" required="true"/>
+          </fields>
+        </section>
+
+        <section id="context">
+          <name>Context (배경)</name>
+          <description>결정이 필요한 상황 설명</description>
+        </section>
+
+        <section id="decision">
+          <name>Decision (결정)</name>
+          <description>내린 결정 내용</description>
+        </section>
+
+        <section id="rationale">
+          <name>Rationale (근거)</name>
+          <description>결정의 이유</description>
+        </section>
+
+        <section id="alternatives">
+          <name>Alternatives (대안)</name>
+          <description>고려했던 다른 옵션들</description>
+        </section>
+
+        <section id="consequences">
+          <name>Consequences (결과)</name>
+          <fields>
+            <field name="긍정적" required="true"/>
+            <field name="부정적" required="true"/>
+          </fields>
+        </section>
+      </required-sections>
+    </document>
+
+    <!-- Security Spec (Level 3 / Fintech) -->
+    <document id="security-spec" file="security-spec.md" required-level="3">
+      <description>보안 명세서</description>
+      <required-for>level-3, fintech</required-for>
+
+      <required-sections>
+        <section id="auth">
+          <name>인증/인가</name>
+          <fields>
+            <field name="인증 방식" required="true"/>
+            <field name="세션 관리" required="true"/>
+            <field name="권한 모델" required="true"/>
+          </fields>
+        </section>
+
+        <section id="data-protection">
+          <name>데이터 보호</name>
+          <fields>
+            <field name="암호화 정책" required="true"/>
+            <field name="민감 데이터 분류" required="true"/>
+          </fields>
+        </section>
+
+        <section id="compliance">
+          <name>컴플라이언스</name>
+          <fields>
+            <field name="적용 규정" required="true"/>
+            <field name="준수 사항" required="true"/>
+          </fields>
+        </section>
+      </required-sections>
+    </document>
+  </documents>
+
+  <!-- ============================================================
+       레벨별 필수 문서
+       ============================================================ -->
+  <level-requirements>
+    <level id="1" name="MVP">
+      <required>prd.md</required>
+      <required>requirements.md</required>
+      <required>service-spec.md</required>
+      <required>data-design.md</required>
+    </level>
+
+    <level id="2" name="Standard">
+      <includes>level-1</includes>
+      <required>error-codes.md</required>
+      <required>planning.md</required>
+      <required>adr/ (최소 1개)</required>
+    </level>
+
+    <level id="3" name="Enterprise">
+      <includes>level-2</includes>
+      <required>security-spec.md</required>
+      <required>test-spec.md</required>
+      <required>deployment-spec.md</required>
+    </level>
+  </level-requirements>
+
+  <!-- ============================================================
+       타입별 추가 필수 문서
+       ============================================================ -->
+  <type-requirements>
+    <type id="web-service">
+      <required>ui-ux-spec.md</required>
+    </type>
+
+    <type id="fintech">
+      <required>security-spec.md</required>
+      <required>compliance-spec.md</required>
+      <required>audit-log-spec.md</required>
+    </type>
+
+    <type id="platform">
+      <required>integration-spec.md</required>
+      <required>glossary.md</required>
+    </type>
+  </type-requirements>
+</ssot-schema>

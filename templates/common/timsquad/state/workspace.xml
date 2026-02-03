@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workspace>
+  <metadata>
+    <project>{{PROJECT_NAME}}</project>
+    <created>{{TIMESTAMP}}</created>
+    <last-updated>{{TIMESTAMP}}</last-updated>
+    <version>1.0</version>
+  </metadata>
+
+  <!-- 현재 활성 에이전트 -->
+  <active-session>
+    <agent>tsq-planner</agent>
+    <started-at>{{TIMESTAMP}}</started-at>
+    <mode>planning</mode>
+  </active-session>
+
+  <!-- ============================================================
+       현재 진행 중인 작업
+       ============================================================ -->
+  <current-task>
+    <id>TASK-001</id>
+    <title>PRD 작성</title>
+    <description>제품 요구사항 정의서 초안 작성</description>
+    <agent>tsq-planner</agent>
+    <phase>planning</phase>
+    <started-at>{{TIMESTAMP}}</started-at>
+    <status>in_progress</status>
+    <ssot-refs>
+      <ref path="ssot/prd.md">출력 대상</ref>
+    </ssot-refs>
+    <progress>
+      <step done="false">배경 및 목표 정의</step>
+      <step done="false">타겟 사용자 정의</step>
+      <step done="false">성공 지표 정의</step>
+      <step done="false">범위 정의</step>
+    </progress>
+  </current-task>
+
+  <!-- ============================================================
+       대기 중인 작업 (우선순위 순)
+       ============================================================ -->
+  <pending-tasks>
+    <!--
+    <task id="TASK-002" priority="1">
+      <title>요구사항 정의</title>
+      <description>기능/비기능 요건 작성</description>
+      <assigned-to>tsq-planner</assigned-to>
+      <phase>planning</phase>
+      <depends-on>TASK-001</depends-on>
+      <estimated-effort>medium</estimated-effort>
+    </task>
+    -->
+  </pending-tasks>
+
+  <!-- ============================================================
+       완료된 작업 (최근 10개 유지)
+       ============================================================ -->
+  <completed-tasks>
+    <!--
+    <task id="TASK-000" completed-at="{{TIMESTAMP}}">
+      <title>프로젝트 초기화</title>
+      <agent>system</agent>
+      <output>TimSquad 프로젝트 구조 생성</output>
+      <duration-minutes>1</duration-minutes>
+    </task>
+    -->
+  </completed-tasks>
+
+  <!-- ============================================================
+       에이전트 간 인수인계 (Handoff)
+       ============================================================ -->
+  <handoff>
+    <!--
+    현재 에이전트가 다음 에이전트에게 전달할 내용
+
+    <from>tsq-planner</from>
+    <to>tsq-developer</to>
+    <timestamp>{{TIMESTAMP}}</timestamp>
+    <message>
+      API 명세 작성 완료. 다음 문서를 참조하여 구현 시작:
+      - service-spec.md: API 엔드포인트 정의
+      - data-design.md: 데이터 모델
+      - error-codes.md: 에러 코드
+
+      특이사항:
+      - JWT 토큰 만료 시간 15분 (ADR-002 참조)
+      - 비밀번호는 bcrypt 해싱 필수
+    </message>
+    <attachments>
+      <ref>ssot/service-spec.md</ref>
+      <ref>ssot/data-design.md</ref>
+      <ref>ssot/error-codes.md</ref>
+      <ref>ssot/adr/ADR-002.md</ref>
+    </attachments>
+    <action-items>
+      <item priority="1">로그인 API 구현</item>
+      <item priority="2">회원가입 API 구현</item>
+      <item priority="3">토큰 갱신 API 구현</item>
+    </action-items>
+    -->
+  </handoff>
+
+  <!-- ============================================================
+       블로킹 이슈
+       ============================================================ -->
+  <blockers>
+    <!--
+    <blocker id="BLK-001" severity="high" created-at="{{TIMESTAMP}}">
+      <description>외부 OAuth API 키 필요</description>
+      <waiting-for>User</waiting-for>
+      <blocks>
+        <task-ref>TASK-005</task-ref>
+      </blocks>
+      <notes>Google OAuth 클라이언트 ID/Secret 필요</notes>
+    </blocker>
+    -->
+  </blockers>
+
+  <!-- ============================================================
+       승인 대기
+       ============================================================ -->
+  <pending-approvals>
+    <!--
+    <approval id="APV-001" type="phase-transition">
+      <from-phase>planning</from-phase>
+      <to-phase>implementation</to-phase>
+      <requested-by>tsq-planner</requested-by>
+      <requested-at>{{TIMESTAMP}}</requested-at>
+      <reason>SSOT 문서 작성 완료, 구현 단계 진입 요청</reason>
+      <checklist>
+        <item checked="true">prd.md 작성 완료</item>
+        <item checked="true">requirements.md 작성 완료</item>
+        <item checked="true">service-spec.md 작성 완료</item>
+        <item checked="true">data-design.md 작성 완료</item>
+      </checklist>
+    </approval>
+
+    <approval id="APV-002" type="feedback-level-3">
+      <issue>스코프 변경 요청</issue>
+      <requested-by>tsq-qa</requested-by>
+      <requested-at>{{TIMESTAMP}}</requested-at>
+      <details>소셜 로그인 기능 추가 필요</details>
+      <options>
+        <option id="1">현재 스코프 유지</option>
+        <option id="2">소셜 로그인 추가 (일정 연장)</option>
+        <option id="3">소셜 로그인 v2에서 추가</option>
+      </options>
+    </approval>
+    -->
+  </pending-approvals>
+
+  <!-- ============================================================
+       피드백 큐 (처리 대기 중인 피드백)
+       ============================================================ -->
+  <feedback-queue>
+    <!--
+    <feedback id="FB-001" level="1" created-at="{{TIMESTAMP}}">
+      <from>tsq-qa</from>
+      <to>tsq-developer</to>
+      <type>code-review</type>
+      <severity>minor</severity>
+      <file>src/auth/login.ts</file>
+      <line>45</line>
+      <message>에러 메시지가 error-codes.md와 다름</message>
+      <suggestion>AUTH_001 코드 사용</suggestion>
+      <status>pending</status>
+    </feedback>
+    -->
+  </feedback-queue>
+
+  <!-- ============================================================
+       다음 단계 계획 (Next Steps)
+       ============================================================ -->
+  <next-steps>
+    <step order="1">
+      <action>PRD 작성 완료</action>
+      <agent>tsq-planner</agent>
+      <output>ssot/prd.md</output>
+    </step>
+    <step order="2">
+      <action>요구사항 정의</action>
+      <agent>tsq-planner</agent>
+      <output>ssot/requirements.md</output>
+    </step>
+    <step order="3">
+      <action>API 명세 작성</action>
+      <agent>tsq-planner</agent>
+      <output>ssot/service-spec.md</output>
+    </step>
+    <step order="4">
+      <action>데이터 설계</action>
+      <agent>tsq-planner</agent>
+      <output>ssot/data-design.md</output>
+    </step>
+    <step order="5">
+      <action>User 승인 요청</action>
+      <agent>tsq-planner</agent>
+      <requires-approval>true</requires-approval>
+    </step>
+    <step order="6">
+      <action>Implementation Phase 시작</action>
+      <agent>tsq-developer</agent>
+      <phase>implementation</phase>
+    </step>
+  </next-steps>
+
+  <!-- ============================================================
+       세션 메모 (임시 노트)
+       ============================================================ -->
+  <session-notes>
+    <!--
+    <note timestamp="{{TIMESTAMP}}" agent="tsq-planner">
+      사용자가 MVP 우선 요청. 소셜 로그인은 v2로 미룸.
+    </note>
+    -->
+  </session-notes>
+</workspace>

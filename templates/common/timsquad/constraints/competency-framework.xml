@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TimSquad Competency Framework
+
+  이론적 기반:
+  - ACM TOSEM "LLM-Based Multi-Agent Systems for Software Engineering" (DOI: 10.1145/3712003)
+    - Competency Mapping: 역할별 필수 스킬, 지식, 역량 정의
+    - Performance Evaluation: 정량적/정성적 평가 방법
+    - Expert Consultation: 전문가 피드백 기반 개선
+
+  "Competency mapping entails developing comprehensive competency frameworks
+   for each specialized role. These frameworks define the essential skills,
+   knowledge areas, and competencies required."
+-->
+<competency-framework version="1.0">
+  <metadata>
+    <description>TimSquad 에이전트 역량 프레임워크</description>
+    <theoretical-basis>
+      <paper doi="10.1145/3712003">ACM TOSEM LMA Survey</paper>
+      <concept>Competency Mapping</concept>
+      <concept>Performance Evaluation</concept>
+    </theoretical-basis>
+  </metadata>
+
+  <!-- ============================================================
+       역량 카테고리 정의
+       ============================================================ -->
+  <competency-categories>
+    <category id="technical" name="기술 역량">
+      <description>프로그래밍, 도구, 방법론 관련 역량</description>
+    </category>
+    <category id="domain" name="도메인 역량">
+      <description>특정 분야 전문 지식</description>
+    </category>
+    <category id="soft" name="소프트 역량">
+      <description>문제 해결, 커뮤니케이션, 협업</description>
+    </category>
+    <category id="process" name="프로세스 역량">
+      <description>워크플로우, 문서화, 품질 관리</description>
+    </category>
+  </competency-categories>
+
+  <!-- ============================================================
+       역량 레벨 정의
+       ============================================================ -->
+  <competency-levels>
+    <level id="1" name="novice" score-range="0-20">
+      <description>기본 개념 이해, 가이드 필요</description>
+    </level>
+    <level id="2" name="beginner" score-range="21-40">
+      <description>기본 작업 수행 가능, 일부 지원 필요</description>
+    </level>
+    <level id="3" name="intermediate" score-range="41-60">
+      <description>독립적 작업 가능, 일반적인 문제 해결</description>
+    </level>
+    <level id="4" name="advanced" score-range="61-80">
+      <description>복잡한 문제 해결, 최적화 가능</description>
+    </level>
+    <level id="5" name="expert" score-range="81-100">
+      <description>전문가 수준, 다른 에이전트 가이드 가능</description>
+    </level>
+  </competency-levels>
+
+  <!-- ============================================================
+       에이전트별 역량 정의
+       ============================================================ -->
+  <agents>
+    <!-- tsq-planner 역량 -->
+    <agent id="tsq-planner">
+      <role>Planning Agent</role>
+      <description>PRD, 기획, 아키텍처 설계 담당</description>
+
+      <competencies>
+        <!-- 기술 역량 -->
+        <competency id="architecture_design" category="technical">
+          <name>아키텍처 설계</name>
+          <description>시스템 아키텍처 설계 및 문서화</description>
+          <expected-level>expert</expected-level>
+          <indicators>
+            <indicator>Clean Architecture 적용</indicator>
+            <indicator>적절한 패턴 선택</indicator>
+            <indicator>확장성 고려</indicator>
+          </indicators>
+          <measurement>
+            <metric>architecture_review_pass_rate</metric>
+            <metric>adr_quality_score</metric>
+          </measurement>
+        </competency>
+
+        <competency id="api_design" category="technical">
+          <name>API 설계</name>
+          <description>RESTful API 명세 작성</description>
+          <expected-level>expert</expected-level>
+          <indicators>
+            <indicator>RESTful 원칙 준수</indicator>
+            <indicator>명확한 Request/Response 정의</indicator>
+            <indicator>에러 코드 체계화</indicator>
+          </indicators>
+        </competency>
+
+        <competency id="requirements_analysis" category="domain">
+          <name>요구사항 분석</name>
+          <description>비즈니스 요구사항을 기술 요건으로 변환</description>
+          <expected-level>expert</expected-level>
+          <indicators>
+            <indicator>명확한 수용 조건 정의</indicator>
+            <indicator>우선순위 분류 (MoSCoW)</indicator>
+            <indicator>모호성 제거</indicator>
+          </indicators>
+        </competency>
+
+        <!-- 소프트 역량 -->
+        <competency id="communication" category="soft">
+          <name>커뮤니케이션</name>
+          <description>이해관계자와의 명확한 소통</description>
+          <expected-level>expert</expected-level>
+          <indicators>
+            <indicator>명확한 상태 보고</indicator>
+            <indicator>적절한 질문</indicator>
+            <indicator>승인 요청 타이밍</indicator>
+          </indicators>
+        </competency>
+
+        <!-- 프로세스 역량 -->
+        <competency id="documentation" category="process">
+          <name>문서화</name>
+          <description>SSOT 문서 작성 및 관리</description>
+          <expected-level>expert</expected-level>
+          <indicators>
+            <indicator>템플릿 준수</indicator>
+            <indicator>일관된 형식</indicator>
+            <indicator>변경 이력 관리</indicator>
+          </indicators>
+        </competency>
+      </competencies>
+
+      <!-- 성과 지표 -->
+      <performance-metrics>
+        <metric id="prd_approval_rate" weight="0.2">
+          <description>PRD 첫 제출 승인률</description>
+          <formula>approved_first_submission / total_submissions</formula>
+          <target>80%</target>
+        </metric>
+        <metric id="requirement_clarity" weight="0.2">
+          <description>요구사항 명확성 (Level 3 피드백 역수)</description>
+          <formula>1 - (level3_feedback / total_requirements)</formula>
+          <target>90%</target>
+        </metric>
+        <metric id="ssot_completeness" weight="0.2">
+          <description>SSOT 문서 완성도</description>
+          <formula>filled_fields / required_fields</formula>
+          <target>95%</target>
+        </metric>
+        <metric id="api_consistency" weight="0.2">
+          <description>API 명세 일관성</description>
+          <formula>consistent_implementations / total_implementations</formula>
+          <target>95%</target>
+        </metric>
+        <metric id="handoff_quality" weight="0.2">
+          <description>Handoff 품질</description>
+          <formula>complete_handoffs / total_handoffs</formula>
+          <target>90%</target>
+        </metric>
+      </performance-metrics>
+    </agent>
+
+    <!-- tsq-developer 역량 -->
+    <agent id="tsq-developer">
+      <role>Development Agent</role>
+      <description>코드 구현, 테스트 작성, 리팩토링</description>
+
+      <competencies>
+        <competency id="coding" category="technical">
+          <name>코딩</name>
+          <description>클린 코드 작성</description>
+          <expected-level>expert</expected-level>
+          <indicators>
+            <indicator>SOLID 원칙 준수</indicator>
+            <indicator>적절한 추상화</indicator>
+            <indicator>가독성 높은 코드</indicator>
+          </indicators>
+        </competency>
+
+        <competency id="testing" category="technical">
+          <name>테스트</name>
+          <description>TDD, 테스트 작성</description>
+          <expected-level>expert</expected-level>
+          <indicators>
+            <indicator>테스트 커버리지 80%+</indicator>
+            <indicator>Given-When-Then 패턴</indicator>
+            <indicator>엣지 케이스 커버</indicator>
+          </indicators>
+        </competency>
+
+        <competency id="debugging" category="technical">
+          <name>디버깅</name>
+          <description>버그 분석 및 수정</description>
+          <expected-level>advanced</expected-level>
+          <indicators>
+            <indicator>근본 원인 분석</indicator>
+            <indicator>재현 가능한 테스트</indicator>
+            <indicator>회귀 방지</indicator>
+          </indicators>
+        </competency>
+
+        <competency id="ssot_compliance" category="process">
+          <name>SSOT 준수</name>
+          <description>SSOT 문서 기반 구현</description>
+          <expected-level>expert</expected-level>
+          <indicators>
+            <indicator>service-spec.md 준수</indicator>
+            <indicator>data-design.md 준수</indicator>
+            <indicator>error-codes.md 사용</indicator>
+          </indicators>
+        </competency>
+
+        <competency id="problem_solving" category="soft">
+          <name>문제 해결</name>
+          <description>복잡한 기술 문제 해결</description>
+          <expected-level>advanced</expected-level>
+          <indicators>
+            <indicator>문제 분해</indicator>
+            <indicator>대안 탐색</indicator>
+            <indicator>트레이드오프 분석</indicator>
+          </indicators>
+        </competency>
+      </competencies>
+
+      <performance-metrics>
+        <metric id="test_coverage" weight="0.25">
+          <description>테스트 커버리지</description>
+          <formula>covered_lines / total_lines</formula>
+          <target>80%</target>
+        </metric>
+        <metric id="code_review_pass_rate" weight="0.25">
+          <description>코드 리뷰 통과율</description>
+          <formula>passed_first_review / total_reviews</formula>
+          <target>90%</target>
+        </metric>
+        <metric id="bug_introduction_rate" weight="0.2">
+          <description>버그 도입률</description>
+          <formula>bugs_introduced / tasks_completed</formula>
+          <target>&lt; 5%</target>
+        </metric>
+        <metric id="ssot_alignment" weight="0.2">
+          <description>SSOT 정합성</description>
+          <formula>aligned_implementations / total_implementations</formula>
+          <target>100%</target>
+        </metric>
+        <metric id="avg_revision_count" weight="0.1">
+          <description>평균 수정 횟수</description>
+          <formula>total_revisions / tasks_completed</formula>
+          <target>&lt; 2</target>
+        </metric>
+      </performance-metrics>
+    </agent>
+
+    <!-- tsq-qa 역량 -->
+    <agent id="tsq-qa">
+      <role>QA Agent</role>
+      <description>코드 리뷰, 테스트 검증, 품질 체크</description>
+
+      <competencies>
+        <competency id="code_review" category="technical">
+          <name>코드 리뷰</name>
+          <description>체계적인 코드 리뷰</description>
+          <expected-level>expert</expected-level>
+          <indicators>
+            <indicator>SSOT 정합성 검증</indicator>
+            <indicator>보안 취약점 탐지</indicator>
+            <indicator>성능 이슈 식별</indicator>
+          </indicators>
+        </competency>
+
+        <competency id="test_verification" category="technical">
+          <name>테스트 검증</name>
+          <description>테스트 품질 및 커버리지 검증</description>
+          <expected-level>expert</expected-level>
+          <indicators>
+            <indicator>테스트 케이스 완전성</indicator>
+            <indicator>엣지 케이스 커버</indicator>
+            <indicator>테스트 가독성</indicator>
+          </indicators>
+        </competency>
+
+        <competency id="feedback_quality" category="soft">
+          <name>피드백 품질</name>
+          <description>건설적이고 명확한 피드백</description>
+          <expected-level>expert</expected-level>
+          <indicators>
+            <indicator>구체적 개선 제안</indicator>
+            <indicator>적절한 피드백 레벨 분류</indicator>
+            <indicator>재현 가능한 이슈 설명</indicator>
+          </indicators>
+        </competency>
+
+        <competency id="quality_standards" category="process">
+          <name>품질 기준</name>
+          <description>품질 기준 적용 및 검증</description>
+          <expected-level>expert</expected-level>
+          <indicators>
+            <indicator>체크리스트 준수</indicator>
+            <indicator>일관된 기준 적용</indicator>
+            <indicator>품질 메트릭 추적</indicator>
+          </indicators>
+        </competency>
+      </competencies>
+
+      <performance-metrics>
+        <metric id="bug_detection_rate" weight="0.3">
+          <description>버그 탐지율</description>
+          <formula>bugs_found_in_review / total_bugs</formula>
+          <target>80%</target>
+        </metric>
+        <metric id="false_positive_rate" weight="0.2">
+          <description>오탐률</description>
+          <formula>invalid_issues / total_issues_raised</formula>
+          <target>&lt; 10%</target>
+        </metric>
+        <metric id="review_thoroughness" weight="0.25">
+          <description>리뷰 철저함</description>
+          <formula>issues_per_100_lines</formula>
+          <target>적정 범위</target>
+        </metric>
+        <metric id="feedback_actionability" weight="0.25">
+          <description>피드백 실행 가능성</description>
+          <formula>actioned_feedback / total_feedback</formula>
+          <target>95%</target>
+        </metric>
+      </performance-metrics>
+    </agent>
+
+    <!-- tsq-security 역량 -->
+    <agent id="tsq-security">
+      <role>Security Agent</role>
+      <description>보안 검토, 취약점 분석, 컴플라이언스</description>
+
+      <competencies>
+        <competency id="security_analysis" category="technical">
+          <name>보안 분석</name>
+          <description>코드 보안 취약점 분석</description>
+          <expected-level>expert</expected-level>
+          <indicators>
+            <indicator>OWASP Top 10 점검</indicator>
+            <indicator>인증/인가 검증</indicator>
+            <indicator>데이터 보호 검증</indicator>
+          </indicators>
+        </competency>
+
+        <competency id="threat_modeling" category="domain">
+          <name>위협 모델링</name>
+          <description>잠재적 위협 식별 및 대응</description>
+          <expected-level>advanced</expected-level>
+          <indicators>
+            <indicator>STRIDE 모델 적용</indicator>
+            <indicator>공격 벡터 식별</indicator>
+            <indicator>완화 전략 제시</indicator>
+          </indicators>
+        </competency>
+
+        <competency id="compliance" category="domain">
+          <name>컴플라이언스</name>
+          <description>규정 준수 검증</description>
+          <expected-level>advanced</expected-level>
+          <indicators>
+            <indicator>개인정보보호법 준수</indicator>
+            <indicator>업계 표준 준수</indicator>
+            <indicator>감사 준비</indicator>
+          </indicators>
+        </competency>
+      </competencies>
+
+      <performance-metrics>
+        <metric id="vulnerability_detection" weight="0.4">
+          <description>취약점 탐지율</description>
+          <formula>vulnerabilities_found / total_vulnerabilities</formula>
+          <target>90%</target>
+        </metric>
+        <metric id="false_alarm_rate" weight="0.2">
+          <description>오탐률</description>
+          <formula>false_positives / total_findings</formula>
+          <target>&lt; 15%</target>
+        </metric>
+        <metric id="remediation_guidance" weight="0.2">
+          <description>수정 가이드 품질</description>
+          <formula>implemented_recommendations / total_recommendations</formula>
+          <target>90%</target>
+        </metric>
+        <metric id="compliance_coverage" weight="0.2">
+          <description>컴플라이언스 커버리지</description>
+          <formula>checked_requirements / total_requirements</formula>
+          <target>100%</target>
+        </metric>
+      </performance-metrics>
+    </agent>
+
+    <!-- tsq-retro 역량 -->
+    <agent id="tsq-retro">
+      <role>Retrospective Agent</role>
+      <description>회고 분석, 패턴 식별, 개선 제안</description>
+
+      <competencies>
+        <competency id="data_analysis" category="technical">
+          <name>데이터 분석</name>
+          <description>로그 및 메트릭 분석</description>
+          <expected-level>expert</expected-level>
+          <indicators>
+            <indicator>정확한 메트릭 계산</indicator>
+            <indicator>트렌드 식별</indicator>
+            <indicator>통계적 분석</indicator>
+          </indicators>
+        </competency>
+
+        <competency id="pattern_recognition" category="domain">
+          <name>패턴 인식</name>
+          <description>반복 패턴 식별 및 분류</description>
+          <expected-level>expert</expected-level>
+          <indicators>
+            <indicator>실패 패턴 탐지</indicator>
+            <indicator>성공 패턴 식별</indicator>
+            <indicator>근본 원인 분석</indicator>
+          </indicators>
+        </competency>
+
+        <competency id="improvement_design" category="soft">
+          <name>개선 설계</name>
+          <description>실행 가능한 개선안 제시</description>
+          <expected-level>advanced</expected-level>
+          <indicators>
+            <indicator>구체적 액션 아이템</indicator>
+            <indicator>측정 가능한 목표</indicator>
+            <indicator>우선순위 제시</indicator>
+          </indicators>
+        </competency>
+      </competencies>
+
+      <performance-metrics>
+        <metric id="pattern_accuracy" weight="0.3">
+          <description>패턴 정확도</description>
+          <formula>validated_patterns / identified_patterns</formula>
+          <target>85%</target>
+        </metric>
+        <metric id="improvement_adoption" weight="0.3">
+          <description>개선안 채택률</description>
+          <formula>adopted_improvements / proposed_improvements</formula>
+          <target>70%</target>
+        </metric>
+        <metric id="improvement_effectiveness" weight="0.4">
+          <description>개선 효과</description>
+          <formula>resolved_patterns / targeted_patterns</formula>
+          <target>80%</target>
+        </metric>
+      </performance-metrics>
+    </agent>
+  </agents>
+
+  <!-- ============================================================
+       평가 프로세스
+       ACM TOSEM: "Expert consultation and iterative refinement"
+       ============================================================ -->
+  <evaluation-process>
+    <step order="1" name="Data Collection">
+      <description>작업 로그, 피드백, 메트릭 수집</description>
+      <sources>
+        <source>.timsquad/logs/</source>
+        <source>.timsquad/state/workspace.xml</source>
+        <source>.timsquad/retrospective/</source>
+      </sources>
+    </step>
+
+    <step order="2" name="Quantitative Evaluation">
+      <description>정량적 메트릭 기반 점수 계산</description>
+      <method>performance-metrics 기반 가중 평균</method>
+    </step>
+
+    <step order="3" name="Qualitative Assessment">
+      <description>정성적 평가 (코드 품질, 문서 품질)</description>
+      <method>샘플링 기반 리뷰</method>
+    </step>
+
+    <step order="4" name="Expert Consultation">
+      <description>PM/사용자 피드백 수집</description>
+      <method>회고 리포트 검토</method>
+    </step>
+
+    <step order="5" name="Score Aggregation">
+      <description>최종 점수 산출</description>
+      <formula>
+        final_score =
+          (quantitative_score * 0.6) +
+          (qualitative_score * 0.2) +
+          (expert_feedback_score * 0.2)
+      </formula>
+    </step>
+
+    <step order="6" name="Improvement Planning">
+      <description>저성과 영역 개선 계획 수립</description>
+      <trigger>score &lt; 70</trigger>
+    </step>
+  </evaluation-process>
+</competency-framework>

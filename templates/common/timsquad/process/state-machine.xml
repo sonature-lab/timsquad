@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<state-machine>
+  <metadata>
+    <description>TimSquad Phase 상태 전환 규칙</description>
+    <version>1.0</version>
+    <initial-state>planning</initial-state>
+  </metadata>
+
+  <!-- ============================================================
+       State 정의
+       ============================================================ -->
+  <states>
+    <state id="planning" name="기획/설계">
+      <description>요구사항 분석, SSOT 문서 작성, 아키텍처 설계</description>
+      <primary-agent>tsq-planner</primary-agent>
+      <allowed-actions>
+        <action>SSOT 문서 생성/수정</action>
+        <action>ADR 작성</action>
+        <action>요구사항 분석</action>
+        <action>아키텍처 설계</action>
+      </allowed-actions>
+      <forbidden-actions>
+        <action>코드 구현</action>
+        <action>테스트 작성</action>
+      </forbidden-actions>
+    </state>
+
+    <state id="implementation" name="구현">
+      <description>SSOT 기반 코드 구현, 테스트 작성</description>
+      <primary-agent>tsq-developer</primary-agent>
+      <allowed-actions>
+        <action>코드 구현</action>
+        <action>테스트 작성</action>
+        <action>리팩토링</action>
+        <action>버그 수정</action>
+      </allowed-actions>
+      <forbidden-actions>
+        <action>SSOT 임의 수정</action>
+        <action>요구사항 변경</action>
+      </forbidden-actions>
+    </state>
+
+    <state id="review" name="검증">
+      <description>코드 리뷰, 테스트 검증, SSOT 일치 확인</description>
+      <primary-agent>tsq-qa</primary-agent>
+      <allowed-actions>
+        <action>코드 리뷰</action>
+        <action>테스트 검증</action>
+        <action>SSOT 일치 확인</action>
+        <action>피드백 작성</action>
+      </allowed-actions>
+      <forbidden-actions>
+        <action>코드 직접 수정</action>
+        <action>SSOT 직접 수정</action>
+      </forbidden-actions>
+    </state>
+
+    <state id="security" name="보안 검토">
+      <description>보안 취약점 분석, 컴플라이언스 체크</description>
+      <primary-agent>tsq-security</primary-agent>
+      <allowed-actions>
+        <action>취약점 분석</action>
+        <action>보안 검토</action>
+        <action>컴플라이언스 체크</action>
+        <action>보안 피드백 작성</action>
+      </allowed-actions>
+      <forbidden-actions>
+        <action>코드 직접 수정</action>
+      </forbidden-actions>
+    </state>
+
+    <state id="complete" name="완료">
+      <description>작업 완료, 회고 준비</description>
+      <allowed-actions>
+        <action>최종 로그 정리</action>
+        <action>회고 데이터 수집</action>
+      </allowed-actions>
+    </state>
+
+    <!-- 특수 상태 -->
+    <state id="blocked" name="차단됨" type="special">
+      <description>검증 실패로 진행 불가</description>
+      <requires>이슈 해결 후 이전 상태로 복귀</requires>
+    </state>
+
+    <state id="waiting-approval" name="승인 대기" type="special">
+      <description>User 승인 대기 중</description>
+      <requires>User 승인 후 다음 상태로 전환</requires>
+    </state>
+  </states>
+
+  <!-- ============================================================
+       Transition 정의
+       ============================================================ -->
+  <transitions>
+    <!-- Planning → Implementation -->
+    <transition id="T-001">
+      <from>planning</from>
+      <to>implementation</to>
+      <name>기획 완료 → 구현 시작</name>
+
+      <conditions>
+        <condition type="required">
+          <check>prd.md 존재</check>
+        </condition>
+        <condition type="required">
+          <check>requirements.md 존재</check>
+        </condition>
+        <condition type="required">
+          <check>service-spec.md 존재</check>
+        </condition>
+        <condition type="required">
+          <check>User 승인 완료</check>
+        </condition>
+      </conditions>
+
+      <on-transition>
+        <action>상태 파일 업데이트</action>
+        <action>Planning Phase 완료 로그 기록</action>
+        <notification>User에게 구현 시작 알림</notification>
+      </on-transition>
+
+      <on-failure>
+        <action>차단 사유 표시</action>
+        <suggestion>누락된 SSOT 문서 작성 필요</suggestion>
+      </on-failure>
+    </transition>
+
+    <!-- Implementation → Review -->
+    <transition id="T-002">
+      <from>implementation</from>
+      <to>review</to>
+      <name>구현 완료 → 검증 시작</name>
+
+      <conditions>
+        <condition type="required">
+          <check>테스트 통과 (커버리지 80% 이상)</check>
+          <command>npm run test:coverage</command>
+          <threshold>80</threshold>
+        </condition>
+        <condition type="required">
+          <check>린트 에러 없음</check>
+          <command>npm run lint</command>
+        </condition>
+        <condition type="required">
+          <check>타입 에러 없음</check>
+          <command>npm run type-check</command>
+        </condition>
+        <condition type="required">
+          <check>작업 로그 기록 완료</check>
+        </condition>
+      </conditions>
+
+      <on-transition>
+        <action>상태 파일 업데이트</action>
+        <action>QA 에이전트에게 리뷰 요청 전달</action>
+      </on-transition>
+    </transition>
+
+    <!-- Review → Security (optional) -->
+    <transition id="T-003">
+      <from>review</from>
+      <to>security</to>
+      <name>검증 완료 → 보안 검토</name>
+      <optional-for>level-1, level-2</optional-for>
+      <required-for>level-3, fintech</required-for>
+
+      <conditions>
+        <condition type="required">
+          <check>Critical/Major 이슈 없음</check>
+        </condition>
+        <condition type="required">
+          <check>QA 체크리스트 통과</check>
+        </condition>
+      </conditions>
+    </transition>
+
+    <!-- Review → Complete (security 생략 시) -->
+    <transition id="T-004">
+      <from>review</from>
+      <to>complete</to>
+      <name>검증 완료 → 완료 (보안 생략)</name>
+      <allowed-for>level-1, level-2</allowed-for>
+      <forbidden-for>level-3, fintech</forbidden-for>
+
+      <conditions>
+        <condition type="required">
+          <check>Critical/Major 이슈 없음</check>
+        </condition>
+        <condition type="required">
+          <check>QA 체크리스트 통과</check>
+        </condition>
+      </conditions>
+    </transition>
+
+    <!-- Security → Complete -->
+    <transition id="T-005">
+      <from>security</from>
+      <to>complete</to>
+      <name>보안 검토 완료 → 완료</name>
+
+      <conditions>
+        <condition type="required">
+          <check>Critical 취약점 없음</check>
+        </condition>
+        <condition type="required">
+          <check>High 취약점 해결됨</check>
+        </condition>
+        <condition type="required">
+          <check>User 승인 (Level 3 / fintech)</check>
+          <applies-to>level-3, fintech</applies-to>
+        </condition>
+      </conditions>
+    </transition>
+
+    <!-- 회귀 전환 (Regression) -->
+    <transition id="T-REG-001" type="regression">
+      <from>review</from>
+      <to>implementation</to>
+      <name>Level 1 피드백 → 구현 수정</name>
+      <trigger>Level 1 피드백 발생</trigger>
+
+      <on-transition>
+        <action>피드백 내용 Developer에게 전달</action>
+        <action>수정 필요 항목 기록</action>
+      </on-transition>
+    </transition>
+
+    <transition id="T-REG-002" type="regression">
+      <from>review</from>
+      <to>planning</to>
+      <name>Level 2 피드백 → 설계 수정</name>
+      <trigger>Level 2 피드백 발생</trigger>
+
+      <on-transition>
+        <action>피드백 내용 Planner에게 전달</action>
+        <action>SSOT 수정 필요 항목 기록</action>
+      </on-transition>
+    </transition>
+
+    <transition id="T-REG-003" type="regression">
+      <from>review</from>
+      <to>waiting-approval</to>
+      <name>Level 3 피드백 → User 승인 대기</name>
+      <trigger>Level 3 피드백 발생</trigger>
+
+      <on-transition>
+        <action>User에게 승인 요청</action>
+        <action>피드백 내용 상세 보고</action>
+      </on-transition>
+
+      <next-state-options>
+        <option condition="User 승인">planning (수정 진행)</option>
+        <option condition="User 거부">blocked (재검토 필요)</option>
+      </next-state-options>
+    </transition>
+
+    <transition id="T-REG-004" type="regression">
+      <from>security</from>
+      <to>implementation</to>
+      <name>Low/Medium 보안 이슈 → 코드 수정</name>
+      <trigger>Low/Medium 보안 취약점</trigger>
+    </transition>
+
+    <transition id="T-REG-005" type="regression">
+      <from>security</from>
+      <to>planning</to>
+      <name>High 보안 이슈 → 설계 수정</name>
+      <trigger>High 보안 취약점 (설계 문제)</trigger>
+    </transition>
+
+    <transition id="T-REG-006" type="regression">
+      <from>security</from>
+      <to>waiting-approval</to>
+      <name>Critical 보안 이슈 → 긴급 보고</name>
+      <trigger>Critical 보안 취약점</trigger>
+
+      <on-transition>
+        <action>User에게 즉시 알림</action>
+        <action>배포 차단</action>
+      </on-transition>
+    </transition>
+  </transitions>
+
+  <!-- ============================================================
+       상태 파일 스키마
+       ============================================================ -->
+  <state-file-schema>
+    <file-path>.timsquad/state/current-phase.json</file-path>
+    <schema>
+      <![CDATA[
+{
+  "current_phase": "implementation",
+  "previous_phase": "planning",
+  "entered_at": "2026-02-03T10:00:00Z",
+  "transition_history": [
+    {
+      "from": "planning",
+      "to": "implementation",
+      "at": "2026-02-03T10:00:00Z",
+      "reason": "SSOT 완료, User 승인"
+    }
+  ],
+  "pending_actions": [],
+  "blocked_by": null
+}
+      ]]>
+    </schema>
+  </state-file-schema>
+
+  <!-- ============================================================
+       User 개입 지점
+       ============================================================ -->
+  <user-intervention-points>
+    <point id="UI-001">
+      <state>planning</state>
+      <event>SSOT 완료</event>
+      <action>승인 요청</action>
+      <description>기획 문서 완료 후 구현 진행 전 User 승인</description>
+    </point>
+
+    <point id="UI-002">
+      <state>review</state>
+      <event>Level 3 피드백</event>
+      <action>결정 요청</action>
+      <description>요구사항/비즈니스 로직 관련 결정 필요</description>
+    </point>
+
+    <point id="UI-003">
+      <state>security</state>
+      <event>Critical 취약점</event>
+      <action>긴급 알림</action>
+      <description>심각한 보안 이슈 즉시 보고</description>
+    </point>
+
+    <point id="UI-004">
+      <state>any</state>
+      <event>User 요청</event>
+      <action>즉시 응답</action>
+      <description>User는 언제든 개입 가능</description>
+    </point>
+  </user-intervention-points>
+</state-machine>

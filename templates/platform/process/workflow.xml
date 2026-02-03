@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TimSquad Platform 워크플로우
+  프레임워크, SDK, 라이브러리 전용 프로세스 정의
+-->
+<workflow type="platform" version="1.0">
+  <metadata>
+    <description>플랫폼/라이브러리 개발 워크플로우</description>
+    <focus>API 설계, 확장성, 문서화, 버전 관리</focus>
+  </metadata>
+
+  <!-- ============================================================
+       Phase 정의
+       ============================================================ -->
+  <phases>
+    <!-- Planning Phase -->
+    <phase id="planning" order="1">
+      <name>API 설계</name>
+      <description>Public API 설계, 확장 포인트 정의</description>
+
+      <tasks>
+        <task id="public-api" required="true">
+          <name>Public API 설계</name>
+          <agent>tsq-planner</agent>
+          <output>service-spec.md</output>
+          <checklist>
+            <item>함수/클래스 시그니처</item>
+            <item>타입 정의</item>
+            <item>옵션 객체</item>
+            <item>반환값</item>
+          </checklist>
+        </task>
+
+        <task id="extension-points" required="true">
+          <name>확장 포인트 정의</name>
+          <agent>tsq-planner</agent>
+          <output>integration-spec.md</output>
+          <checklist>
+            <item>훅/콜백</item>
+            <item>플러그인 인터페이스</item>
+            <item>이벤트 시스템</item>
+          </checklist>
+        </task>
+
+        <task id="glossary" required="true">
+          <name>용어 정의</name>
+          <agent>tsq-planner</agent>
+          <output>glossary.md</output>
+          <checklist>
+            <item>핵심 개념</item>
+            <item>용어 설명</item>
+            <item>예제</item>
+          </checklist>
+        </task>
+      </tasks>
+
+      <validation>
+        <rule>모든 Public API 문서화</rule>
+        <rule>확장 포인트 명확히 정의</rule>
+      </validation>
+
+      <exit-criteria>
+        <criterion>service-spec.md 완성</criterion>
+        <criterion>integration-spec.md 완성</criterion>
+        <criterion>glossary.md 완성</criterion>
+        <criterion>사용자 승인</criterion>
+      </exit-criteria>
+    </phase>
+
+    <!-- Implementation Phase -->
+    <phase id="implementation" order="2">
+      <name>구현</name>
+      <description>타입 안전한 구현, 문서화</description>
+
+      <tasks>
+        <task id="core-implementation" required="true">
+          <name>핵심 기능 구현</name>
+          <agent>tsq-developer</agent>
+          <dependency>public-api</dependency>
+          <checklist>
+            <item>타입 정의</item>
+            <item>핵심 로직</item>
+            <item>에러 처리</item>
+            <item>TSDoc 문서화</item>
+          </checklist>
+        </task>
+
+        <task id="plugin-system" required="false">
+          <name>플러그인 시스템</name>
+          <agent>tsq-developer</agent>
+          <dependency>extension-points</dependency>
+        </task>
+
+        <task id="examples" required="true">
+          <name>예제 코드 작성</name>
+          <agent>tsq-developer</agent>
+          <dependency>core-implementation</dependency>
+        </task>
+      </tasks>
+
+      <validation>
+        <rule>모든 Public API에 TSDoc</rule>
+        <rule>타입 검사 통과</rule>
+        <rule>no-any 규칙 준수</rule>
+      </validation>
+    </phase>
+
+    <!-- Testing Phase -->
+    <phase id="testing" order="3">
+      <name>테스트</name>
+      <description>단위 테스트, 타입 테스트, 번들 테스트</description>
+
+      <tasks>
+        <task id="unit-test" required="true">
+          <name>단위 테스트</name>
+          <agent>tsq-qa</agent>
+          <checklist>
+            <item>모든 Public API 테스트</item>
+            <item>엣지 케이스</item>
+            <item>에러 케이스</item>
+          </checklist>
+        </task>
+
+        <task id="type-test" required="true">
+          <name>타입 테스트</name>
+          <agent>tsq-qa</agent>
+          <checklist>
+            <item>타입 추론 테스트</item>
+            <item>제네릭 테스트</item>
+            <item>에러 타입 테스트</item>
+          </checklist>
+        </task>
+
+        <task id="bundle-test" required="true">
+          <name>번들 테스트</name>
+          <agent>tsq-qa</agent>
+          <checklist>
+            <item>번들 크기 확인</item>
+            <item>Tree-shaking 테스트</item>
+            <item>ESM/CJS 호환성</item>
+          </checklist>
+        </task>
+      </tasks>
+
+      <validation>
+        <rule>테스트 커버리지 90% 이상</rule>
+        <rule>Public API 100% 테스트</rule>
+        <rule>번들 크기 50kb 이하</rule>
+      </validation>
+    </phase>
+
+    <!-- Documentation Phase -->
+    <phase id="documentation" order="4">
+      <name>문서화</name>
+      <description>API 레퍼런스, 가이드 작성</description>
+
+      <tasks>
+        <task id="api-reference" required="true">
+          <name>API 레퍼런스</name>
+          <agent>tsq-developer</agent>
+          <checklist>
+            <item>함수 레퍼런스</item>
+            <item>타입 레퍼런스</item>
+            <item>옵션 설명</item>
+          </checklist>
+        </task>
+
+        <task id="getting-started" required="true">
+          <name>Getting Started</name>
+          <agent>tsq-developer</agent>
+          <checklist>
+            <item>설치 방법</item>
+            <item>기본 사용법</item>
+            <item>간단한 예제</item>
+          </checklist>
+        </task>
+
+        <task id="advanced-guides" required="false">
+          <name>고급 가이드</name>
+          <agent>tsq-developer</agent>
+          <checklist>
+            <item>플러그인 작성</item>
+            <item>커스터마이징</item>
+            <item>마이그레이션</item>
+          </checklist>
+        </task>
+      </tasks>
+    </phase>
+
+    <!-- Release Phase -->
+    <phase id="release" order="5">
+      <name>릴리스</name>
+      <description>버전 관리, 배포</description>
+
+      <tasks>
+        <task id="version-bump" required="true">
+          <name>버전 업데이트</name>
+          <agent>tsq-developer</agent>
+          <checklist>
+            <item>SemVer 규칙 준수</item>
+            <item>Breaking Changes 확인</item>
+          </checklist>
+        </task>
+
+        <task id="changelog" required="true">
+          <name>CHANGELOG 작성</name>
+          <agent>tsq-developer</agent>
+        </task>
+
+        <task id="publish" required="true">
+          <name>npm 배포</name>
+          <agent>tsq-developer</agent>
+          <checklist>
+            <item>dry-run 실행</item>
+            <item>태그 확인</item>
+            <item>배포</item>
+          </checklist>
+        </task>
+      </tasks>
+
+      <approval>
+        <required>true</required>
+        <approvers>
+          <approver>user</approver>
+        </approvers>
+      </approval>
+    </phase>
+  </phases>
+
+  <!-- ============================================================
+       Platform 특화 규칙
+       ============================================================ -->
+  <rules>
+    <rule id="api-stability">
+      <description>Public API는 SemVer 준수</description>
+      <enforcement>strict</enforcement>
+    </rule>
+
+    <rule id="documentation-first">
+      <description>문서화 없이 릴리스 금지</description>
+      <enforcement>strict</enforcement>
+    </rule>
+
+    <rule id="type-safety">
+      <description>any 타입 사용 금지</description>
+      <enforcement>strict</enforcement>
+    </rule>
+
+    <rule id="bundle-size">
+      <description>번들 크기 50kb 이하 유지</description>
+      <enforcement>warning</enforcement>
+    </rule>
+  </rules>
+</workflow>

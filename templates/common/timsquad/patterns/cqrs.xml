@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pattern name="cqrs">
+  <metadata>
+    <full-name>Command Query Responsibility Segregation</full-name>
+    <applies-to>Clean Architecture, Hexagonal Architecture</applies-to>
+    <complexity>high</complexity>
+  </metadata>
+
+  <description>
+    읽기(Query)와 쓰기(Command)를 분리하는 패턴.
+    기존 아키텍처의 Use Case / Application 레이어에 적용.
+  </description>
+
+  <when-to-use>
+    <use>읽기/쓰기 부하 패턴이 크게 다를 때</use>
+    <use>복잡한 도메인 로직 vs 단순 조회</use>
+    <use>읽기 성능 최적화가 중요할 때</use>
+    <avoid>단순 CRUD 애플리케이션</avoid>
+    <avoid>팀 CQRS 경험 없을 때</avoid>
+  </when-to-use>
+
+  <core-concepts>
+    <concept name="command">
+      <description>상태 변경 요청. void 또는 ID만 반환</description>
+      <example>CreateUserCommand, PlaceOrderCommand</example>
+    </concept>
+    <concept name="query">
+      <description>데이터 조회. 상태 변경 없음</description>
+      <example>GetUserQuery, ListOrdersQuery</example>
+    </concept>
+    <concept name="read-model">
+      <description>조회 최적화된 비정규화 모델</description>
+    </concept>
+  </core-concepts>
+
+  <!-- Clean Architecture에 CQRS 적용 시 변경점 -->
+  <apply-to architecture="clean">
+    <modification layer="application">
+      <before>
+        <dir name="use-cases">
+          <file name="create-user.ts" />
+          <file name="get-user.ts" />
+        </dir>
+      </before>
+      <after>
+        <dir name="command">
+          <dir name="user">
+            <file name="create-user.command.ts" />
+            <file name="create-user.handler.ts" />
+          </dir>
+        </dir>
+        <dir name="query">
+          <dir name="user">
+            <file name="get-user.query.ts" />
+            <file name="get-user.handler.ts" />
+            <file name="user.read-model.ts" />
+          </dir>
+        </dir>
+        <dir name="shared">
+          <file name="command-bus.ts" />
+          <file name="query-bus.ts" />
+        </dir>
+      </after>
+    </modification>
+  </apply-to>
+
+  <!-- Hexagonal Architecture에 CQRS 적용 시 변경점 -->
+  <apply-to architecture="hexagonal">
+    <modification layer="application">
+      <before>
+        <dir name="port">
+          <dir name="inbound">
+            <file name="user.port.ts" />
+          </dir>
+        </dir>
+        <dir name="service">
+          <file name="user.service.ts" />
+        </dir>
+      </before>
+      <after>
+        <dir name="command">
+          <file name="create-user.command.ts" />
+          <file name="create-user.handler.ts" />
+        </dir>
+        <dir name="query">
+          <file name="get-user.query.ts" />
+          <file name="get-user.handler.ts" />
+          <file name="user.read-model.ts" />
+        </dir>
+      </after>
+    </modification>
+  </apply-to>
+
+  <code-example language="typescript">
+    <title>Command/Query 기본 구조</title>
+    <code><![CDATA[
+// Command
+class CreateUserCommand {
+  constructor(
+    readonly email: string,
+    readonly name: string
+  ) {}
+}
+
+// Command Handler
+class CreateUserHandler implements ICommandHandler<CreateUserCommand> {
+  async handle(command: CreateUserCommand): Promise<UserId> {
+    const user = User.create(command.email, command.name);
+    await this.userRepository.save(user);
+    return user.id;
+  }
+}
+
+// Query
+class GetUserQuery {
+  constructor(readonly userId: string) {}
+}
+
+// Query Handler (Read Model 사용)
+class GetUserHandler implements IQueryHandler<GetUserQuery, UserReadModel> {
+  async handle(query: GetUserQuery): Promise<UserReadModel> {
+    return this.readRepository.findById(query.userId);
+  }
+}
+    ]]></code>
+  </code-example>
+</pattern>

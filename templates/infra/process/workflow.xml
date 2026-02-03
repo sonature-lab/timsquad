@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TimSquad Infrastructure 워크플로우
+  DevOps, IaC, 인프라 자동화 전용 프로세스 정의
+-->
+<workflow type="infra" version="1.0">
+  <metadata>
+    <description>인프라 구축 워크플로우</description>
+    <focus>IaC, 보안, 고가용성, 비용 최적화</focus>
+  </metadata>
+
+  <!-- ============================================================
+       Phase 정의
+       ============================================================ -->
+  <phases>
+    <!-- Planning Phase -->
+    <phase id="planning" order="1">
+      <name>아키텍처 설계</name>
+      <description>인프라 아키텍처, 보안, 비용 계획</description>
+
+      <tasks>
+        <task id="architecture-design" required="true">
+          <name>인프라 아키텍처 설계</name>
+          <agent>tsq-planner</agent>
+          <output>deployment-spec.md</output>
+          <checklist>
+            <item>네트워크 토폴로지</item>
+            <item>컴퓨팅 리소스</item>
+            <item>스토리지 전략</item>
+            <item>고가용성 설계</item>
+            <item>DR 계획</item>
+          </checklist>
+        </task>
+
+        <task id="security-design" required="true">
+          <name>보안 설계</name>
+          <agent>tsq-security</agent>
+          <output>security-spec.md</output>
+          <checklist>
+            <item>네트워크 보안</item>
+            <item>IAM 정책</item>
+            <item>시크릿 관리</item>
+            <item>암호화 전략</item>
+            <item>컴플라이언스</item>
+          </checklist>
+        </task>
+
+        <task id="env-config" required="true">
+          <name>환경 설정 정의</name>
+          <agent>tsq-planner</agent>
+          <output>env-config.md</output>
+          <checklist>
+            <item>환경별 설정</item>
+            <item>시크릿 목록</item>
+            <item>환경변수</item>
+          </checklist>
+        </task>
+
+        <task id="cost-estimation" required="true">
+          <name>비용 산정</name>
+          <agent>tsq-planner</agent>
+          <checklist>
+            <item>리소스별 비용</item>
+            <item>예상 월간 비용</item>
+            <item>최적화 방안</item>
+          </checklist>
+        </task>
+      </tasks>
+
+      <validation>
+        <rule>보안 요구사항 충족</rule>
+        <rule>비용 예산 내</rule>
+        <rule>DR 계획 포함</rule>
+      </validation>
+
+      <exit-criteria>
+        <criterion>deployment-spec.md 완성</criterion>
+        <criterion>security-spec.md 완성</criterion>
+        <criterion>env-config.md 완성</criterion>
+        <criterion>비용 승인</criterion>
+        <criterion>사용자 승인</criterion>
+      </exit-criteria>
+    </phase>
+
+    <!-- Implementation Phase -->
+    <phase id="implementation" order="2">
+      <name>IaC 구현</name>
+      <description>Terraform/IaC 코드 작성</description>
+
+      <tasks>
+        <task id="network-setup" required="true">
+          <name>네트워크 구성</name>
+          <agent>tsq-developer</agent>
+          <dependency>architecture-design</dependency>
+          <checklist>
+            <item>VPC 구성</item>
+            <item>서브넷 구성</item>
+            <item>보안 그룹</item>
+            <item>라우팅</item>
+          </checklist>
+        </task>
+
+        <task id="compute-setup" required="true">
+          <name>컴퓨팅 구성</name>
+          <agent>tsq-developer</agent>
+          <dependency>network-setup</dependency>
+          <checklist>
+            <item>EC2/ECS/EKS</item>
+            <item>Auto Scaling</item>
+            <item>Load Balancer</item>
+          </checklist>
+        </task>
+
+        <task id="storage-setup" required="true">
+          <name>스토리지 구성</name>
+          <agent>tsq-developer</agent>
+          <dependency>network-setup</dependency>
+          <checklist>
+            <item>RDS/Aurora</item>
+            <item>S3 버킷</item>
+            <item>ElastiCache</item>
+          </checklist>
+        </task>
+
+        <task id="monitoring-setup" required="true">
+          <name>모니터링 구성</name>
+          <agent>tsq-developer</agent>
+          <checklist>
+            <item>CloudWatch 설정</item>
+            <item>알람 설정</item>
+            <item>대시보드</item>
+          </checklist>
+        </task>
+
+        <task id="cicd-setup" required="true">
+          <name>CI/CD 파이프라인</name>
+          <agent>tsq-developer</agent>
+          <checklist>
+            <item>빌드 파이프라인</item>
+            <item>배포 파이프라인</item>
+            <item>승인 단계</item>
+          </checklist>
+        </task>
+      </tasks>
+
+      <validation>
+        <rule>terraform validate 통과</rule>
+        <rule>보안 스캔 통과</rule>
+        <rule>비용 예측 확인</rule>
+      </validation>
+    </phase>
+
+    <!-- Testing Phase -->
+    <phase id="testing" order="3">
+      <name>인프라 테스트</name>
+      <description>인프라 검증, 보안 스캔</description>
+
+      <tasks>
+        <task id="infra-validation" required="true">
+          <name>인프라 검증</name>
+          <agent>tsq-qa</agent>
+          <checklist>
+            <item>terraform plan 확인</item>
+            <item>리소스 생성 테스트</item>
+            <item>연결성 테스트</item>
+          </checklist>
+        </task>
+
+        <task id="security-scan" required="true">
+          <name>보안 스캔</name>
+          <agent>tsq-security</agent>
+          <checklist>
+            <item>Checkov 스캔</item>
+            <item>tfsec 스캔</item>
+            <item>취약점 검사</item>
+          </checklist>
+        </task>
+
+        <task id="dr-test" required="true">
+          <name>DR 테스트</name>
+          <agent>tsq-qa</agent>
+          <checklist>
+            <item>백업 복원 테스트</item>
+            <item>장애 복구 테스트</item>
+          </checklist>
+        </task>
+      </tasks>
+
+      <validation>
+        <rule>보안 스캔 통과</rule>
+        <rule>DR 테스트 통과</rule>
+      </validation>
+    </phase>
+
+    <!-- Staging Deployment -->
+    <phase id="staging" order="4">
+      <name>Staging 배포</name>
+      <description>Staging 환경에 배포 및 검증</description>
+
+      <tasks>
+        <task id="staging-deploy" required="true">
+          <name>Staging 배포</name>
+          <agent>tsq-developer</agent>
+          <checklist>
+            <item>terraform apply (staging)</item>
+            <item>애플리케이션 배포</item>
+            <item>연동 테스트</item>
+          </checklist>
+        </task>
+
+        <task id="staging-validation" required="true">
+          <name>Staging 검증</name>
+          <agent>tsq-qa</agent>
+          <checklist>
+            <item>기능 테스트</item>
+            <item>부하 테스트</item>
+            <item>모니터링 확인</item>
+          </checklist>
+        </task>
+      </tasks>
+    </phase>
+
+    <!-- Production Deployment -->
+    <phase id="production" order="5">
+      <name>Production 배포</name>
+      <description>운영 환경 배포 (수동 승인 필수)</description>
+
+      <tasks>
+        <task id="prod-approval" required="true">
+          <name>배포 승인</name>
+          <approval-required>true</approval-required>
+          <approvers>
+            <approver>user</approver>
+          </approvers>
+        </task>
+
+        <task id="prod-deploy" required="true">
+          <name>Production 배포</name>
+          <agent>tsq-developer</agent>
+          <dependency>prod-approval</dependency>
+          <checklist>
+            <item>백업 확인</item>
+            <item>terraform apply (production)</item>
+            <item>롤백 계획 준비</item>
+          </checklist>
+        </task>
+
+        <task id="prod-validation" required="true">
+          <name>Production 검증</name>
+          <agent>tsq-qa</agent>
+          <checklist>
+            <item>헬스 체크</item>
+            <item>모니터링 확인</item>
+            <item>알람 테스트</item>
+          </checklist>
+        </task>
+      </tasks>
+
+      <rollback>
+        <enabled>true</enabled>
+        <strategy>previous-state</strategy>
+        <timeout>30m</timeout>
+      </rollback>
+    </phase>
+  </phases>
+
+  <!-- ============================================================
+       Infra 특화 규칙
+       ============================================================ -->
+  <rules>
+    <rule id="iac-only">
+      <description>수동 인프라 변경 금지, IaC만 사용</description>
+      <enforcement>strict</enforcement>
+    </rule>
+
+    <rule id="security-first">
+      <description>보안 스캔 통과 필수</description>
+      <enforcement>strict</enforcement>
+    </rule>
+
+    <rule id="prod-approval">
+      <description>Production 배포는 수동 승인 필수</description>
+      <enforcement>strict</enforcement>
+    </rule>
+
+    <rule id="cost-tracking">
+      <description>비용 태깅 필수</description>
+      <enforcement>strict</enforcement>
+    </rule>
+
+    <rule id="backup-before-change">
+      <description>변경 전 백업 확인</description>
+      <enforcement>warning</enforcement>
+    </rule>
+  </rules>
+</workflow>

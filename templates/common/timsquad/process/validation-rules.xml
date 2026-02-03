@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<validation-rules>
+  <metadata>
+    <description>TimSquad 작업 검증 규칙</description>
+    <version>1.0</version>
+  </metadata>
+
+  <!-- ============================================================
+       시스템 검증 (모든 작업 전 필수)
+       ============================================================ -->
+  <system-validation>
+    <rule id="SYS-001" severity="critical">
+      <name>TimSquad 초기화 확인</name>
+      <check>`.timsquad/` 디렉토리 존재</check>
+      <error-message>
+        TimSquad 프로젝트가 아닙니다.
+        먼저 `tsq init --type {type}`을 실행하세요.
+      </error-message>
+      <action-on-fail>block</action-on-fail>
+    </rule>
+
+    <rule id="SYS-002" severity="critical">
+      <name>설정 파일 확인</name>
+      <check>`.timsquad/config.yaml` 존재 및 유효</check>
+      <error-message>설정 파일이 없거나 손상되었습니다.</error-message>
+      <action-on-fail>block</action-on-fail>
+    </rule>
+
+    <rule id="SYS-003" severity="warning">
+      <name>현재 Phase 확인</name>
+      <check>`.timsquad/state/current-phase.json` 존재</check>
+      <error-message>Phase 상태를 확인할 수 없습니다. planning으로 초기화합니다.</error-message>
+      <action-on-fail>initialize</action-on-fail>
+      <default-value>planning</default-value>
+    </rule>
+  </system-validation>
+
+  <!-- ============================================================
+       Phase별 Pre-condition
+       ============================================================ -->
+  <phase-preconditions>
+    <!-- Planning Phase -->
+    <phase id="planning">
+      <precondition id="PLAN-PRE-001" severity="info">
+        <name>기존 SSOT 확인</name>
+        <check>`.timsquad/ssot/` 디렉토리 내용 확인</check>
+        <description>기존 문서가 있으면 읽고 컨텍스트 파악</description>
+      </precondition>
+    </phase>
+
+    <!-- Implementation Phase -->
+    <phase id="implementation">
+      <precondition id="IMPL-PRE-001" severity="critical">
+        <name>필수 SSOT 존재</name>
+        <check>
+          <file required="true">.timsquad/ssot/prd.md</file>
+          <file required="true">.timsquad/ssot/requirements.md</file>
+          <file required="true">.timsquad/ssot/service-spec.md</file>
+        </check>
+        <error-message>
+          구현에 필요한 SSOT 문서가 없습니다.
+          Planning Phase를 먼저 완료하세요.
+        </error-message>
+        <action-on-fail>block</action-on-fail>
+        <route-to>tsq-planner</route-to>
+      </precondition>
+
+      <precondition id="IMPL-PRE-002" severity="critical">
+        <name>SSOT 문서 읽기</name>
+        <check>에이전트가 SSOT 문서를 읽었는지 확인</check>
+        <instruction>
+          작업 시작 전 반드시 다음 문서를 읽으세요:
+          1. .timsquad/ssot/service-spec.md (API 명세)
+          2. .timsquad/ssot/data-design.md (데이터 설계)
+          3. .timsquad/ssot/error-codes.md (에러 코드)
+        </instruction>
+        <action-on-fail>warn-and-continue</action-on-fail>
+      </precondition>
+
+      <precondition id="IMPL-PRE-003" severity="warning">
+        <name>스킬 파일 로드</name>
+        <check>mandatory-skills 섹션의 스킬 파일 로드</check>
+        <instruction>에이전트 정의의 mandatory-skills를 읽고 적용</instruction>
+      </precondition>
+    </phase>
+
+    <!-- Review Phase -->
+    <phase id="review">
+      <precondition id="REV-PRE-001" severity="critical">
+        <name>구현 완료 확인</name>
+        <check>Implementation Phase의 exit-criteria 충족</check>
+        <required-criteria>
+          <criterion>테스트 통과</criterion>
+          <criterion>린트/타입 에러 없음</criterion>
+          <criterion>작업 로그 기록</criterion>
+        </required-criteria>
+        <action-on-fail>block</action-on-fail>
+        <route-to>tsq-developer</route-to>
+      </precondition>
+    </phase>
+
+    <!-- Security Phase -->
+    <phase id="security">
+      <precondition id="SEC-PRE-001" severity="critical">
+        <name>Review 통과</name>
+        <check>Review Phase의 exit-criteria 충족</check>
+        <action-on-fail>block</action-on-fail>
+        <route-to>tsq-qa</route-to>
+      </precondition>
+
+      <precondition id="SEC-PRE-002" severity="warning">
+        <name>보안 명세 확인</name>
+        <check>.timsquad/ssot/security-spec.md 존재 (있는 경우)</check>
+        <description>보안 명세가 있으면 참조</description>
+      </precondition>
+    </phase>
+  </phase-preconditions>
+
+  <!-- ============================================================
+       에이전트별 Pre-condition
+       ============================================================ -->
+  <agent-preconditions>
+    <agent id="tsq-planner">
+      <precondition id="PLN-PRE-001">
+        <name>기존 결정 확인</name>
+        <check>.timsquad/ssot/adr/ 디렉토리 확인</check>
+        <instruction>기존 ADR이 있으면 읽고 일관성 유지</instruction>
+      </precondition>
+
+      <precondition id="PLN-PRE-002">
+        <name>프로젝트 지식 확인</name>
+        <check>.timsquad/knowledge/ 디렉토리 확인</check>
+        <instruction>
+          다음 파일이 있으면 읽고 컨텍스트 파악:
+          - tribal.md (팀 컨벤션)
+          - lessons.md (과거 교훈)
+          - constraints.md (제약사항)
+        </instruction>
+      </precondition>
+    </agent>
+
+    <agent id="tsq-developer">
+      <precondition id="DEV-PRE-001" severity="critical">
+        <name>SSOT 참조 필수</name>
+        <instruction>
+          코드 작성 전 반드시 확인:
+          1. service-spec.md의 API 명세
+          2. data-design.md의 데이터 모델
+          3. error-codes.md의 에러 코드
+
+          SSOT와 다르게 구현하면 즉시 중단하고 tsq-planner에게 보고
+        </instruction>
+      </precondition>
+    </agent>
+
+    <agent id="tsq-qa">
+      <precondition id="QA-PRE-001" severity="critical">
+        <name>검증 기준 확인</name>
+        <instruction>
+          검증 전 반드시 확인:
+          1. service-spec.md (API 일치 여부)
+          2. test-spec.md (테스트 기준, 있는 경우)
+          3. security-spec.md (보안 기준, 있는 경우)
+        </instruction>
+      </precondition>
+    </agent>
+
+    <agent id="tsq-security">
+      <precondition id="SEC-PRE-001" severity="critical">
+        <name>보안 체크리스트 로드</name>
+        <instruction>
+          skills/security/SKILL.md의 체크리스트 로드 필수
+        </instruction>
+      </precondition>
+    </agent>
+  </agent-preconditions>
+
+  <!-- ============================================================
+       Post-condition (작업 후 검증)
+       ============================================================ -->
+  <post-conditions>
+    <!-- 공통 -->
+    <condition id="POST-001" applies-to="all" severity="critical">
+      <name>작업 로그 기록</name>
+      <check>.timsquad/logs/ 에 로그 기록</check>
+      <template>
+        ## {timestamp} | {agent} | {task_title}
+        ### What (작업 내용)
+        ### Why (작업 이유)
+        ### Changes (변경 파일)
+        ### Result (결과)
+      </template>
+      <error-message>로그 없이 작업 완료 불가</error-message>
+      <action-on-fail>block-completion</action-on-fail>
+    </condition>
+
+    <!-- Planner -->
+    <condition id="POST-PLN-001" applies-to="tsq-planner" severity="critical">
+      <name>SSOT 문서 생성/수정</name>
+      <check>SSOT 파일 생성 또는 수정됨</check>
+      <validation>
+        <rule>필수 섹션 존재 (ssot-schema.xml 참조)</rule>
+        <rule>버전 정보 업데이트</rule>
+      </validation>
+    </condition>
+
+    <condition id="POST-PLN-002" applies-to="tsq-planner">
+      <name>주요 결정 ADR 기록</name>
+      <check>아키텍처/설계 결정 시 ADR 생성</check>
+      <triggers>
+        <trigger>기술 스택 선택</trigger>
+        <trigger>아키텍처 패턴 선택</trigger>
+        <trigger>데이터베이스 설계</trigger>
+        <trigger>인증/인가 방식</trigger>
+      </triggers>
+    </condition>
+
+    <!-- Developer -->
+    <condition id="POST-DEV-001" applies-to="tsq-developer" severity="critical">
+      <name>테스트 작성</name>
+      <check>구현 코드에 대한 테스트 존재</check>
+      <criteria>
+        <criterion>단위 테스트 작성</criterion>
+        <criterion>테스트 통과</criterion>
+      </criteria>
+      <error-message>테스트 없이 구현 완료 불가</error-message>
+    </condition>
+
+    <condition id="POST-DEV-002" applies-to="tsq-developer" severity="critical">
+      <name>SSOT 일치 확인</name>
+      <check>구현이 SSOT와 일치</check>
+      <validation>
+        <rule>API 엔드포인트 일치 (service-spec.md)</rule>
+        <rule>데이터 모델 일치 (data-design.md)</rule>
+        <rule>에러 코드 일치 (error-codes.md)</rule>
+      </validation>
+      <on-mismatch>
+        <action>작업 중단</action>
+        <route-to>tsq-planner</route-to>
+        <report>SSOT 불일치 내용 보고</report>
+      </on-mismatch>
+    </condition>
+
+    <condition id="POST-DEV-003" applies-to="tsq-developer" severity="warning">
+      <name>코드 품질</name>
+      <check>린트/타입 에러 없음</check>
+      <commands>
+        <command>npm run lint</command>
+        <command>npm run type-check</command>
+      </commands>
+    </condition>
+
+    <!-- QA -->
+    <condition id="POST-QA-001" applies-to="tsq-qa" severity="critical">
+      <name>피드백 레벨 분류</name>
+      <check>모든 피드백에 레벨(1/2/3) 지정</check>
+      <error-message>레벨 분류 없이 피드백 불가</error-message>
+    </condition>
+
+    <condition id="POST-QA-002" applies-to="tsq-qa" severity="critical">
+      <name>리포트 형식</name>
+      <check>정해진 리포트 형식 준수</check>
+      <template-ref>agents/tsq-qa.md#report-format</template-ref>
+    </condition>
+
+    <!-- Security -->
+    <condition id="POST-SEC-001" applies-to="tsq-security" severity="critical">
+      <name>취약점 심각도 분류</name>
+      <check>모든 발견 사항에 심각도 지정</check>
+      <levels>Critical, High, Medium, Low</levels>
+    </condition>
+
+    <condition id="POST-SEC-002" applies-to="tsq-security" severity="critical">
+      <name>OWASP/CWE 참조</name>
+      <check>취약점에 OWASP/CWE 번호 포함</check>
+    </condition>
+  </post-conditions>
+
+  <!-- ============================================================
+       Invariant (항상 유지해야 하는 규칙)
+       ============================================================ -->
+  <invariants>
+    <invariant id="INV-001" severity="critical">
+      <name>SSOT는 진실의 원천</name>
+      <rule>SSOT 문서와 구현이 항상 일치해야 함</rule>
+      <on-violation>
+        <action>작업 중단</action>
+        <report>불일치 내용을 tsq-planner에게 보고</report>
+      </on-violation>
+    </invariant>
+
+    <invariant id="INV-002" severity="critical">
+      <name>에이전트 간 직접 통신 금지</name>
+      <rule>모든 에스컬레이션은 명시적 라우팅 규칙을 따름</rule>
+    </invariant>
+
+    <invariant id="INV-003" severity="critical">
+      <name>User 승인 지점 준수</name>
+      <rule>Level 3 피드백, Critical 보안 이슈는 User 승인 필수</rule>
+    </invariant>
+
+    <invariant id="INV-004" severity="warning">
+      <name>로그 기록 필수</name>
+      <rule>모든 작업은 로그 기록이 필수</rule>
+      <exception>단순 조회, 질문 응답</exception>
+    </invariant>
+  </invariants>
+</validation-rules>

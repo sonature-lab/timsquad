@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  TimSquad Retrospective Configuration
+
+  이론적 기반:
+  - Agentsway (arXiv:2510.23664): Retrospective Learning, Prompting Agent
+  - ACM TOSEM LMA Survey: Competency Mapping, Performance Evaluation
+  - Self-Refine: Iterative FEEDBACK → REFINE Loop
+  - MAR (Multi-Agent Reflexion): Episodic Memory, Reflection
+-->
+<retrospective-config version="1.0">
+  <metadata>
+    <description>회고 시스템 설정 및 규칙 정의</description>
+    <theoretical-basis>
+      <paper id="agentsway" arxiv="2510.23664">Retrospective Learning</paper>
+      <paper id="tosem" doi="10.1145/3712003">Competency Framework</paper>
+      <paper id="self-refine">Iterative Refinement</paper>
+    </theoretical-basis>
+  </metadata>
+
+  <!-- ============================================================
+       패턴 감지 규칙 (Pattern Detection)
+       Agentsway: "Fine-tuned LLMs leverage outputs and feedback"
+       ============================================================ -->
+  <pattern-detection>
+    <!-- 실패 패턴 자동 감지 임계값 -->
+    <failure-patterns>
+      <threshold
+        min-occurrences="3"
+        time-window="7d"
+        description="3회 이상 반복되면 패턴으로 등록">
+        <action>register_pattern</action>
+        <action>notify_pm</action>
+      </threshold>
+
+      <categories>
+        <category id="CQ" name="코드 품질">
+          <trigger>test_failure</trigger>
+          <trigger>lint_error</trigger>
+          <trigger>type_error</trigger>
+          <trigger>runtime_error</trigger>
+        </category>
+        <category id="DM" name="설계 불일치">
+          <trigger>api_mismatch</trigger>
+          <trigger>schema_mismatch</trigger>
+          <trigger>ssot_violation</trigger>
+        </category>
+        <category id="RQ" name="요구사항">
+          <trigger>requirement_ambiguity</trigger>
+          <trigger>scope_creep</trigger>
+          <trigger>missing_acceptance_criteria</trigger>
+        </category>
+        <category id="PR" name="프로세스">
+          <trigger>phase_violation</trigger>
+          <trigger>missing_documentation</trigger>
+          <trigger>workflow_error</trigger>
+        </category>
+        <category id="CM" name="커뮤니케이션">
+          <trigger>handoff_failure</trigger>
+          <trigger>context_loss</trigger>
+          <trigger>unclear_instruction</trigger>
+        </category>
+      </categories>
+    </failure-patterns>
+
+    <!-- 성공 패턴 자동 감지 -->
+    <success-patterns>
+      <threshold
+        min-occurrences="3"
+        success-rate="90%"
+        description="3회 이상 90% 성공률이면 패턴으로 등록">
+        <action>register_pattern</action>
+        <action>consider_standardization</action>
+      </threshold>
+
+      <categories>
+        <category id="DC" name="문서화">
+          <indicator>ssot_first_implementation</indicator>
+          <indicator>comprehensive_adr</indicator>
+        </category>
+        <category id="CQ" name="코드 품질">
+          <indicator>tdd_approach</indicator>
+          <indicator>high_coverage</indicator>
+        </category>
+        <category id="CL" name="협업">
+          <indicator>complete_handoff</indicator>
+          <indicator>clear_context</indicator>
+        </category>
+      </categories>
+    </success-patterns>
+  </pattern-detection>
+
+  <!-- ============================================================
+       개선 규칙 (Improvement Rules)
+       Self-Refine: "FEEDBACK → REFINE iterative loop"
+       ============================================================ -->
+  <improvement-rules>
+    <!-- 자동 개선 제안 조건 -->
+    <auto-suggestion>
+      <rule id="IMP-AUTO-001">
+        <condition>failure_pattern.occurrences >= 3</condition>
+        <action>generate_prompt_improvement</action>
+        <target>affected_agent.skill_md</target>
+        <requires-approval>true</requires-approval>
+      </rule>
+
+      <rule id="IMP-AUTO-002">
+        <condition>success_pattern.validated == true</condition>
+        <action>propose_standardization</action>
+        <target>skill_md, template</target>
+        <requires-approval>true</requires-approval>
+      </rule>
+
+      <rule id="IMP-AUTO-003">
+        <condition>agent.score &lt; 70</condition>
+        <action>analyze_weakness</action>
+        <action>generate_training_suggestion</action>
+        <requires-approval>true</requires-approval>
+      </rule>
+    </auto-suggestion>
+
+    <!-- 개선 적용 프로세스 (Iterative Refinement) -->
+    <apply-process>
+      <step order="1">
+        <name>Proposal</name>
+        <description>개선안 생성</description>
+        <agent>tsq-retro</agent>
+      </step>
+      <step order="2">
+        <name>Review</name>
+        <description>PM/사용자 검토</description>
+        <requires-approval>true</requires-approval>
+      </step>
+      <step order="3">
+        <name>Apply</name>
+        <description>파일 수정 적용</description>
+        <targets>
+          <target type="skill">.claude/agents/*.md</target>
+          <target type="template">.timsquad/ssot/*.template.md</target>
+          <target type="knowledge">.timsquad/knowledge/lessons.md</target>
+        </targets>
+      </step>
+      <step order="4">
+        <name>Verify</name>
+        <description>다음 사이클에서 효과 측정</description>
+        <metric>pattern_recurrence</metric>
+        <metric>agent_score_change</metric>
+      </step>
+    </apply-process>
+  </improvement-rules>
+
+  <!-- ============================================================
+       메트릭 정의 (Metrics Definition)
+       ACM TOSEM: "Performance Evaluation"
+       ============================================================ -->
+  <metrics-definition>
+    <!-- 에이전트 성과 메트릭 -->
+    <agent-metrics>
+      <metric id="success_rate" weight="0.3">
+        <formula>(successful_tasks / total_tasks) * 100</formula>
+        <target>90%</target>
+      </metric>
+      <metric id="revision_rate" weight="0.2">
+        <formula>1 - (avg_revisions / max_expected_revisions)</formula>
+        <target>&lt; 2 revisions</target>
+      </metric>
+      <metric id="feedback_rate" weight="0.2">
+        <formula>1 - (level2_level3_feedback / total_tasks)</formula>
+        <target>&lt; 10%</target>
+      </metric>
+      <metric id="ssot_compliance" weight="0.15">
+        <formula>compliant_implementations / total_implementations</formula>
+        <target>100%</target>
+      </metric>
+      <metric id="handoff_quality" weight="0.15">
+        <formula>complete_handoffs / total_handoffs</formula>
+        <target>95%</target>
+      </metric>
+    </agent-metrics>
+
+    <!-- 사이클 메트릭 -->
+    <cycle-metrics>
+      <metric id="total_tasks">완료된 작업 수</metric>
+      <metric id="overall_success_rate">전체 성공률</metric>
+      <metric id="avg_cycle_time">평균 작업 시간</metric>
+      <metric id="level3_feedback_count">Level 3 피드백 수</metric>
+      <metric id="pattern_recurrence">반복 패턴 수</metric>
+    </cycle-metrics>
+
+    <!-- 점수 계산 -->
+    <score-calculation>
+      <formula>
+        agent_score =
+          (success_rate * 0.3) +
+          (revision_rate * 0.2) +
+          (feedback_rate * 0.2) +
+          (ssot_compliance * 0.15) +
+          (handoff_quality * 0.15)
+      </formula>
+      <thresholds>
+        <level name="excellent" min="90">우수</level>
+        <level name="good" min="80">양호</level>
+        <level name="needs_improvement" min="70">개선 필요</level>
+        <level name="critical" min="0">심각</level>
+      </thresholds>
+    </score-calculation>
+  </metrics-definition>
+
+  <!-- ============================================================
+       회고 사이클 설정
+       ============================================================ -->
+  <cycle-settings>
+    <!-- 사이클 기간 -->
+    <duration>
+      <default unit="days">14</default>
+      <minimum unit="days">7</minimum>
+      <maximum unit="days">30</maximum>
+    </duration>
+
+    <!-- 사이클 종료 조건 -->
+    <completion-criteria>
+      <criterion type="time">기간 만료</criterion>
+      <criterion type="milestone">주요 마일스톤 완료</criterion>
+      <criterion type="manual">사용자 수동 종료</criterion>
+    </completion-criteria>
+
+    <!-- 자동 회고 트리거 -->
+    <auto-triggers>
+      <trigger condition="phase_transition">Phase 전환 시</trigger>
+      <trigger condition="major_milestone">주요 마일스톤 완료 시</trigger>
+      <trigger condition="critical_feedback_count >= 5">Critical 피드백 5건 이상</trigger>
+    </auto-triggers>
+
+    <!-- 리포트 보존 -->
+    <retention>
+      <cycles-to-keep>10</cycles-to-keep>
+      <archive-after unit="months">6</archive-after>
+    </retention>
+  </cycle-settings>
+
+  <!-- ============================================================
+       에이전트 역할 (회고 관련)
+       ============================================================ -->
+  <agent-roles>
+    <agent id="tsq-retro">
+      <responsibilities>
+        <duty>로그 분석 및 메트릭 계산</duty>
+        <duty>패턴 식별 및 분류</duty>
+        <duty>개선안 생성</duty>
+        <duty>회고 리포트 작성</duty>
+      </responsibilities>
+      <permissions>
+        <permission>read:.timsquad/logs/*</permission>
+        <permission>read:.timsquad/state/*</permission>
+        <permission>write:.timsquad/retrospective/*</permission>
+      </permissions>
+    </agent>
+
+    <agent id="pm">
+      <responsibilities>
+        <duty>개선안 검토 및 승인</duty>
+        <duty>사용자에게 회고 결과 보고</duty>
+        <duty>개선 적용 조율</duty>
+      </responsibilities>
+    </agent>
+  </agent-roles>
+
+  <!-- ============================================================
+       학습 규칙 (Retrospective Learning)
+       Agentsway: "Retrospective learning process"
+       ============================================================ -->
+  <learning-rules>
+    <!-- 지식 축적 -->
+    <knowledge-accumulation>
+      <rule id="LEARN-001">
+        <source>resolved_failure_patterns</source>
+        <destination>.timsquad/knowledge/lessons.md</destination>
+        <format>structured_lesson</format>
+      </rule>
+      <rule id="LEARN-002">
+        <source>validated_success_patterns</source>
+        <destination>.timsquad/knowledge/tribal.md</destination>
+        <format>best_practice</format>
+      </rule>
+    </knowledge-accumulation>
+
+    <!-- 프롬프트 진화 -->
+    <prompt-evolution>
+      <versioning>semantic</versioning>
+      <rollback-enabled>true</rollback-enabled>
+      <a-b-testing>optional</a-b-testing>
+    </prompt-evolution>
+  </learning-rules>
+</retrospective-config>

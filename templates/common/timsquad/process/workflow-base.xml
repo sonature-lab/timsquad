@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow-definitions>
+  <metadata>
+    <description>TimSquad 기본 워크플로우 정의</description>
+    <version>1.0</version>
+  </metadata>
+
+  <!-- 공통 Phase 정의 -->
+  <phases>
+    <phase id="planning" name="기획/설계">
+      <primary-agent>tsq-planner</primary-agent>
+      <description>요구사항 분석, SSOT 문서 작성, 아키텍처 설계</description>
+
+      <tasks>
+        <task id="analyze">요구사항 분석</task>
+        <task id="ssot">SSOT 문서 작성 (prd, requirements, service-spec, data-design)</task>
+        <task id="adr">아키텍처 결정 기록 (ADR)</task>
+      </tasks>
+
+      <methodology-tasks>
+        <task methodology="ddd">Bounded Context 정의, 용어 사전 작성</task>
+        <task methodology="bdd">Feature 시나리오 작성 (Gherkin)</task>
+      </methodology-tasks>
+
+      <mandatory-outputs>
+        <output>ssot/prd.md</output>
+        <output>ssot/requirements.md</output>
+        <output>ssot/service-spec.md</output>
+      </mandatory-outputs>
+
+      <exit-criteria>
+        <criterion>필수 SSOT 문서 완성</criterion>
+        <criterion>User 승인</criterion>
+      </exit-criteria>
+    </phase>
+
+    <phase id="implementation" name="구현">
+      <primary-agent>tsq-developer</primary-agent>
+      <description>SSOT 기반 코드 구현, 테스트 작성</description>
+
+      <pre-conditions>
+        <condition required="true">SSOT 문서 확인</condition>
+        <condition required="true">스킬 파일 로드</condition>
+        <condition required="true">아키텍처 파일 참조</condition>
+      </pre-conditions>
+
+      <tasks>
+        <task id="read-ssot">SSOT 문서 읽기 및 요약</task>
+        <task id="plan">구현 계획 수립</task>
+        <task id="implement">코드 구현</task>
+        <task id="test">테스트 작성</task>
+        <task id="log">작업 로그 기록</task>
+      </tasks>
+
+      <methodology-tasks>
+        <task methodology="tdd" order="before-implement">테스트 먼저 작성</task>
+        <task methodology="bdd" order="before-implement">Step Definition 작성</task>
+      </methodology-tasks>
+
+      <escalation-rules>
+        <rule trigger="SSOT 불일치" route="tsq-planner" action="작업 중단">
+          SSOT와 요구사항이 맞지 않으면 즉시 중단하고 Planner에게 보고
+        </rule>
+        <rule trigger="요구사항 불명확" route="User" action="질문">
+          불명확한 부분은 User에게 직접 질문
+        </rule>
+        <rule trigger="보안 우려" route="tsq-security" action="검토 요청">
+          보안 관련 우려 발견 시 Security에게 검토 요청
+        </rule>
+      </escalation-rules>
+
+      <exit-criteria>
+        <criterion>테스트 통과 (커버리지 80% 이상)</criterion>
+        <criterion>린트/타입 에러 없음</criterion>
+        <criterion>작업 로그 작성 완료</criterion>
+      </exit-criteria>
+    </phase>
+
+    <phase id="review" name="검증">
+      <primary-agent>tsq-qa</primary-agent>
+      <description>코드 리뷰, 테스트 검증, SSOT 일치 확인</description>
+
+      <tasks>
+        <task id="code-review">코드 리뷰</task>
+        <task id="test-verify">테스트 커버리지 검증</task>
+        <task id="ssot-check">SSOT 일치 확인</task>
+        <task id="basic-security">기본 보안 체크</task>
+      </tasks>
+
+      <feedback-routing>
+        <level id="1" severity="Minor,Major" route="tsq-developer">
+          <triggers>코드 스타일, 테스트 누락, 린트 오류, 타입 에러</triggers>
+          <action>Developer에게 수정 요청</action>
+          <return-to-phase>implementation</return-to-phase>
+        </level>
+        <level id="2" severity="Major" route="tsq-planner">
+          <triggers>API 명세 불일치, 데이터 모델 불일치, 설계 문제</triggers>
+          <action>Planner에게 SSOT 수정 요청</action>
+          <return-to-phase>planning</return-to-phase>
+        </level>
+        <level id="3" severity="Critical" route="User">
+          <triggers>요구사항 오류, 비즈니스 로직 문제, 스코프 변경</triggers>
+          <action>User 승인 필요</action>
+          <requires-approval>true</requires-approval>
+          <return-to-phase>planning</return-to-phase>
+        </level>
+      </feedback-routing>
+
+      <exit-criteria>
+        <criterion>모든 체크리스트 통과</criterion>
+        <criterion>Critical/Major 이슈 해결됨</criterion>
+      </exit-criteria>
+    </phase>
+
+    <phase id="security" name="보안 검토">
+      <primary-agent>tsq-security</primary-agent>
+      <description>보안 취약점 분석, 컴플라이언스 체크</description>
+
+      <tasks>
+        <task id="owasp">OWASP Top 10 체크</task>
+        <task id="secrets">시크릿 노출 검사</task>
+        <task id="deps">의존성 취약점 검사</task>
+        <task id="auth">인증/인가 검토</task>
+      </tasks>
+
+      <feedback-routing>
+        <level id="1" severity="Low,Medium" route="tsq-developer">
+          <triggers>코드 수준 보안 이슈</triggers>
+        </level>
+        <level id="2" severity="High" route="tsq-planner">
+          <triggers>설계 수준 보안 이슈</triggers>
+        </level>
+        <level id="3" severity="Critical" route="User">
+          <triggers>심각한 취약점, 컴플라이언스 위반</triggers>
+          <action>즉시 알림, 배포 중단</action>
+          <requires-approval>true</requires-approval>
+        </level>
+      </feedback-routing>
+
+      <exit-criteria>
+        <criterion>Critical 취약점 없음</criterion>
+        <criterion>High 취약점 해결됨</criterion>
+      </exit-criteria>
+    </phase>
+
+    <phase id="complete" name="완료">
+      <tasks>
+        <task id="final-log">최종 로그 정리</task>
+        <task id="retrospective" optional="true">회고 데이터 수집</task>
+      </tasks>
+    </phase>
+  </phases>
+
+  <!-- 공통 규칙 -->
+  <global-rules>
+    <rule id="no-direct-communication">
+      에이전트 간 직접 통신 금지. 모든 에스컬레이션은 명시적 라우팅 규칙 따름.
+    </rule>
+    <rule id="user-can-intervene">
+      User는 어느 Phase에서든 개입 가능
+    </rule>
+    <rule id="phase-regression">
+      Phase 회귀 시 해당 Phase부터 재시작
+    </rule>
+    <rule id="mandatory-logging">
+      모든 작업은 로그 기록 필수. 미기록 시 작업 미완료로 간주.
+    </rule>
+  </global-rules>
+
+  <!-- User 승인 필요 지점 -->
+  <user-checkpoints>
+    <checkpoint phase="planning" event="SSOT 완료">User 승인 필요</checkpoint>
+    <checkpoint phase="review" event="Level 3 피드백">User 승인 필요</checkpoint>
+    <checkpoint phase="security" event="Critical 발견">User 즉시 알림</checkpoint>
+  </user-checkpoints>
+
+  <!-- 로그 템플릿 -->
+  <log-template>
+    <![CDATA[
+## {timestamp} | {agent} | {task_title}
+
+### What (작업 내용)
+{task_description}
+
+### Why (작업 이유)
+{reason}
+- 관련 ADR: {adr_link}
+
+### Reference (참조)
+- SSOT: {ssot_files}
+- 외부: {external_refs}
+
+### Changes (변경 파일)
+{changed_files}
+
+### Result (결과)
+{success|failure}
+- 테스트: {test_result}
+- 비고: {notes}
+    ]]>
+  </log-template>
+</workflow-definitions>
