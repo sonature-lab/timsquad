@@ -4,7 +4,7 @@ import { colors, printHeader, printError, printSuccess, printKeyValue } from '..
 import { findProjectRoot } from '../../lib/project.js';
 import { promptInput, promptConfirm } from '../../utils/prompts.js';
 
-const CO_AUTHOR = 'Co-Authored-By: Claude <noreply@anthropic.com>';
+const CO_AUTHOR = 'Co-Authored-By: TimSquad <timsquad@noreply>';
 
 export function registerCommitCommand(program: Command): void {
   program
