@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow extends="common/process/workflow-base.xml">
+  <metadata>
+    <name>web-app-workflow</name>
+    <description>BaaS 기반 웹앱 프로젝트용 워크플로우</description>
+    <type>web-app</type>
+    <version>1.0</version>
+  </metadata>
+
+  <!-- 레벨별 워크플로우 프리셋 -->
+  <presets>
+    <preset id="mvp" level="1" description="MVP - 빠른 개발">
+      <phases include="planning,implementation,review,complete"/>
+      <skip-phases>security</skip-phases>
+      <simplified-rules>
+        <rule>보안 검토 생략 가능</rule>
+        <rule>테스트 커버리지 60% 허용</rule>
+        <rule>기본 RLS 정책만 필수</rule>
+      </simplified-rules>
+    </preset>
+
+    <preset id="standard" level="2" description="표준 - 균형 잡힌 개발">
+      <phases include="planning,implementation,review,complete"/>
+      <optional-phases>security</optional-phases>
+      <rules>
+        <rule>UI/UX 명세 필수</rule>
+        <rule>데이터 설계 (RLS 포함) 필수</rule>
+        <rule>테스트 커버리지 80% 필수</rule>
+        <rule>코드 리뷰 필수</rule>
+      </rules>
+    </preset>
+
+    <preset id="enterprise" level="3" description="엔터프라이즈 - 완전한 프로세스">
+      <phases include="planning,implementation,review,security,complete"/>
+      <mandatory>
+        <item>모든 Phase 통과 필수</item>
+        <item>보안 검토 필수</item>
+        <item>RLS 감사 필수</item>
+        <item>테스트 커버리지 90% 필수</item>
+      </mandatory>
+    </preset>
+  </presets>
+
+  <!-- Web App 특화 Phase 확장 -->
+  <phase-extensions>
+    <!-- 기획 Phase 확장 -->
+    <extend-phase id="planning">
+      <additional-tasks>
+        <task id="ui-ux">UI/UX 설계 (화면 플로우, 테마, 컴포넌트)</task>
+        <task id="data-design">데이터 설계 (테이블, RLS, 인덱스)</task>
+        <task id="baas-integration">BaaS 기능 설계 (Auth, Storage, Realtime)</task>
+      </additional-tasks>
+
+      <additional-outputs>
+        <output required="true">ssot/ui-ux-spec.md</output>
+        <output required="true">ssot/data-design.md</output>
+      </additional-outputs>
+
+      <context-verification>
+        <instruction priority="critical">
+          템플릿 작성 시 프로젝트의 실제 BaaS 프로바이더와 기능을 확인하고,
+          사용하지 않는 외부 서비스(Stripe, SendGrid 등)를 포함하지 마세요.
+          config.yaml의 baas.features와 stack 설정을 먼저 확인하세요.
+        </instruction>
+      </context-verification>
+
+      <agent-assignment>
+        <task ref="ui-ux" agent="tsq-designer" fallback="tsq-planner"/>
+        <task ref="data-design" agent="tsq-dba" fallback="tsq-planner" mode="architect"/>
+        <task ref="baas-integration" agent="tsq-planner" mode="architect"/>
+      </agent-assignment>
+    </extend-phase>
+
+    <!-- 구현 Phase 확장: BaaS 앱은 프론트엔드 중심 -->
+    <extend-phase id="implementation">
+      <parallel-tracks>
+        <track id="frontend" agent="tsq-frontend" fallback="tsq-developer">
+          <description>프론트엔드 + BaaS 연동 구현</description>
+          <prerequisites>
+            <check>ssot/ui-ux-spec.md</check>
+            <check>ssot/service-spec.md</check>
+            <check>ssot/data-design.md</check>
+          </prerequisites>
+          <tasks>
+            <task id="baas-setup">BaaS 클라이언트 설정 (Server/Browser/Middleware)</task>
+            <task id="auth">BaaS Auth 연동 (로그인, 회원가입, 세션)</task>
+            <task id="components">UI 컴포넌트 구현</task>
+            <task id="pages">페이지 구현</task>
+            <task id="state">상태 관리</task>
+            <task id="data-access">데이터 접근 계층 (BaaS SDK 호출)</task>
+          </tasks>
+          <exit-criteria>
+            <criterion>모든 화면 구현 완료</criterion>
+            <criterion>BaaS 연동 테스트 통과</criterion>
+            <criterion>반응형 디자인 확인</criterion>
+          </exit-criteria>
+        </track>
+
+        <track id="database" agent="tsq-dba" fallback="tsq-developer">
+          <description>데이터베이스 + RLS 구현</description>
+          <prerequisites>
+            <check>ssot/data-design.md</check>
+          </prerequisites>
+          <tasks>
+            <task id="migrations">Migration 파일 작성</task>
+            <task id="rls">RLS 정책 구현</task>
+            <task id="indexes">인덱스 최적화</task>
+            <task id="seed">Seed 데이터 작성</task>
+          </tasks>
+          <exit-criteria>
+            <criterion>모든 테이블 생성 완료</criterion>
+            <criterion>RLS 정책 적용 완료</criterion>
+            <criterion>Migration 테스트 통과</criterion>
+          </exit-criteria>
+        </track>
+
+        <track id="edge-functions" optional="true" agent="tsq-developer">
+          <description>Edge Functions (서버사이드 로직)</description>
+          <condition>config.baas.features.edge_functions == true</condition>
+          <tasks>
+            <task id="edge-impl">Edge Function 구현</task>
+            <task id="edge-test">Edge Function 테스트</task>
+          </tasks>
+        </track>
+      </parallel-tracks>
+
+      <methodology-variants>
+        <variant methodology="tdd">
+          <task-order>test → implement → refactor</task-order>
+          <enforcement>테스트 없이 구현 코드 PR 금지</enforcement>
+        </variant>
+      </methodology-variants>
+    </extend-phase>
+
+    <!-- 검증 Phase 확장 -->
+    <extend-phase id="review">
+      <additional-checklists>
+        <checklist name="UI/UX 검증">
+          <item>디자인 명세 일치</item>
+          <item>반응형 동작 확인</item>
+          <item>접근성(a11y) 기본 체크</item>
+          <item>로딩/에러 상태 UI</item>
+        </checklist>
+
+        <checklist name="BaaS 연동 검증">
+          <item>Auth 플로우 정상 동작</item>
+          <item>RLS 정책 올바르게 적용됨</item>
+          <item>BaaS SDK 호출 패턴 일관성</item>
+          <item>환경별 BaaS 프로젝트 분리 확인</item>
+        </checklist>
+
+        <checklist name="데이터 검증">
+          <item>data-design.md와 실제 스키마 일치</item>
+          <item>모든 테이블에 RLS 정책 존재</item>
+          <item>인덱스 적절히 설정됨</item>
+          <item>Soft delete 정책 일관성</item>
+        </checklist>
+
+        <checklist name="성능 기본">
+          <item>First Contentful Paint &lt; 1.5s</item>
+          <item>Largest Contentful Paint &lt; 2.5s</item>
+          <item>BaaS 쿼리 응답 시간 &lt; 500ms</item>
+          <item>번들 사이즈 체크</item>
+        </checklist>
+      </additional-checklists>
+    </extend-phase>
+  </phase-extensions>
+
+  <!-- Web App 특화 에스컬레이션 규칙 -->
+  <escalation-extensions>
+    <rule trigger="UI/UX 불일치" route="tsq-designer" fallback="tsq-planner">
+      화면 설계와 구현이 맞지 않으면 Designer에게 확인
+    </rule>
+    <rule trigger="RLS 정책 누락" route="tsq-planner" mode="architect">
+      RLS 정책 미적용 테이블 발견 시 즉시 설계 보완
+    </rule>
+    <rule trigger="BaaS 연동 오류" route="tsq-developer">
+      BaaS SDK 호출 오류 시 Developer가 수정
+    </rule>
+    <rule trigger="성능 이슈" route="tsq-developer">
+      성능 기준 미달 시 Developer가 최적화
+    </rule>
+  </escalation-extensions>
+
+  <!-- 배포 설정 -->
+  <deployment>
+    <environments>
+      <env name="development" auto-deploy="true">
+        <baas-project>dev 프로젝트</baas-project>
+      </env>
+      <env name="staging" requires-review="true">
+        <baas-project>staging 프로젝트</baas-project>
+      </env>
+      <env name="production" requires-approval="true">
+        <baas-project>production 프로젝트</baas-project>
+      </env>
+    </environments>
+
+    <ci-cd>
+      <provider>github-actions</provider>
+      <checks>
+        <check>lint</check>
+        <check>type-check</check>
+        <check>unit-tests</check>
+        <check>build</check>
+        <check>rls-audit</check>
+      </checks>
+    </ci-cd>
+  </deployment>
+</workflow>

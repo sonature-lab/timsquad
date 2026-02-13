@@ -15,6 +15,8 @@ import { registerReleaseCommand } from './commands/git/release.js';
 import { registerSyncCommand } from './commands/git/sync.js';
 import { registerWatchCommand } from './commands/watch.js';
 import { registerMetricsCommand } from './commands/metrics.js';
+import { registerImproveCommand } from './commands/improve.js';
+import { registerSessionCommand } from './commands/session.js';
 
 const program = new Command();
 
@@ -37,6 +39,8 @@ registerReleaseCommand(program);
 registerSyncCommand(program);
 registerWatchCommand(program);
 registerMetricsCommand(program);
+registerImproveCommand(program);
+registerSessionCommand(program);
 
 // Default action (show help)
 program.action(() => {

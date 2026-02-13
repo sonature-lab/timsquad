@@ -65,11 +65,13 @@ tools: [Read, Bash, Grep, Glob]
       <item>민감 정보 노출 없음</item>
       <item>하드코딩된 시크릿 없음</item>
     </checklist>
-    <checklist name="SSOT 일치">
-      <item>API 엔드포인트 일치</item>
+    <checklist name="SSOT 일치 (교차 검증)">
+      <item>API 엔드포인트 일치 (service-spec.md ↔ 구현 코드)</item>
       <item>Request/Response 형식 일치</item>
-      <item>에러 코드 일치</item>
-      <item>데이터 모델 일치</item>
+      <item>에러 코드 일치 (error-codes.md ↔ 구현 코드)</item>
+      <item>데이터 모델 일치 (data-design.md ↔ 마이그레이션/스키마)</item>
+      <item>FR-XXX ID 추적성 (requirements.md → functional-spec.md → test-spec.md)</item>
+      <item>용어 일관성 (glossary.md 기준)</item>
     </checklist>
     <checklist name="성능">
       <item>N+1 쿼리 없음</item>
@@ -87,6 +89,38 @@ tools: [Read, Bash, Grep, Glob]
     <must-not>피드백 없이 "문제 없음" 결론</must-not>
     <must-not>Level 분류 없이 피드백 전달</must-not>
   </rules>
+
+  <tsq-cli priority="critical">
+    <instruction>
+      로그 기록, 피드백, 메트릭 등 TSQ CLI가 제공하는 기능은
+      반드시 CLI 커맨드를 사용하세요. 직접 파일을 조작하지 마세요.
+      CLI를 사용해야 구조화된 데이터가 자동 저장되어 회고 시스템에 집계됩니다.
+    </instruction>
+
+    <on-review-start>
+      tsq status --ssot             # SSOT 완성도 확인
+      tsq log add qa work "리뷰 시작: {대상 설명}"
+    </on-review-start>
+
+    <on-issue-found>
+      tsq feedback "{이슈 설명}"    # Level 자동 분류 + JSON 저장
+      tsq log add qa feedback "Level {n}: {이슈 요약}"
+    </on-issue-found>
+
+    <on-review-complete>
+      tsq log add qa work "리뷰 완료: {결과 요약}"
+      tsq metrics collect            # 메트릭 자동 수집
+    </on-review-complete>
+
+    <on-phase-complete>
+      tsq retro phase review         # Phase 회고 (KPT)
+    </on-phase-complete>
+
+    <forbidden>
+      직접 .timsquad/logs/ 파일 생성/수정 금지 (tsq log 사용)
+      직접 .timsquad/feedback/ 파일 생성 금지 (tsq feedback 사용)
+    </forbidden>
+  </tsq-cli>
 
   <feedback-routing>
     <level id="1" severity="Minor/Major">

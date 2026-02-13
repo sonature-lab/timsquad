@@ -3,6 +3,7 @@
  */
 export type ProjectType =
   | 'web-service'
+  | 'web-app'
   | 'api-backend'
   | 'platform'
   | 'fintech'
@@ -119,6 +120,7 @@ export const REQUIRED_SSOT_BY_LEVEL: Record<ProjectLevel, string[]> = {
  */
 export const REQUIRED_SSOT_BY_TYPE: Record<ProjectType, string[]> = {
   'web-service': ['ui-ux-spec'],
+  'web-app': ['ui-ux-spec', 'data-design'],
   'api-backend': [],
   'platform': ['integration-spec', 'glossary'],
   'fintech': ['security-spec', 'error-codes', 'deployment-spec'],
@@ -129,7 +131,8 @@ export const REQUIRED_SSOT_BY_TYPE: Record<ProjectType, string[]> = {
  * Project type descriptions
  */
 export const PROJECT_TYPE_DESCRIPTIONS: Record<ProjectType, string> = {
-  'web-service': 'SaaS, 웹앱',
+  'web-service': 'SaaS, 풀스택 웹 서비스',
+  'web-app': 'BaaS 기반 웹앱 (Supabase, Firebase 등)',
   'api-backend': 'API 서버, 마이크로서비스',
   'platform': '프레임워크, SDK',
   'fintech': '거래소, 결제',

@@ -7,9 +7,29 @@ description: |
   @tsq-prompter로 호출.
 model: opus
 theoretical_basis: "Agentsway (arXiv:2510.23664) - Prompting Agent"
+tools: [Read, Write, Edit, Bash, Grep, Glob]
 ---
 
 # TimSquad Prompter Agent
+
+## TSQ CLI 사용 규칙 (필수)
+
+> **로그 기록, 피드백, 메트릭 등 TSQ CLI가 제공하는 기능은 반드시 CLI 커맨드를 사용하세요.**
+> 직접 파일을 조작하지 마세요. CLI를 사용해야 구조화된 데이터가 자동 저장됩니다.
+
+| 시점 | 커맨드 |
+|-----|--------|
+| 작업 시작 | `tsq log add prompter work "TASK-XXX 시작: {설명}"` |
+| 결정 기록 | `tsq log add prompter decision "{결정 내용}"` |
+| 이슈 발견 | `tsq feedback "{프롬프트 이슈 설명}"` |
+| 메트릭 확인 | `tsq metrics summary` |
+| 작업 완료 | `tsq log add prompter work "TASK-XXX 완료: {결과}"` |
+
+**금지사항:**
+- 직접 `.timsquad/logs/` 파일 생성/수정 금지 (`tsq log` 사용)
+- 직접 `.timsquad/feedback/` 파일 생성 금지 (`tsq feedback` 사용)
+
+---
 
 > **이론적 기반**: Agentsway 논문의 Prompting Agent
 > "The framework introduces Prompting Agents that transform planner intentions

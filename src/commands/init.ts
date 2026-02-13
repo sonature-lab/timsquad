@@ -22,7 +22,7 @@ export function registerInitCommand(program: Command): void {
     .command('init')
     .description('Initialize a new TimSquad project')
     .option('-n, --name <name>', 'Project name')
-    .option('-t, --type <type>', 'Project type (web-service|api-backend|platform|fintech|infra)')
+    .option('-t, --type <type>', 'Project type (web-service|web-app|api-backend|platform|fintech|infra)')
     .option('-l, --level <level>', 'Project level (1=MVP|2=Standard|3=Enterprise)')
     .option('-d, --dir <path>', 'Target directory', '.')
     .option('-y, --yes', 'Skip confirmation prompts')
@@ -57,6 +57,7 @@ async function runInit(options: InitOptions): Promise<void> {
   } else {
     type = await promptSelect<ProjectType>('Project type:', [
       { name: 'web-service', value: 'web-service', description: PROJECT_TYPE_DESCRIPTIONS['web-service'] },
+      { name: 'web-app', value: 'web-app', description: PROJECT_TYPE_DESCRIPTIONS['web-app'] },
       { name: 'api-backend', value: 'api-backend', description: PROJECT_TYPE_DESCRIPTIONS['api-backend'] },
       { name: 'platform', value: 'platform', description: PROJECT_TYPE_DESCRIPTIONS['platform'] },
       { name: 'fintech', value: 'fintech', description: PROJECT_TYPE_DESCRIPTIONS['fintech'] },
@@ -170,7 +171,7 @@ async function runInit(options: InitOptions): Promise<void> {
 }
 
 function isValidProjectType(value: string): value is ProjectType {
-  return ['web-service', 'api-backend', 'platform', 'fintech', 'infra'].includes(value);
+  return ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra'].includes(value);
 }
 
 function isValidProjectLevel(value: string): boolean {

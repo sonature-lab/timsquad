@@ -6,8 +6,9 @@
 # ============================================================
 project:
   name: my-project
-  type: web-service      # web-service | api-backend | platform | fintech | infra
+  type: web-service      # web-service | web-app | api-backend | platform | fintech | infra
   level: 2               # 1=MVP | 2=Standard | 3=Enterprise
+  architecture: traditional  # traditional | baas | microservices
   description: ""
 
 # ============================================================

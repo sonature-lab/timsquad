@@ -1,11 +1,12 @@
 import { Command } from 'commander';
 import path from 'path';
+import fs from 'fs-extra';
 import { colors, printHeader, printError, printSuccess, printKeyValue } from '../utils/colors.js';
 import { findProjectRoot } from '../lib/project.js';
-import { exists, readFile, writeFile } from '../utils/fs.js';
+import { exists, readFile, writeFile, listFiles } from '../utils/fs.js';
 import { loadYaml } from '../utils/yaml.js';
-import { getDateString, getTimeString } from '../utils/date.js';
-import type { FeedbackLevel, FeedbackRoutingRules } from '../types/index.js';
+import { getDateString, getTimeString, getTimestamp } from '../utils/date.js';
+import type { FeedbackLevel, FeedbackRoutingRules, FeedbackEntry } from '../types/index.js';
 import { DEFAULT_ROUTING_RULES } from '../types/feedback.js';
 
 export function registerFeedbackCommand(program: Command): void {
@@ -152,6 +153,8 @@ async function logFeedback(
 ): Promise<void> {
   const date = getDateString();
   const time = getTimeString();
+
+  // 1. Markdown log (기존)
   const logDir = path.join(projectRoot, '.timsquad', 'logs');
   const logFile = path.join(logDir, `${date}-feedback.md`);
 
@@ -168,4 +171,25 @@ async function logFeedback(
   content += `**Message:**\n\n${message}\n\n---\n\n`;
 
   await writeFile(logFile, content);
+
+  // 2. Structured JSON (retro report 집계용)
+  const feedbackDir = path.join(projectRoot, '.timsquad', 'feedback');
+  await fs.ensureDir(feedbackDir);
+
+  const existingFiles = await listFiles('FB-*.json', feedbackDir);
+  const nextNum = existingFiles.length + 1;
+  const fileName = `FB-${String(nextNum).padStart(4, '0')}.json`;
+
+  const entry: FeedbackEntry = {
+    id: `FB-${String(nextNum).padStart(4, '0')}`,
+    timestamp: getTimestamp(),
+    type: 'feedback',
+    level: result.level,
+    trigger: result.trigger,
+    message,
+    routeTo: result.routeTo,
+    tags: [result.trigger, `level-${result.level}`],
+  };
+
+  await fs.writeJson(path.join(feedbackDir, fileName), entry, { spaces: 2 });
 }

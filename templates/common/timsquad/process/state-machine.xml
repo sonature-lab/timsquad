@@ -110,12 +110,19 @@
           <check>service-spec.md 존재</check>
         </condition>
         <condition type="required">
+          <check>workspace.xml 동기화 완료 (모든 Planning TASK가 completed-tasks에 존재)</check>
+        </condition>
+        <condition type="required">
+          <check>workspace.xml handoff 섹션 작성 완료</check>
+        </condition>
+        <condition type="required">
           <check>User 승인 완료</check>
         </condition>
       </conditions>
 
       <on-transition>
         <action>상태 파일 업데이트</action>
+        <action>workspace.xml active-session을 tsq-developer로 변경</action>
         <action>Planning Phase 완료 로그 기록</action>
         <notification>User에게 구현 시작 알림</notification>
       </on-transition>
@@ -123,6 +130,7 @@
       <on-failure>
         <action>차단 사유 표시</action>
         <suggestion>누락된 SSOT 문서 작성 필요</suggestion>
+        <suggestion>workspace.xml 동기화 필요</suggestion>
       </on-failure>
     </transition>
 
@@ -149,10 +157,14 @@
         <condition type="required">
           <check>작업 로그 기록 완료</check>
         </condition>
+        <condition type="required">
+          <check>workspace.xml 동기화 완료 (모든 Implementation TASK가 completed-tasks에 존재)</check>
+        </condition>
       </conditions>
 
       <on-transition>
         <action>상태 파일 업데이트</action>
+        <action>workspace.xml active-session을 tsq-qa로 변경</action>
         <action>QA 에이전트에게 리뷰 요청 전달</action>
       </on-transition>
     </transition>

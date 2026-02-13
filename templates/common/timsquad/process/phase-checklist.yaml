@@ -1,0 +1,174 @@
+# TimSquad Phase 전환 체크리스트
+# 각 Phase 전환 시 반드시 확인해야 할 항목
+# 에이전트는 이 체크리스트를 모두 통과해야 다음 Phase로 진행 가능
+
+version: "1.0"
+
+# ============================================================
+# Planning → Implementation
+# ============================================================
+planning_to_implementation:
+  description: "기획/설계 완료 → 구현 시작"
+  checklist:
+    # SSOT 문서 완성 확인
+    - id: ssot-complete
+      check: "필수 SSOT 문서가 모두 작성되었는가?"
+      required: true
+      validation:
+        - "prd.md 존재 및 내용 작성됨"
+        - "requirements.md 존재 및 내용 작성됨"
+        - "service-spec.md 존재 및 내용 작성됨"
+        - "프로젝트 타입별 필수 문서 확인 (REQUIRED_SSOT_BY_TYPE)"
+        - "프로젝트 레벨별 필수 문서 확인 (REQUIRED_SSOT_BY_LEVEL)"
+
+    # workspace.xml 동기화 확인
+    - id: workspace-synced
+      check: "workspace.xml이 최신 상태인가?"
+      required: true
+      validation:
+        - "모든 Planning TASK가 completed-tasks에 존재"
+        - "pending-tasks에 미완료 Planning 작업 없음"
+        - "current-task가 비어있거나 Implementation 첫 TASK"
+
+    # Handoff 작성 확인
+    - id: handoff-written
+      check: "workspace.xml의 handoff 섹션이 작성되었는가?"
+      required: true
+      validation:
+        - "from: tsq-planner"
+        - "to: tsq-developer"
+        - "message: 인수인계 내용 작성됨"
+        - "attachments: 참조할 SSOT 문서 목록"
+        - "action-items: 구현 우선순위 목록"
+
+    # 사용자 승인
+    - id: user-approval
+      check: "사용자가 구현 진행을 승인했는가?"
+      required: true
+      validation:
+        - "pending-approvals에 승인 요청 기록"
+        - "사용자 승인 응답 수신"
+
+  on_failure:
+    - "미완료 항목 목록 표시"
+    - "Phase 전환 차단"
+    - "누락된 문서 작성 안내"
+
+# ============================================================
+# Implementation → Review
+# ============================================================
+implementation_to_review:
+  description: "구현 완료 → 검증 시작"
+  checklist:
+    - id: tests-pass
+      check: "모든 테스트가 통과하는가?"
+      required: true
+      validation:
+        - "npm run test 성공"
+        - "커버리지 최소 기준 충족 (L1: 60%, L2: 80%, L3: 90%)"
+
+    - id: no-lint-errors
+      check: "린트 에러가 없는가?"
+      required: true
+      validation:
+        - "npm run lint 성공"
+
+    - id: no-type-errors
+      check: "타입 에러가 없는가?"
+      required: true
+      validation:
+        - "npm run type-check 성공"
+
+    - id: work-log
+      check: "작업 로그가 기록되었는가?"
+      required: true
+      validation:
+        - ".timsquad/logs/ 에 최신 로그 존재"
+
+    - id: workspace-synced
+      check: "workspace.xml이 최신 상태인가?"
+      required: true
+      validation:
+        - "모든 Implementation TASK가 completed-tasks에 존재"
+        - "구현 결과 output 기록됨"
+
+  on_failure:
+    - "실패 항목 상세 표시"
+    - "Phase 전환 차단"
+    - "수정 필요 항목 안내"
+
+# ============================================================
+# Review → Security (Level 3 / fintech 필수)
+# ============================================================
+review_to_security:
+  description: "검증 완료 → 보안 검토"
+  required_for: ["level-3", "fintech"]
+  optional_for: ["level-1", "level-2"]
+  checklist:
+    - id: no-critical-issues
+      check: "Critical/Major 이슈가 모두 해결되었는가?"
+      required: true
+
+    - id: qa-checklist
+      check: "QA 체크리스트를 모두 통과했는가?"
+      required: true
+
+    - id: feedback-resolved
+      check: "미해결 피드백이 없는가?"
+      required: true
+      validation:
+        - "feedback-queue에 pending 항목 없음"
+
+# ============================================================
+# Review → Complete (보안 생략 시, Level 1/2만)
+# ============================================================
+review_to_complete:
+  description: "검증 완료 → 완료 (보안 생략)"
+  allowed_for: ["level-1", "level-2"]
+  forbidden_for: ["level-3", "fintech"]
+  checklist:
+    - id: no-critical-issues
+      check: "Critical/Major 이슈가 모두 해결되었는가?"
+      required: true
+
+    - id: qa-checklist
+      check: "QA 체크리스트를 모두 통과했는가?"
+      required: true
+
+# ============================================================
+# Security → Complete
+# ============================================================
+security_to_complete:
+  description: "보안 검토 완료 → 완료"
+  checklist:
+    - id: no-critical-vuln
+      check: "Critical 취약점이 없는가?"
+      required: true
+
+    - id: high-vuln-resolved
+      check: "High 취약점이 모두 해결되었는가?"
+      required: true
+
+    - id: user-approval
+      check: "사용자 승인을 받았는가? (Level 3 / fintech)"
+      required_for: ["level-3", "fintech"]
+
+# ============================================================
+# 공통 규칙
+# ============================================================
+common_rules:
+  # 체크리스트 미통과 시 행동
+  on_checklist_failure:
+    action: block_transition
+    message: "Phase 전환 조건이 충족되지 않았습니다."
+    show: "미충족 항목 목록"
+
+  # workspace.xml 업데이트는 모든 전환의 공통 조건
+  workspace_sync:
+    required: true
+    description: "모든 Phase 전환 시 workspace.xml이 최신 상태여야 합니다."
+
+  # 로그 기록은 모든 전환의 공통 조건
+  logging:
+    required: true
+    description: "Phase 전환 시 전환 사유와 결과를 로그에 기록합니다."

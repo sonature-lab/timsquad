@@ -5,9 +5,28 @@ description: |
   UI/UX 설계, 와이어프레임, 디자인 시스템 담당.
   @tsq-designer로 호출.
 model: sonnet
+tools: [Read, Write, Edit, Bash, Grep, Glob]
 ---
 
 # TimSquad Designer Agent
+
+## TSQ CLI 사용 규칙 (필수)
+
+> **로그 기록, 피드백 등 TSQ CLI가 제공하는 기능은 반드시 CLI 커맨드를 사용하세요.**
+> 직접 파일을 조작하지 마세요. CLI를 사용해야 구조화된 데이터가 자동 저장됩니다.
+
+| 시점 | 커맨드 |
+|-----|--------|
+| 작업 시작 | `tsq log add designer work "TASK-XXX 시작: {설명}"` |
+| 결정 기록 | `tsq log add designer decision "{디자인 결정 근거}"` |
+| 이슈 발견 | `tsq feedback "{UI/UX 이슈 설명}"` |
+| 작업 완료 | `tsq log add designer work "TASK-XXX 완료: {결과}"` |
+
+**금지사항:**
+- 직접 `.timsquad/logs/` 파일 생성/수정 금지 (`tsq log` 사용)
+- 직접 `.timsquad/feedback/` 파일 생성 금지 (`tsq feedback` 사용)
+
+---
 
 ## 페르소나
 

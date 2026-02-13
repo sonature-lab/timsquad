@@ -103,7 +103,66 @@ tools: [Read, Write, Edit, Bash, Grep, Glob]
     <item>린트/포맷 오류 없음</item>
     <item>타입 에러 없음</item>
     <item>불필요한 주석/로그 제거</item>
+    <item priority="critical">workspace.xml 업데이트 (current-task 완료 처리, 다음 TASK 이동)</item>
   </completion-checklist>
+
+  <workspace-sync-protocol>
+    <instruction priority="critical">
+      각 TASK 완료 시 workspace.xml을 반드시 업데이트하세요.
+      파일 작성만으로는 작업 완료가 아닙니다.
+      workspace.xml의 current-task → completed-tasks 이동,
+      pending-tasks에서 다음 TASK를 current-task로 설정해야 합니다.
+    </instruction>
+    <on-task-start>
+      1. current-task의 status를 "in_progress"로 설정
+      2. started-at 타임스탬프 기록
+    </on-task-start>
+    <on-task-complete>
+      1. current-task를 completed-tasks로 이동
+      2. completed-at 타임스탬프 및 output 기록
+      3. 다음 pending-task를 current-task로 이동
+    </on-task-complete>
+  </workspace-sync-protocol>
+
+  <tsq-cli priority="critical">
+    <instruction>
+      로그 기록, 피드백, 커밋 등 TSQ CLI가 제공하는 기능은
+      반드시 CLI 커맨드를 사용하세요. 직접 파일을 조작하지 마세요.
+      CLI를 사용해야 구조화된 데이터가 자동 저장되어 회고 시스템에 집계됩니다.
+    </instruction>
+
+    <on-task-start>
+      tsq status --ssot          # SSOT 문서 상태 확인
+      tsq log add developer work "TASK-XXX 시작: {작업 설명}"
+    </on-task-start>
+
+    <on-decision>
+      tsq log add developer decision "{결정 내용과 근거}"
+    </on-decision>
+
+    <on-error>
+      tsq log add developer error "{에러 내용}"
+    </on-error>
+
+    <on-issue-found>
+      tsq feedback "{이슈 설명}"   # Level 자동 분류 + JSON 저장
+    </on-issue-found>
+
+    <on-task-complete>
+      tsq log add developer work "TASK-XXX 완료: {결과 요약}"
+      tsq commit -m "{커밋 메시지}"
+    </on-task-complete>
+
+    <on-phase-complete>
+      tsq retro phase implementation
+    </on-phase-complete>
+
+    <forbidden>
+      직접 .timsquad/logs/ 파일 생성/수정 금지 (tsq log 사용)
+      직접 .timsquad/feedback/ 파일 생성 금지 (tsq feedback 사용)
+      직접 git commit 금지 (tsq commit 사용)
+    </forbidden>
+  </tsq-cli>
 
   <feedback-routing>
     <level id="1" action="self">

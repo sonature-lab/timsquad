@@ -108,6 +108,10 @@ async function copyDirectoryWithSubstitution(
 
       if (textExtensions.includes(ext)) {
         await copyAndProcessFile(srcPath, destPath, variables);
+        // Preserve executable permission for shell scripts
+        if (ext === '.sh') {
+          await fs.chmod(destPath, 0o755);
+        }
       } else {
         await fs.copy(srcPath, destPath);
       }
@@ -171,6 +175,7 @@ export async function initializeProject(
   const additionalDirs = [
     '.timsquad/logs',
     '.timsquad/logs/quick',
+    '.timsquad/logs/sessions',
     '.timsquad/state',
     '.timsquad/knowledge',
     '.timsquad/retrospective/cycles',
@@ -185,6 +190,9 @@ export async function initializeProject(
 
   // 6. Create initial state files
   await createInitialStateFiles(projectRoot, name, type, effectiveLevel);
+
+  // 7. Create .gitignore (기존 파일이 없을 때만)
+  await createGitignore(projectRoot);
 }
 
 /**
@@ -208,7 +216,7 @@ async function createInitialStateFiles(
     { spaces: 2 }
   );
 
-  // knowledge files
+  // knowledge files (이하 기존 로직)
   const knowledgeDir = path.join(projectRoot, '.timsquad', 'knowledge');
 
   await fs.writeFile(
@@ -228,4 +236,66 @@ async function createInitialStateFiles(
     `# Project Constraints\n\n`,
     'utf-8'
   );
+}
+
+/**
+ * Create .gitignore for TimSquad project
+ * .timsquad/, .claude/, CLAUDE.md 는 git 추적 대상으로 포함
+ * 런타임 생성 파일과 일반적 무시 대상만 제외
+ */
+async function createGitignore(projectRoot: string): Promise<void> {
+  const gitignorePath = path.join(projectRoot, '.gitignore');
+
+  // 기존 .gitignore가 있으면 건드리지 않음
+  if (await fs.pathExists(gitignorePath)) {
+    return;
+  }
+
+  const content = `# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+dist/
+build/
+.next/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Temp
+*.tmp
+*.temp
+
+# ============================================================
+# TimSquad - 아래 항목은 git에 포함됨 (ignore하지 않음)
+# ============================================================
+# CLAUDE.md          → 프로젝트 에이전트 지시사항 (추적)
+# .claude/           → 에이전트, 스킬, 훅 설정 (추적)
+# .timsquad/         → SSOT, 설정, 프로세스 (추적)
+#
+# 단, 런타임 생성 로그/세션 데이터는 제외:
+.timsquad/logs/sessions/
+.timsquad/logs/quick/
+.timsquad/logs/*-session.md
+.timsquad/logs/*-alerts.md
+.timsquad/retrospective/metrics/latest.json
+`;
+
+  await fs.writeFile(gitignorePath, content, 'utf-8');
 }

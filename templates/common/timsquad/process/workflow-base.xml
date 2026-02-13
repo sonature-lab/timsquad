@@ -165,7 +165,131 @@
     <rule id="mandatory-logging">
       모든 작업은 로그 기록 필수. 미기록 시 작업 미완료로 간주.
     </rule>
+    <rule id="mandatory-workspace-sync">
+      모든 TASK 완료 시 workspace.xml 업데이트 필수. 미동기화 시 작업 미완료로 간주.
+    </rule>
+    <rule id="phase-checklist">
+      Phase 전환 시 phase-checklist.yaml의 해당 체크리스트를 모두 통과해야 함.
+    </rule>
   </global-rules>
+
+  <!-- 에이전트 위임 실패 폴백 전략 -->
+  <agent-fallback-strategy>
+    <description>
+      서브에이전트 실행 실패 시 (Bash 권한 거부, 환경 미설정 등) 자동 폴백 전략.
+      역할 분리 원칙을 최대한 유지하되, 프로세스 중단을 방지.
+    </description>
+
+    <fallback-chain>
+      <step id="1" action="retry">
+        <description>동일 에이전트로 1회 재시도</description>
+        <max-retries>1</max-retries>
+        <wait>5s</wait>
+      </step>
+      <step id="2" action="fallback-agent">
+        <description>폴백 에이전트로 위임 (workflow에 정의된 fallback)</description>
+        <example>tsq-frontend 실패 → tsq-developer로 폴백</example>
+        <example>tsq-dba 실패 → tsq-planner(architect)로 폴백</example>
+      </step>
+      <step id="3" action="pm-direct">
+        <description>PM(현재 에이전트)이 직접 처리</description>
+        <conditions>
+          <condition>폴백 에이전트도 실패한 경우</condition>
+          <condition>환경 자체 문제 (권한, 의존성 미설치)</condition>
+        </conditions>
+        <logging>
+          역할 분리 원칙 위반 사유를 로그에 기록.
+          회고 시 개선 대상으로 플래그.
+        </logging>
+      </step>
+      <step id="4" action="user-notify">
+        <description>모든 폴백 실패 시 사용자에게 알림</description>
+        <message>에이전트 실행 환경 문제 보고. 수동 개입 요청.</message>
+      </step>
+    </fallback-chain>
+
+    <!-- 환경 사전 요구사항 -->
+    <environment-prerequisites>
+      <instruction>
+        .timsquad/knowledge/setup.md에 프로젝트 환경 요구사항을 문서화하세요.
+        에이전트 실행 전 이 파일을 확인하여 누락된 의존성을 사전 설치합니다.
+      </instruction>
+      <common-requirements>
+        <requirement>Node.js 18+</requirement>
+        <requirement>패키지 매니저 (npm/pnpm/bun)</requirement>
+        <requirement>corepack enable (pnpm 사용 시)</requirement>
+      </common-requirements>
+    </environment-prerequisites>
+  </agent-fallback-strategy>
+
+  <!-- 대용량 문서 분할 가이드 -->
+  <large-document-guide>
+    <description>
+      1,000 lines 이상 예상되는 SSOT 문서는 토큰 초과를 방지하기 위해 분할 작성합니다.
+    </description>
+    <rules>
+      <rule id="split-threshold">
+        단일 문서가 800 lines 이상 예상되면 섹션별 분할 작성
+      </rule>
+      <rule id="domain-split">
+        도메인별 분리: 예) functional-spec.md → FS-AUTH.md, FS-MATCH.md, FS-PAYMENT.md
+      </rule>
+      <rule id="sequential-append">
+        분할 문서는 순차 append 방식으로 작성 (한 번에 전체 작성 금지)
+      </rule>
+      <rule id="index-file">
+        분할된 문서들의 인덱스 파일 유지 (예: functional-spec.md에 각 분할 파일 링크)
+      </rule>
+    </rules>
+    <split-patterns>
+      <pattern document="functional-spec.md">
+        <split-by>도메인 (인증, 매칭, 결제 등)</split-by>
+        <naming>FS-{DOMAIN}.md (예: FS-AUTH.md)</naming>
+      </pattern>
+      <pattern document="service-spec.md">
+        <split-by>API 그룹 (auth, users, resources 등)</split-by>
+        <naming>API-{GROUP}.md (예: API-AUTH.md)</naming>
+      </pattern>
+      <pattern document="data-design.md">
+        <split-by>도메인 (사용자, 매칭, 트랜잭션 등)</split-by>
+        <naming>DD-{DOMAIN}.md (예: DD-USERS.md)</naming>
+      </pattern>
+    </split-patterns>
+  </large-document-guide>
+
+  <!-- SSOT 교차 검증 규칙 -->
+  <ssot-cross-validation>
+    <description>
+      SSOT 문서 간 일관성을 검증하는 규칙.
+      에이전트(특히 tsq-qa)가 검증 시 적용.
+    </description>
+    <rules>
+      <rule id="fr-id-consistency">
+        <check>requirements.md의 FR-XXX ID가 functional-spec.md에서 참조됨</check>
+        <severity>Major</severity>
+      </rule>
+      <rule id="api-endpoint-match">
+        <check>service-spec.md의 API 엔드포인트가 구현 코드와 일치</check>
+        <severity>Critical</severity>
+      </rule>
+      <rule id="error-code-match">
+        <check>error-codes.md의 에러 코드가 구현 코드에서 올바르게 사용됨</check>
+        <severity>Major</severity>
+      </rule>
+      <rule id="data-model-match">
+        <check>data-design.md의 테이블/필드가 실제 스키마(마이그레이션)와 일치</check>
+        <severity>Critical</severity>
+      </rule>
+      <rule id="glossary-consistency">
+        <check>glossary.md의 용어가 모든 SSOT 문서에서 일관되게 사용됨</check>
+        <severity>Minor</severity>
+      </rule>
+      <rule id="req-to-test-traceability">
+        <check>requirements.md의 각 FR이 test-spec.md에서 테스트 케이스로 매핑됨</check>
+        <severity>Major</severity>
+      </rule>
+    </rules>
+  </ssot-cross-validation>
 
   <!-- User 승인 필요 지점 -->
   <user-checkpoints>

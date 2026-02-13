@@ -1,0 +1,198 @@
+# TimSquad Web App Template Configuration
+# BaaS 기반 웹 앱 (Supabase, Firebase 등) 전용
+
+template:
+  name: web-app
+  description: BaaS 기반 웹앱을 위한 템플릿
+  version: 2.0.0
+
+# ============================================================
+# 프로젝트 기본값
+# ============================================================
+project:
+  type: web-app
+  level: 2
+  architecture: baas     # BaaS 기반 아키텍처
+
+# ============================================================
+# 개발 방법론 기본값
+# ============================================================
+methodology:
+  development: tdd
+  process: agile
+  branching: github-flow
+  review: required
+
+# ============================================================
+# 권장 기술 스택
+# ============================================================
+stack:
+  language: typescript
+
+  frontend:
+    enabled: true
+    framework: nextjs
+    state: zustand
+    styling: tailwind
+    testing: vitest
+
+  backend:
+    enabled: false         # BaaS 사용 → 별도 백엔드 서버 없음
+    baas: supabase         # supabase | firebase | appwrite
+    runtime: edge          # Edge Functions (Supabase/Vercel)
+    testing: vitest
+
+  database:
+    primary: postgresql    # BaaS 관리형 DB
+    orm: none              # BaaS SDK 직접 사용
+    rls: required          # Row Level Security 필수
+    cache: none
+
+  infrastructure:
+    hosting: vercel
+    baas_provider: supabase
+    container: false
+    ci_cd: github
+
+# ============================================================
+# 스킬 자동 로딩 규칙
+# ============================================================
+skills:
+  base:
+    - coding
+    - testing
+    - security
+    - planning
+    - architecture
+
+  type-specific:
+    - typescript
+    - frontend/react
+    - frontend/nextjs
+    - methodology/tdd
+
+# ============================================================
+# SSOT 문서 설정
+# ============================================================
+ssot:
+  required:
+    - prd.md
+    - planning.md
+    - requirements.md
+    - service-spec.md       # API / BaaS 호출 명세
+    - data-design.md        # 테이블, RLS, 인덱스 설계 (필수)
+    - ui-ux-spec.md         # UI/UX 명세 (필수)
+    - error-codes.md
+
+  recommended:
+    - functional-spec.md
+    - glossary.md
+    - test-spec.md
+    - env-config.md
+
+  optional:
+    - integration-spec.md   # BaaS 외 외부 연동이 있을 때만
+    - security-spec.md
+    - deployment-spec.md
+
+# ============================================================
+# BaaS 특화 설정
+# ============================================================
+baas:
+  provider: supabase
+
+  # Supabase 기능별 활성화
+  features:
+    auth: true             # Supabase Auth
+    storage: false         # Supabase Storage
+    realtime: false        # Supabase Realtime
+    edge_functions: false  # Supabase Edge Functions
+    rpc: false             # Database RPC
+
+  # RLS (Row Level Security) 정책
+  rls:
+    required: true
+    audit: required        # 모든 테이블에 RLS 정책 존재 확인
+
+  # 데이터 설계 주의사항
+  data_design:
+    # BaaS는 ORM 없이 직접 SQL/SDK 사용
+    migration: supabase    # Supabase Migration
+    naming: snake_case     # PostgreSQL 네이밍
+    soft_delete: recommended
+
+# ============================================================
+# 추가 에이전트
+# ============================================================
+additional_agents:
+  - name: tsq-frontend
+    description: 프론트엔드 전문 개발자
+    base: tsq-developer
+    skills: [frontend/react, frontend/nextjs, typescript]
+
+# ============================================================
+# 레벨별 권장 사항
+# ============================================================
+level_recommendations:
+  1:  # MVP
+    focus:
+      - 핵심 기능 구현
+      - BaaS Auth 연동
+      - 최소 UI
+      - 기본 RLS 설정
+    skip:
+      - 성능 최적화
+      - 상세 모니터링
+      - 복잡한 권한 체계
+
+  2:  # Standard
+    focus:
+      - 완전한 기능
+      - 테스트 커버리지 80%+
+      - UI/UX 품질
+      - RLS 정책 완성
+      - 기본 모니터링
+    skip:
+      - 엔터프라이즈 보안
+      - 멀티 리전
+
+  3:  # Enterprise
+    focus:
+      - 전체 기능
+      - 테스트 커버리지 90%+
+      - 보안 강화 (OWASP)
+      - 상세 모니터링
+      - 문서화 완성
+      - RLS 감사
+    additional_agents:
+      - tsq-security
+
+# ============================================================
+# 배포 설정
+# ============================================================
+deployment:
+  frontend: vercel         # Vercel 배포
+  baas: supabase           # Supabase 관리형
+  environments:
+    - development
+    - staging
+    - production
+  env_sync: required       # 환경별 환경변수 동기화 필수
+
+# ============================================================
+# 코딩 규칙
+# ============================================================
+coding:
+  # BaaS 클라이언트 패턴
+  baas_client:
+    server_client: required    # 서버 컴포넌트용 클라이언트
+    browser_client: required   # 브라우저용 클라이언트
+    middleware: required       # Auth 미들웨어
+
+  # Server Actions / API Routes
+  api_pattern: server-actions  # server-actions | api-routes
+
+  # 타입 생성
+  type_generation:
+    source: supabase           # supabase gen types
+    auto_update: recommended
