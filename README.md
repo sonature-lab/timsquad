@@ -329,11 +329,6 @@ tsq sync                             # fetch + rebase
 tsq release                          # 태그 + GitHub Release
 ```
 
-모든 커밋에 자동 추가:
-```
-Co-Authored-By: TimSquad <timsquad@noreply>
-```
-
 ### SSOT 감시
 
 ```bash

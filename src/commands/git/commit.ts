@@ -4,8 +4,6 @@ import { colors, printHeader, printError, printSuccess, printKeyValue } from '..
 import { findProjectRoot } from '../../lib/project.js';
 import { promptInput, promptConfirm } from '../../utils/prompts.js';
 
-const CO_AUTHOR = 'Co-Authored-By: TimSquad <timsquad@noreply>';
-
 export function registerCommitCommand(program: Command): void {
   program
     .command('commit [message]')
@@ -92,11 +90,8 @@ async function runCommit(message?: string, stageAll?: boolean): Promise<void> {
     }
   }
 
-  // Add Co-Author
-  const fullMessage = `${commitMessage}\n\n${CO_AUTHOR}`;
-
   // Commit
-  const result = await git.commit(fullMessage);
+  const result = await git.commit(commitMessage);
 
   printSuccess('Committed successfully');
   printKeyValue('Commit', result.commit);

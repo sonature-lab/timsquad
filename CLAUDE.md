@@ -44,4 +44,4 @@ tsq retro                     # 회고 실행
 - 스크립트 작업 시 `scripts/` 확인
 
 ## 커밋 규칙
-- Co-Authored-By는 `Co-Authored-By: TimSquad <timsquad@noreply>` 로 표기
+- Conventional Commits 형식 사용 (feat:, fix:, refactor: 등)

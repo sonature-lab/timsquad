@@ -38,8 +38,6 @@ fi
 git add -A
 
 # 커밋
-git commit -m "$MESSAGE
-
-Co-Authored-By: TimSquad <timsquad@noreply>"
+git commit -m "$MESSAGE"
 
 echo -e "${GREEN}커밋 완료: $MESSAGE${NC}"
