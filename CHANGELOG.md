@@ -8,11 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.3.0] - 2026-02-15
 
 ### Added
+- **`tsq upgrade` 범용 버전 동기화**: npm 업데이트 후 프로젝트 템플릿 자동 동기화
+  - `--dry-run`: 변경 미리보기
+  - `--rollback`: 직전 로컬 버전으로 복원
+  - `framework_version` 필드로 버전 추적
+- **upgrade-backup 모듈**: `.timsquad/.upgrade-backup/`에 자동 백업 + manifest
+- **version.ts 중앙화**: `getInstalledVersion()`, `parseSemver()`, `isNewer()` 공유 유틸리티
 - **L2/L3 피드백 자동 액션**: 피드백 분류 후 워크플로우 상태에 자동 반영
   - L2: `in_review` 상태 전환, `pending_feedback`에 추가, Phase Gate 차단
   - L3: `open` 상태, 사용자 `approve`/`reject` 대기, Phase Gate 차단
 - **Feedback 서브커맨드**: `tsq feedback route/list/resolve/approve/reject`
 - **데몬→피드백 연동**: 태스크 완료 시 semantic.issues에서 L2+ 이슈 자동 피드백 생성
+- **브랜드 에셋**: favicon, logo, banner (assets/ 디렉토리)
+- **공개 문서 8개 신규**: cli.md, core-concepts.md, feedback-and-retrospective.md, token-efficiency.md, file-structure.md 등
 - `FeedbackStatus` 타입: `open | in_review | resolved | approved | rejected`
 
 ### Changed
@@ -21,8 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `WorkflowState`에 `pending_feedback: string[]` 추가
 - Phase Gate에 미해결 피드백 체크 로직 추가
 - templates 디렉토리: `common/` → `base/` + `platforms/` + `project-types/` 리팩토링
+- 하드코딩 버전 `'3.0.0'` 제거 → `version.ts` 중앙화 (index.ts, update-check.ts)
+- `package.json` files 화이트리스트 세분화 (templates/domains/ 제외)
 - 공개용 docs 정리 (비즈니스 전략, 내부 분석 문서 gitignore 처리)
-- README.md 전면 재작성 (882줄 → 279줄, 최신 구조 반영)
+- README.md 전면 재작성 (882줄 → 279줄, 배너 + "Vibe Development Framework" 태그라인)
 
 ---
 
