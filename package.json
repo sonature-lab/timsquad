@@ -1,6 +1,6 @@
 {
   "name": "timsquad",
-  "version": "3.0.0",
+  "version": "3.3.0",
   "description": "AI Agent Development Process Framework - SSOT 기반 문서 체계, 최적화된 에이전트 롤, 회고적 학습",
   "type": "module",
   "main": "dist/index.js",
