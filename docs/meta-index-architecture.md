@@ -1,3 +1,5 @@
+[English](meta-index-architecture.en.md) | [**한국어**](meta-index-architecture.md)
+
 # Meta Index Architecture
 
 > v2.1.0+ 구현 완료 기준. 2026-02-14 확정.

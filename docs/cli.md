@@ -1,3 +1,5 @@
+[English](cli.en.md) | [**한국어**](cli.md)
+
 # CLI Reference
 
 > `tsq` (또는 `timsquad`) 명령어 전체 레퍼런스

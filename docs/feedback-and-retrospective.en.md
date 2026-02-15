@@ -1,26 +1,26 @@
-[English](feedback-and-retrospective.en.md) | [**한국어**](feedback-and-retrospective.md)
+[**English**](feedback-and-retrospective.en.md) | [한국어](feedback-and-retrospective.md)
 
 # Feedback Routing & Retrospective Learning
 
-> PRD Section 3, 4에서 분리된 문서
+> Separated from PRD Sections 3 and 4
 
 ---
 
-## 1. 피드백 라우팅 시스템
+## 1. Feedback Routing System
 
-### 1.1 피드백 레벨 정의
+### 1.1 Feedback Level Definitions
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    피드백 발생                              │
+│                    Feedback Occurred                         │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   피드백 분류기                             │
+│                   Feedback Classifier                       │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │ 트리거 분석                                          │   │
+│  │ Trigger Analysis                                     │   │
 │  │ - test_failure, lint_error, type_error              │   │
 │  │ - architecture_issue, api_mismatch                  │   │
 │  │ - requirement_ambiguity, scope_change               │   │
@@ -31,7 +31,7 @@
           ▼                 ▼                 ▼
     ┌──────────┐     ┌──────────┐     ┌──────────┐
     │ Level 1  │     │ Level 2  │     │ Level 3  │
-    │ 구현 수정 │     │ 설계 수정 │     │ 기획 수정 │
+    │Impl. Fix │     │Design Fix│     │Plan. Fix │
     └────┬─────┘     └────┬─────┘     └────┬─────┘
          │                │                │
          ▼                ▼                ▼
@@ -47,12 +47,12 @@
                                     └──────────┘
 ```
 
-### 1.2 피드백 라우팅 규칙
+### 1.2 Feedback Routing Rules
 
 ```yaml
 feedback_routing:
   level_1:
-    name: "구현 수정"
+    name: "Implementation Fix"
     triggers:
       - test_failure
       - lint_error
@@ -63,7 +63,7 @@ feedback_routing:
     approval_required: false
 
   level_2:
-    name: "설계 수정"
+    name: "Design Fix"
     triggers:
       - architecture_issue
       - api_mismatch
@@ -75,7 +75,7 @@ feedback_routing:
     ssot_update: true
 
   level_3:
-    name: "기획/PRD 수정"
+    name: "Planning/PRD Fix"
     triggers:
       - requirement_ambiguity
       - scope_change
@@ -83,11 +83,11 @@ feedback_routing:
       - feature_request
       - stakeholder_feedback
     route_to: planner (planning mode)
-    approval_required: true  # 반드시 사용자 승인
+    approval_required: true  # User approval mandatory
     ssot_update: true
 ```
 
-### 1.3 피드백 패턴 학습
+### 1.3 Feedback Pattern Learning
 
 ```yaml
 feedback_patterns:
@@ -99,7 +99,7 @@ feedback_patterns:
     - recurrence_count
 
   learning:
-    # 같은 패턴 3회 이상 발생 시
+    # When the same pattern occurs 3+ times
     threshold: 3
     actions:
       - update_agent_skill
@@ -109,176 +109,176 @@ feedback_patterns:
 
 ---
 
-## 2. 회고적 학습 시스템 (Retrospective Learning)
+## 2. Retrospective Learning System
 
-### 2.1 개요
+### 2.1 Overview
 
-Agentsway의 핵심 개념을 TimSquad에 맞게 적용. LLM 파인튜닝 대신 **프롬프트/템플릿 개선**으로 실용화.
+Adapts the core concept of Agentsway for TimSquad. Pragmatically implemented through **prompt/template improvement** instead of LLM fine-tuning.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                   개발 사이클 완료                          │
+│                   Development Cycle Complete                 │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   로그 수집                                 │
-│  - 에이전트별 작업 로그                                     │
-│  - 피드백 이력                                              │
-│  - 성공/실패 메트릭                                         │
+│                   Log Collection                            │
+│  - Per-agent work logs                                      │
+│  - Feedback history                                         │
+│  - Success/failure metrics                                  │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   패턴 분석                                 │
-│  - 반복 실패 패턴                                           │
-│  - 성공 패턴                                                │
-│  - 병목 지점                                                │
+│                   Pattern Analysis                          │
+│  - Recurring failure patterns                               │
+│  - Success patterns                                         │
+│  - Bottleneck points                                        │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   개선 제안 생성                            │
-│  - 프롬프트 개선안                                          │
-│  - 템플릿 개선안                                            │
-│  - AGENT.md 업데이트                                        │
+│                   Improvement Suggestion Generation          │
+│  - Prompt improvements                                      │
+│  - Template improvements                                    │
+│  - AGENT.md updates                                         │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   사용자 승인                               │
+│                   User Approval                             │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   적용                                      │
-│  - 프롬프트 템플릿 업데이트                                 │
-│  - SSOT 템플릿 업데이트                                     │
-│  - Lessons Learned 추가                                     │
+│                   Application                               │
+│  - Update prompt templates                                  │
+│  - Update SSOT templates                                    │
+│  - Add to Lessons Learned                                   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 회고 디렉토리 구조
+### 2.2 Retrospective Directory Structure
 
 ```
 /retrospective
 ├── cycles/
-│   ├── cycle-001.md          # 사이클별 회고 리포트
+│   ├── cycle-001.md          # Per-cycle retrospective report
 │   ├── cycle-002.md
 │   └── ...
 │
 ├── metrics/
-│   ├── agent-performance.json    # 에이전트별 성과
-│   ├── feedback-stats.json       # 피드백 통계
-│   └── improvement-history.json  # 개선 이력
+│   ├── agent-performance.json    # Per-agent performance
+│   ├── feedback-stats.json       # Feedback statistics
+│   └── improvement-history.json  # Improvement history
 │
 ├── improvements/
-│   ├── prompts/                  # 프롬프트 개선 이력
+│   ├── prompts/                  # Prompt improvement history
 │   │   ├── developer-v1.md
 │   │   ├── developer-v2.md
 │   │   └── changelog.md
 │   │
-│   └── templates/                # 템플릿 개선 이력
+│   └── templates/                # Template improvement history
 │       ├── prd-v1.md
 │       ├── prd-v2.md
 │       └── changelog.md
 │
 └── patterns/
-    ├── failure-patterns.md       # 실패 패턴 모음
-    └── success-patterns.md       # 성공 패턴 모음
+    ├── failure-patterns.md       # Collection of failure patterns
+    └── success-patterns.md       # Collection of success patterns
 ```
 
-### 2.3 회고 리포트 템플릿
+### 2.3 Retrospective Report Template
 
 ```markdown
 # Cycle {N} Retrospective Report
 
-## 기간
-- 시작: {start_date}
-- 종료: {end_date}
+## Period
+- Start: {start_date}
+- End: {end_date}
 
-## 메트릭 요약
-| 지표 | 값 | 이전 대비 |
-|-----|-----|---------|
-| 총 작업 수 | {n} | +{diff} |
-| 성공률 | {rate}% | +{diff}% |
-| 평균 수정 횟수 | {n} | -{diff} |
-| Level 3 피드백 수 | {n} | -{diff} |
+## Metrics Summary
+| Metric | Value | vs. Previous |
+|--------|-------|-------------|
+| Total Tasks | {n} | +{diff} |
+| Success Rate | {rate}% | +{diff}% |
+| Avg. Revisions | {n} | -{diff} |
+| Level 3 Feedback Count | {n} | -{diff} |
 
-## 에이전트별 성과
-| 에이전트 | 성공률 | 평균 수정 횟수 | 주요 이슈 |
-|---------|-------|--------------|----------|
+## Per-Agent Performance
+| Agent | Success Rate | Avg. Revisions | Key Issues |
+|-------|-------------|----------------|------------|
 | developer | {rate}% | {n} | {issue} |
 | dba | {rate}% | {n} | {issue} |
 | qa | {rate}% | {n} | {issue} |
 
-## 발견된 패턴
+## Discovered Patterns
 
-### 실패 패턴
-1. **{패턴명}**
-   - 빈도: {n}회
-   - 원인: {cause}
-   - 제안: {suggestion}
+### Failure Patterns
+1. **{pattern_name}**
+   - Frequency: {n} times
+   - Cause: {cause}
+   - Suggestion: {suggestion}
 
-### 성공 패턴
-1. **{패턴명}**
-   - 빈도: {n}회
-   - 요인: {factor}
-   - 적용 확대: {recommendation}
+### Success Patterns
+1. **{pattern_name}**
+   - Frequency: {n} times
+   - Factor: {factor}
+   - Scale-up: {recommendation}
 
-## 개선 조치
-| 조치 | 대상 | 상태 |
-|-----|-----|-----|
-| 프롬프트 수정 | developer | ✅ 적용됨 |
-| 템플릿 수정 | prd.template.md | ✅ 적용됨 |
-| Lessons Learned 추가 | AGENT.md | ✅ 적용됨 |
+## Improvement Actions
+| Action | Target | Status |
+|--------|--------|--------|
+| Prompt revision | developer | Applied |
+| Template revision | prd.template.md | Applied |
+| Lessons Learned added | AGENT.md | Applied |
 
-## 다음 사이클 목표
+## Next Cycle Goals
 - [ ] {goal_1}
 - [ ] {goal_2}
 ```
 
-### 2.4 자동화 스크립트
+### 2.4 Automation Script
 
 ```bash
 #!/bin/bash
 # timsquad-retrospective.sh
 
-# 1. 로그 수집
+# 1. Collect logs
 collect_logs() {
   find ./agents -name "*.log" -exec cat {} \; > ./retrospective/raw-logs.txt
 }
 
-# 2. 메트릭 계산
+# 2. Calculate metrics
 calculate_metrics() {
-  # 성공률, 수정 횟수, 피드백 통계 등
+  # Success rate, revision count, feedback statistics, etc.
   node ./scripts/calculate-metrics.js
 }
 
-# 3. 패턴 분석 (Claude API 호출)
+# 3. Analyze patterns (Claude API call)
 analyze_patterns() {
-  # Claude에게 로그 분석 요청
-  # 실패/성공 패턴 추출
+  # Request log analysis from Claude
+  # Extract failure/success patterns
   node ./scripts/analyze-patterns.js
 }
 
-# 4. 개선안 생성
+# 4. Generate improvements
 generate_improvements() {
-  # 프롬프트/템플릿 개선안 생성
+  # Generate prompt/template improvement proposals
   node ./scripts/generate-improvements.js
 }
 
-# 5. 리포트 생성
+# 5. Generate report
 generate_report() {
   node ./scripts/generate-report.js
 }
 
-# 실행
+# Execute
 collect_logs
 calculate_metrics
 analyze_patterns
 generate_improvements
 generate_report
 
-echo "회고 완료. ./retrospective/cycles/cycle-{N}.md 확인"
+echo "Retrospective complete. See ./retrospective/cycles/cycle-{N}.md"
 ```

@@ -1,3 +1,5 @@
+[English](PRD.en.md) | [**한국어**](PRD.md)
+
 # TimSquad PRD v2.0
 **AI Agent Development Process Framework**
 (AI 에이전트 개발 프로세스 프레임워크)

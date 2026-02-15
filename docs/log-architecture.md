@@ -1,3 +1,5 @@
+[English](log-architecture.en.md) | [**한국어**](log-architecture.md)
+
 # TimSquad 3-Layer Log Architecture
 
 > v3.0 로그 체계 설계 명세. 2026-02-14 확정.

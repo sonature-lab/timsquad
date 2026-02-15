@@ -1,3 +1,5 @@
+[English](authoring-guide.en.md) | [**한국어**](authoring-guide.md)
+
 # TimSquad Authoring Guide
 
 > 에이전트 프롬프트, 스킬, Knowledge 파일 작성을 위한 종합 가이드.
