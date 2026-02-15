@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/timsquad_banner.png" alt="TimSquad" width="640">
+  <img src="assets/timsquad_banner.png" alt="TimSquad" width="100%">
 </p>
 
 <p align="center">
