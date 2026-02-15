@@ -17,13 +17,21 @@ import { registerWatchCommand } from './commands/watch.js';
 import { registerMetricsCommand } from './commands/metrics.js';
 import { registerImproveCommand } from './commands/improve.js';
 import { registerSessionCommand } from './commands/session.js';
+import { registerMetaIndexCommand } from './commands/meta-index.js';
+import { registerKnowledgeCommand } from './commands/knowledge.js';
+import { registerWorkflowCommand } from './commands/workflow.js';
+import { registerDaemonCommand } from './commands/daemon.js';
+import { registerUpgradeCommand } from './commands/upgrade.js';
+import { checkForUpdates } from './lib/update-check.js';
+import { getInstalledVersion } from './lib/version.js';
 
 const program = new Command();
+const VERSION = getInstalledVersion();
 
 program
   .name('tsq')
   .description('TimSquad - AI Agent Development Process Framework')
-  .version('2.0.0');
+  .version(VERSION);
 
 // Register all commands
 registerInitCommand(program);
@@ -41,12 +49,22 @@ registerWatchCommand(program);
 registerMetricsCommand(program);
 registerImproveCommand(program);
 registerSessionCommand(program);
+registerMetaIndexCommand(program);
+registerKnowledgeCommand(program);
+registerWorkflowCommand(program);
+registerDaemonCommand(program);
+registerUpgradeCommand(program);
 
 // Default action (show help)
 program.action(() => {
-  console.log(chalk.cyan.bold('\n  TimSquad v2.0.0'));
+  console.log(chalk.cyan.bold(`\n  TimSquad v${VERSION}`));
   console.log(chalk.gray('  AI Agent Development Process Framework\n'));
   program.help();
+});
+
+// Check for updates (non-blocking, after command execution)
+program.hook('postAction', async () => {
+  await checkForUpdates();
 });
 
 // Parse arguments
@@ -54,7 +72,7 @@ program.parse(process.argv);
 
 // Show help if no arguments
 if (process.argv.length === 2) {
-  console.log(chalk.cyan.bold('\n  TimSquad v2.0.0'));
+  console.log(chalk.cyan.bold(`\n  TimSquad v${VERSION}`));
   console.log(chalk.gray('  AI Agent Development Process Framework\n'));
   program.help();
 }

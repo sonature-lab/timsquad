@@ -1,8 +1,9 @@
 import path from 'path';
-import type { TimsquadConfig, ProjectType, ProjectLevel } from '../types/index.js';
-import { DEFAULT_CONFIG, FINTECH_CONFIG_OVERRIDES } from '../types/config.js';
+import type { TimsquadConfig, ProjectType, ProjectLevel, Platform, Domain } from '../types/index.js';
+import { DEFAULT_CONFIG, FINTECH_CONFIG_OVERRIDES, buildAgentsConfig, DEFAULT_NAMING } from '../types/config.js';
 import { exists } from '../utils/fs.js';
 import { loadYaml, saveYaml } from '../utils/yaml.js';
+import { getInstalledVersion } from './version.js';
 
 const CONFIG_FILE = '.timsquad/config.yaml';
 
@@ -40,7 +41,8 @@ export async function saveConfig(projectRoot: string, config: TimsquadConfig): P
 export function createDefaultConfig(
   name: string,
   type: ProjectType,
-  level: ProjectLevel
+  level: ProjectLevel,
+  options?: { domain?: Domain; platform?: Platform; stack?: string[] },
 ): TimsquadConfig {
   const baseConfig: TimsquadConfig = {
     project: {
@@ -48,8 +50,14 @@ export function createDefaultConfig(
       type,
       level,
       created: new Date().toISOString(),
+      framework_version: getInstalledVersion(),
+      domain: options?.domain ?? 'general-web',
+      platform: options?.platform ?? 'claude-code',
+      stack: options?.stack ?? [],
     },
     ...DEFAULT_CONFIG,
+    agents: buildAgentsConfig(type),
+    naming: { ...DEFAULT_NAMING },
   };
 
   // Apply fintech-specific overrides
@@ -61,6 +69,8 @@ export function createDefaultConfig(
         ...baseConfig.project,
         level: 3, // Force level 3 for fintech
       },
+      agents: buildAgentsConfig('fintech'),
+      naming: { ...DEFAULT_NAMING },
     } as TimsquadConfig;
   }
 
@@ -83,6 +93,11 @@ export function validateConfig(config: unknown): config is TimsquadConfig {
   if (!isValidProjectType(project.type)) return false;
   if (!isValidProjectLevel(project.level)) return false;
 
+  // Validate optional v4.0 fields (only if present)
+  if (project.domain !== undefined && !isValidDomain(project.domain)) return false;
+  if (project.platform !== undefined && !isValidPlatform(project.platform)) return false;
+  if (project.stack !== undefined && !Array.isArray(project.stack)) return false;
+
   return true;
 }
 
@@ -90,7 +105,7 @@ export function validateConfig(config: unknown): config is TimsquadConfig {
  * Check if value is a valid project type
  */
 function isValidProjectType(value: unknown): value is ProjectType {
-  const validTypes: ProjectType[] = ['web-service', 'api-backend', 'platform', 'fintech', 'infra'];
+  const validTypes: ProjectType[] = ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra'];
   return typeof value === 'string' && validTypes.includes(value as ProjectType);
 }
 
@@ -99,6 +114,16 @@ function isValidProjectType(value: unknown): value is ProjectType {
  */
 function isValidProjectLevel(value: unknown): value is ProjectLevel {
   return typeof value === 'number' && [1, 2, 3].includes(value);
+}
+
+function isValidPlatform(value: unknown): value is Platform {
+  const valid: Platform[] = ['claude-code', 'cursor', 'windsurf', 'mcp', 'gemini'];
+  return typeof value === 'string' && valid.includes(value as Platform);
+}
+
+function isValidDomain(value: unknown): value is Domain {
+  const valid: Domain[] = ['general-web', 'ml-engineering', 'fintech', 'mobile', 'gamedev', 'systems'];
+  return typeof value === 'string' && valid.includes(value as Domain);
 }
 
 /**

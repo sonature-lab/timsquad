@@ -1,18 +1,23 @@
 import { Command } from 'commander';
 import path from 'path';
 import ora from 'ora';
+import fs from 'fs-extra';
 import { colors, printHeader, printSuccess, printError, printStep, printKeyValue } from '../utils/colors.js';
 import { promptText, promptSelect, promptConfirm } from '../utils/prompts.js';
 import { exists, mkdir } from '../utils/fs.js';
 import { initializeProject } from '../lib/template.js';
 import { createDefaultConfig, saveConfig } from '../lib/config.js';
-import type { ProjectType, ProjectLevel } from '../types/index.js';
-import { PROJECT_TYPE_DESCRIPTIONS, PROJECT_LEVEL_DESCRIPTIONS } from '../types/project.js';
+import { getActiveAgents, formatActiveAgentsList } from '../lib/agent-generator.js';
+import { rebuildIndex } from '../lib/meta-index.js';
+import type { ProjectType, ProjectLevel, Domain } from '../types/index.js';
+import { PROJECT_TYPE_DESCRIPTIONS, PROJECT_LEVEL_DESCRIPTIONS, DOMAIN_DESCRIPTIONS } from '../types/project.js';
 
 interface InitOptions {
   name?: string;
   type?: string;
   level?: string;
+  domain?: string;
+  stack?: string;
   dir?: string;
   yes?: boolean;
 }
@@ -24,6 +29,8 @@ export function registerInitCommand(program: Command): void {
     .option('-n, --name <name>', 'Project name')
     .option('-t, --type <type>', 'Project type (web-service|web-app|api-backend|platform|fintech|infra)')
     .option('-l, --level <level>', 'Project level (1=MVP|2=Standard|3=Enterprise)')
+    .option('--domain <domain>', 'Project domain (general-web|ml-engineering|fintech|mobile|gamedev|systems)')
+    .option('--stack <items>', 'Technology stack (comma-separated: react,node,prisma,typescript,nextjs,postgresql,mysql)')
     .option('-d, --dir <path>', 'Target directory', '.')
     .option('-y, --yes', 'Skip confirmation prompts')
     .action(async (options: InitOptions) => {
@@ -80,7 +87,38 @@ async function runInit(options: InitOptions): Promise<void> {
     ]);
   }
 
-  // 4. Determine target directory
+  // 4. Get domain (v4.0 Composition Layer)
+  let domain: Domain;
+  if (options.domain && isValidDomain(options.domain)) {
+    domain = options.domain;
+  } else if (options.yes) {
+    domain = 'general-web';
+  } else {
+    domain = await promptSelect<Domain>('Project domain:', [
+      { name: 'general-web', value: 'general-web', description: DOMAIN_DESCRIPTIONS['general-web'] },
+      { name: 'ml-engineering', value: 'ml-engineering', description: DOMAIN_DESCRIPTIONS['ml-engineering'] },
+      { name: 'fintech', value: 'fintech', description: DOMAIN_DESCRIPTIONS['fintech'] },
+      { name: 'mobile', value: 'mobile', description: DOMAIN_DESCRIPTIONS['mobile'] },
+      { name: 'gamedev', value: 'gamedev', description: DOMAIN_DESCRIPTIONS['gamedev'] },
+      { name: 'systems', value: 'systems', description: DOMAIN_DESCRIPTIONS['systems'] },
+    ]);
+  }
+
+  // 5. Parse stack option
+  const stack = options.stack
+    ? options.stack.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+
+  // 6. Ask about automated backup process
+  let automationEnabled = true;
+  if (!options.yes) {
+    automationEnabled = await promptConfirm(
+      'Enable automated backup process? (logging, metrics, retro)',
+      true,
+    );
+  }
+
+  // 6. Determine target directory
   const targetDir = path.resolve(options.dir || '.');
 
   // Check if directory exists and has files
@@ -94,11 +132,16 @@ async function runInit(options: InitOptions): Promise<void> {
     }
   }
 
-  // 5. Show summary
+  // 6. Show summary
   console.log('\n');
   printKeyValue('Project Name', name);
   printKeyValue('Type', `${type} (${PROJECT_TYPE_DESCRIPTIONS[type]})`);
+  printKeyValue('Domain', `${domain} (${DOMAIN_DESCRIPTIONS[domain]})`);
   printKeyValue('Level', `${level} (${PROJECT_LEVEL_DESCRIPTIONS[level]})`);
+  if (stack.length > 0) {
+    printKeyValue('Stack', stack.join(', '));
+  }
+  printKeyValue('Automation', automationEnabled ? 'ON (logging, metrics, retro)' : 'OFF (manual)');
   printKeyValue('Directory', targetDir);
   console.log('\n');
 
@@ -110,50 +153,78 @@ async function runInit(options: InitOptions): Promise<void> {
     }
   }
 
-  // 6. Initialize project
-  console.log('\n');
-  const totalSteps = 7;
+  // Detect existing source code (for meta index build)
+  const hasExistingCode = await detectExistingCode(targetDir);
 
-  // Step 1: Create directories
-  printStep(1, totalSteps, 'Creating directory structure...');
+  // 7. Initialize project
+  console.log('\n');
+  const totalSteps = hasExistingCode ? 9 : 8;
+
+  // Step 1: Create config (에이전트 동적 생성에 필요)
+  printStep(1, totalSteps, 'Creating configuration...');
+  const config = createDefaultConfig(name, type, level, { domain, platform: 'claude-code', stack });
+
+  // Step 2: Create directories
+  printStep(2, totalSteps, 'Creating directory structure...');
   await mkdir(path.join(targetDir, '.timsquad'));
   await mkdir(path.join(targetDir, '.claude'));
 
-  // Step 2: Copy templates
+  // Step 3: Copy templates + dynamic agent generation
   const spinner = ora('Copying templates...').start();
-  printStep(2, totalSteps, 'Copying templates...');
+  printStep(3, totalSteps, 'Copying templates and agents...');
 
   try {
-    await initializeProject(targetDir, name, type, level);
+    await initializeProject(targetDir, name, type, level, config, automationEnabled);
     spinner.succeed('Templates copied');
   } catch (error) {
     spinner.fail('Failed to copy templates');
     throw error;
   }
 
-  // Step 3: Create config
-  printStep(3, totalSteps, 'Creating configuration...');
-  const config = createDefaultConfig(name, type, level);
+  // Step 4: Save config
+  printStep(4, totalSteps, 'Saving configuration...');
   await saveConfig(targetDir, config);
 
-  // Step 4: Initialize state
-  printStep(4, totalSteps, 'Initializing state files...');
-  // (Already done in initializeProject)
-
-  // Step 5: Setup agents
-  printStep(5, totalSteps, 'Setting up agents...');
+  // Step 5: Initialize state
+  printStep(5, totalSteps, 'Initializing state files...');
   // (Already done in initializeProject)
 
   // Step 6: Setup SSOT
   printStep(6, totalSteps, 'Preparing SSOT documents...');
   // (Already done in initializeProject)
 
-  // Step 7: Finalize
-  printStep(7, totalSteps, 'Finalizing...');
+  // Step 7: Configure automation
+  printStep(7, totalSteps, `Setting up automation (${automationEnabled ? 'ON' : 'OFF'})...`);
+  // (Automation config is saved in config.yaml and workflow.json)
+
+  // Step 8: Meta Index (기존 코드가 있는 경우)
+  let metaIndexResult: { files: number; methods: number } | null = null;
+  if (hasExistingCode) {
+    const miSpinner = ora('Building meta index from existing code...').start();
+    printStep(8, totalSteps, 'Building meta index...');
+    try {
+      const summary = await rebuildIndex(targetDir);
+      metaIndexResult = { files: summary.totalFiles, methods: summary.totalMethods };
+      miSpinner.succeed(`Meta index built: ${summary.totalFiles} files, ${summary.totalMethods} methods`);
+    } catch {
+      miSpinner.warn('Meta index build skipped (no parseable source files)');
+    }
+  }
+
+  // Final step: Finalize
+  printStep(totalSteps, totalSteps, 'Finalizing...');
 
   // 7. Show success message
   console.log('\n');
   printSuccess(`TimSquad project "${name}" initialized successfully!`);
+
+  // 활성 에이전트 표시
+  const activeAgents = getActiveAgents(config);
+  const agentsList = formatActiveAgentsList(activeAgents);
+  console.log('\n' + colors.dim('  Active agents: ') + colors.command(agentsList));
+  if (metaIndexResult) {
+    console.log(colors.dim('  Meta index: ') + colors.command(`${metaIndexResult.files} files, ${metaIndexResult.methods} methods`));
+  }
 
   console.log('\n' + colors.header('Next steps:'));
   console.log(colors.dim('  1. ') + colors.command('cd ' + (targetDir === '.' ? '' : targetDir)));
@@ -176,4 +247,32 @@ function isValidProjectType(value: string): value is ProjectType {
 
 function isValidProjectLevel(value: string): boolean {
   return ['1', '2', '3'].includes(value);
+}
+
+function isValidDomain(value: string): value is Domain {
+  return ['general-web', 'ml-engineering', 'fintech', 'mobile', 'gamedev', 'systems'].includes(value);
+}
+
+/**
+ * Detect if target directory has existing source code
+ * (not a fresh project — has .ts, .tsx, .js, .jsx, .py, .go, etc.)
+ */
+async function detectExistingCode(targetDir: string): Promise<boolean> {
+  const srcDirs = ['src', 'lib', 'app', 'pages', 'components', 'server', 'api'];
+
+  for (const dir of srcDirs) {
+    const dirPath = path.join(targetDir, dir);
+    if (await fs.pathExists(dirPath)) {
+      return true;
+    }
+  }
+
+  // Check for common source files in root
+  const sourceExts = ['.ts', '.tsx', '.js', '.jsx', '.py', '.go', '.java', '.rs'];
+  try {
+    const entries = await fs.readdir(targetDir);
+    return entries.some(e => sourceExts.some(ext => e.endsWith(ext)));
+  } catch {
+    return false;
+  }
 }

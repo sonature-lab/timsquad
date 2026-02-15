@@ -80,6 +80,11 @@ export interface FeedbackRoutingRules {
  * Default routing rules
  */
 /**
+ * Feedback status for tracking lifecycle
+ */
+export type FeedbackStatus = 'open' | 'in_review' | 'resolved' | 'approved' | 'rejected';
+
+/**
  * Feedback entry (로컬 JSON 저장용)
  */
 export interface FeedbackEntry {
@@ -92,6 +97,9 @@ export interface FeedbackEntry {
   message: string;
   routeTo?: string;
   tags?: string[];
+  status: FeedbackStatus;
+  resolvedAt?: string;
+  resolvedBy?: string;
 }
 
 /**
@@ -143,7 +151,7 @@ export const DEFAULT_ROUTING_RULES: FeedbackRoutingRules = {
   level_2: {
     name: '설계 수정',
     triggers: ['architecture_issue', 'api_mismatch', 'performance_problem', 'scalability_concern', 'security_vulnerability'],
-    route_to: 'planner',
+    route_to: 'architect',
     approval_required: false,
     ssot_update: true,
   },

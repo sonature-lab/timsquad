@@ -312,16 +312,190 @@ async function analyzeRetro(): Promise<void> {
     throw new Error('Collect metrics first. Run "tsq retro collect"');
   }
 
-  console.log(colors.warning('\n⚠ Pattern analysis requires Claude integration'));
-  console.log(colors.dim('  This feature will analyze logs and suggest improvements'));
-  console.log(colors.dim('  For now, marking as analyzed for manual review\n'));
+  printHeader(`Analyzing Patterns - Cycle ${state.currentCycle}`);
+
+  const analysis = await runPatternAnalysis(projectRoot, state.currentCycle);
+
+  // 결과 저장
+  const analysisDir = path.join(projectRoot, '.timsquad', 'retrospective', 'analysis');
+  await fs.ensureDir(analysisDir);
+  await fs.writeJson(
+    path.join(analysisDir, `cycle-${state.currentCycle}-analysis.json`),
+    analysis,
+    { spaces: 2 },
+  );
 
   state.status = 'reporting';
   state.analyzedAt = getTimestamp();
   await saveRetroState(projectRoot, state);
 
-  printSuccess('Analysis phase completed (manual review mode)');
+  // 결과 출력
+  printSuccess('Pattern analysis completed');
+  printKeyValue('Sessions analyzed', String(analysis.sessions));
+  printKeyValue('Agents', String(Object.keys(analysis.agents).length));
+  printKeyValue('Flags', String(analysis.flags.length));
+
+  if (analysis.flags.length > 0) {
+    console.log(colors.warning('\n⚠ Detected issues:'));
+    for (const flag of analysis.flags) {
+      console.log(colors.dim(`  - [${flag.severity}] ${flag.message}`));
+    }
+  }
+
   console.log(colors.dim('\nNext: Run "tsq retro report" to generate report'));
+}
+
+interface AnalysisFlag {
+  severity: 'warn' | 'info';
+  category: string;
+  message: string;
+}
+
+interface PatternAnalysis {
+  cycle: number;
+  analyzedAt: string;
+  sessions: number;
+  agents: Record<string, { calls: number; failures: number; failureRate: number }>;
+  tools: Record<string, { uses: number; failures: number; failureRate: number }>;
+  reworkFiles: Array<{ path: string; modifications: number }>;
+  flags: AnalysisFlag[];
+}
+
+async function runPatternAnalysis(projectRoot: string, cycle: number): Promise<PatternAnalysis> {
+  const sessionsDir = path.join(projectRoot, '.timsquad', 'logs', 'sessions');
+  const agentStats: Record<string, { calls: number; failures: number }> = {};
+  const toolStats: Record<string, { uses: number; failures: number }> = {};
+  const fileModCounts: Record<string, number> = {};
+  let sessionCount = 0;
+
+  // 세션 로그 파싱
+  if (await exists(sessionsDir)) {
+    const logFiles = await listFiles('*.jsonl', sessionsDir);
+    sessionCount = logFiles.length;
+
+    for (const file of logFiles) {
+      try {
+        const content = await fs.readFile(path.join(sessionsDir, file), 'utf-8');
+        for (const line of content.split('\n')) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          try {
+            const ev = JSON.parse(trimmed);
+
+            // 에이전트 통계
+            if (ev.event === 'SubagentStart' && ev.detail?.subagent_type) {
+              const agent = ev.detail.subagent_type;
+              if (!agentStats[agent]) agentStats[agent] = { calls: 0, failures: 0 };
+              agentStats[agent].calls++;
+            }
+
+            // 도구 통계
+            if (ev.event === 'PostToolUse' && ev.tool) {
+              if (!toolStats[ev.tool]) toolStats[ev.tool] = { uses: 0, failures: 0 };
+              toolStats[ev.tool].uses++;
+            }
+            if (ev.event === 'PostToolUseFailure' && ev.tool) {
+              if (!toolStats[ev.tool]) toolStats[ev.tool] = { uses: 0, failures: 0 };
+              toolStats[ev.tool].failures++;
+            }
+          } catch { /* skip malformed line */ }
+        }
+      } catch { /* skip unreadable file */ }
+    }
+  }
+
+  // L1 태스크 로그에서 rework 파일 탐지
+  const tasksDir = path.join(projectRoot, '.timsquad', 'logs', 'tasks');
+  if (await exists(tasksDir)) {
+    const taskFiles = await listFiles('*.json', tasksDir);
+    for (const file of taskFiles) {
+      try {
+        const task = await fs.readJson(path.join(tasksDir, file));
+        if (task.mechanical?.files) {
+          for (const f of task.mechanical.files) {
+            fileModCounts[f.path] = (fileModCounts[f.path] || 0) + 1;
+          }
+        }
+        // 에이전트 실패 추적 (status !== 'completed')
+        if (task.agent && task.status !== 'completed') {
+          if (!agentStats[task.agent]) agentStats[task.agent] = { calls: 0, failures: 0 };
+          agentStats[task.agent].failures++;
+        }
+      } catch { /* skip */ }
+    }
+  }
+
+  // rework 파일 (3회+ 수정)
+  const reworkFiles = Object.entries(fileModCounts)
+    .filter(([, count]) => count >= 3)
+    .sort(([, a], [, b]) => b - a)
+    .map(([filePath, modifications]) => ({ path: filePath, modifications }));
+
+  // 에이전트별 실패율 계산
+  const agents: PatternAnalysis['agents'] = {};
+  for (const [name, stat] of Object.entries(agentStats)) {
+    const total = stat.calls + stat.failures;
+    agents[name] = {
+      calls: stat.calls,
+      failures: stat.failures,
+      failureRate: total > 0 ? Math.round((stat.failures / total) * 100) : 0,
+    };
+  }
+
+  // 도구별 실패율 계산
+  const tools: PatternAnalysis['tools'] = {};
+  for (const [name, stat] of Object.entries(toolStats)) {
+    const total = stat.uses + stat.failures;
+    tools[name] = {
+      uses: stat.uses,
+      failures: stat.failures,
+      failureRate: total > 0 ? Math.round((stat.failures / total) * 100) : 0,
+    };
+  }
+
+  // 이상 탐지 플래그
+  const flags: AnalysisFlag[] = [];
+
+  // 에이전트 실패율 > 20%
+  for (const [name, stat] of Object.entries(agents)) {
+    if (stat.failureRate > 20 && (stat.calls + stat.failures) >= 3) {
+      flags.push({
+        severity: 'warn',
+        category: 'agent-failure',
+        message: `Agent "${name}" failure rate ${stat.failureRate}% (${stat.failures}/${stat.calls + stat.failures})`,
+      });
+    }
+  }
+
+  // 도구 실패율 > 30% (3회 이상 사용)
+  for (const [name, stat] of Object.entries(tools)) {
+    if (stat.failureRate > 30 && (stat.uses + stat.failures) >= 3) {
+      flags.push({
+        severity: 'warn',
+        category: 'tool-failure',
+        message: `Tool "${name}" failure rate ${stat.failureRate}% (${stat.failures}/${stat.uses + stat.failures})`,
+      });
+    }
+  }
+
+  // rework 파일
+  for (const rw of reworkFiles.slice(0, 5)) {
+    flags.push({
+      severity: 'info',
+      category: 'rework',
+      message: `File "${rw.path}" modified ${rw.modifications} times (possible rework)`,
+    });
+  }
+
+  return {
+    cycle,
+    analyzedAt: getTimestamp(),
+    sessions: sessionCount,
+    agents,
+    tools,
+    reworkFiles,
+    flags,
+  };
 }
 
 // ============================================================
@@ -701,12 +875,22 @@ async function runAutoRetro(localOnly?: boolean): Promise<void> {
     printSuccess(`[2/4] Metrics collected (${recentLogs.length} logs, ${Object.keys(agentStats).length} agents)`);
   }
 
-  // Step 3: Skip analyze (stub) → reporting
+  // Step 3: Pattern analysis
   if (state.status === 'analyzing') {
+    const analysis = await runPatternAnalysis(projectRoot, state.currentCycle);
+
+    const analysisDir = path.join(projectRoot, '.timsquad', 'retrospective', 'analysis');
+    await fs.ensureDir(analysisDir);
+    await fs.writeJson(
+      path.join(analysisDir, `cycle-${state.currentCycle}-analysis.json`),
+      analysis,
+      { spaces: 2 },
+    );
+
     state.status = 'reporting';
     state.analyzedAt = getTimestamp();
     await saveRetroState(projectRoot, state);
-    printSuccess('[3/4] Analysis skipped (programmatic mode)');
+    printSuccess(`[3/4] Analysis completed (${analysis.flags.length} flags)`);
   }
 
   // Step 4: Report + Apply

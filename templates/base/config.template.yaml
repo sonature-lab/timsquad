@@ -1,0 +1,213 @@
+# TimSquad Project Configuration
+# 이 파일을 .timsquad/config.yaml로 복사하여 사용
+
+# ============================================================
+# 프로젝트 기본 정보
+# ============================================================
+project:
+  name: my-project
+  type: web-service      # web-service | web-app | api-backend | platform | fintech | infra
+  level: 2               # 1=MVP | 2=Standard | 3=Enterprise
+  domain: general-web    # general-web | ml-engineering | fintech | mobile | gamedev | systems
+  platform: claude-code  # claude-code | cursor | windsurf | mcp | gemini (auto-detect)
+  stack: []              # react, nextjs, node, prisma 등 (auto-detect, 선택)
+  description: ""
+
+# ============================================================
+# 개발 방법론
+# ============================================================
+methodology:
+  development: tdd       # tdd | bdd | none
+  process: agile         # agile | waterfall | kanban
+  branching: github-flow # gitflow | trunk-based | github-flow
+  review: required       # required | optional | none
+
+# ============================================================
+# 기술 스택
+# ============================================================
+stack:
+  # 공통
+  language: typescript   # typescript | javascript
+
+  # 프론트엔드
+  frontend:
+    enabled: true
+    framework: nextjs    # nextjs | react | vue | svelte | none
+    state: zustand       # zustand | redux | recoil | context | none
+    styling: tailwind    # tailwind | styled-components | css-modules | none
+    testing: vitest      # vitest | jest | none
+
+  # 백엔드
+  backend:
+    enabled: true
+    runtime: node        # node | python | go | java
+    framework: hono      # hono | express | fastify | nest | none
+    testing: vitest      # vitest | jest | pytest | none
+
+  # 데이터베이스
+  database:
+    primary: postgresql  # postgresql | mysql | mongodb | sqlite
+    orm: prisma          # prisma | typeorm | drizzle | none
+    cache: none          # redis | memcached | none
+
+  # 인프라
+  infrastructure:
+    hosting: vercel      # vercel | aws | gcp | self-hosted
+    container: false     # Docker 사용 여부
+    ci_cd: github        # github | gitlab | none
+
+# ============================================================
+# 에이전트 스킬 설정
+# ============================================================
+# 스킬 구조 (Vercel 패턴):
+#   SKILL.md     = 인덱스 (~100줄, 항상 로드)
+#   rules/       = 개별 패턴 파일 (on-demand 로드)
+# 500줄 초과 스킬은 반드시 SKILL.md(인덱스) + rules/(개별 파일)로 분리
+# 새 스킬 생성 시 _template/ 참조
+skills:
+  # 기본 스킬 (항상 로드)
+  base:
+    - coding
+    - testing
+    - security
+
+  # 방법론에 따라 자동 로드
+  methodology:
+    tdd: [methodology/tdd]
+    bdd: [methodology/bdd]
+
+  # 스택에 따라 자동 로드
+  stack:
+    typescript: [typescript]
+    react: [frontend/react]
+    nextjs: [frontend/nextjs, frontend/react]
+    vue: [frontend/vue]
+    node: [backend/node]
+    python: [backend/python]
+    prisma: [database/prisma]
+    typeorm: [database/typeorm]
+
+# ============================================================
+# 에이전트 설정
+# ============================================================
+# 활성 에이전트는 project.type에 따라 AGENT_PRESETS로 자동 결정:
+#   web-service: architect, developer, designer, qa
+#   api-backend: architect, developer, dba, qa
+#   fintech:     architect, developer, dba, security, qa
+#   web-app:     architect, developer, designer, qa
+#   platform:    architect, developer, qa
+#   infra:       architect, developer, security
+agents:
+  architect:
+    model: opus          # opus | sonnet | haiku
+    enabled: true
+
+  developer:
+    model: sonnet
+    enabled: true
+    # 프론트엔드/백엔드 분리 시
+    # variants:
+    #   frontend:
+    #     skills: [frontend/react, frontend/nextjs]
+    #   backend:
+    #     skills: [backend/node, database/prisma]
+
+  qa:
+    model: sonnet
+    enabled: true
+
+  security:
+    model: sonnet
+    enabled: false       # type에 따라 자동 활성화 (fintech, infra)
+
+  dba:
+    model: sonnet
+    enabled: false       # type에 따라 자동 활성화 (api-backend, fintech)
+
+  designer:
+    model: sonnet
+    enabled: true        # type에 따라 자동 활성화 (web-service, web-app)
+
+# ============================================================
+# Knowledge 설정
+# ============================================================
+# knowledge 3계층:
+#   1. Curated (npm): common/ + {type}/ 병합 → 빈 껍데기로 로컬 복사
+#   2. Local: 프로젝트 작업 중 distillation skill로 생성
+#   3. Shared (향후): Retro → GitHub PR → npm 다음 버전 포함
+knowledge:
+  platforms: []          # 예: [supabase, vercel]
+  domains: []            # 예: [fintech, healthcare]
+  checklists:
+    - security           # 기본 보안 체크리스트
+  # local:               # 프로젝트 진행 중 로컬 생성
+  #   - ml/custom-architecture
+
+# ============================================================
+# 품질 기준
+# ============================================================
+quality:
+  test_coverage:
+    minimum: 80
+    recommended: 90
+
+  code_review:
+    required: true
+    approvers: 1
+
+  lint:
+    enabled: true
+    fix_on_save: true
+
+# ============================================================
+# 네이밍 규칙
+# ============================================================
+# Phase/Sequence/Task ID 자동 생성 시 사용하는 숫자 기반 패턴.
+# PM이 이 규칙에 따라 tsq wf set-phase / add-sequence를 자동 호출합니다.
+# 예: P1 = planning, P3-S001 = implementation 1번 시퀀스, P3-S001-T002 = 2번 태스크
+naming:
+  # Phase ID: P{N} — N은 order 배열의 인덱스 (1부터)
+  phase:
+    pattern: "P{N}"
+    order:                         # SSOT 프로세스 순서
+      - planning                   # P1
+      - design                     # P2
+      - implementation             # P3
+      - review                     # P4
+      - security                   # P5
+      - deployment                 # P6
+
+  # Sequence ID: P{N}-S{NNN}
+  sequence:
+    pattern: "P{N}-S{NNN}"
+    counter_pad: 3                 # zero-padding (001, 002, ...)
+
+  # Task ID: P{N}-S{NNN}-T{NNN}
+  task:
+    pattern: "P{N}-S{NNN}-T{NNN}"
+    counter_pad: 3
+
+# ============================================================
+# 자동화 백업 프로세스
+# ============================================================
+# 로그/메트릭/회고를 Hook이 자동으로 처리합니다.
+# 개별 토글로 필요한 항목만 활성화 가능.
+automation:
+  sequence_log: true               # L2 시퀀스 로그 자동 생성
+  phase_log: true                  # L3 페이즈 로그 자동 생성
+  phase_gate: true                 # 페이즈 전환 게이트 자동 체크
+  metrics: true                    # 세션 메트릭 자동 수집
+  retro: true                     # KPT 회고 자동 생성
+
+# ============================================================
+# SSOT 설정
+# ============================================================
+ssot:
+  # 프로젝트 레벨에 따른 필수 문서는 자동 결정
+  # 추가로 필요한 문서 지정
+  additional: []
+
+  # 문서 템플릿 커스터마이징
+  templates:
+    # 기본 템플릿 사용
+    use_default: true

@@ -1,0 +1,352 @@
+# TimSquad Feedback Routing Rules
+# 피드백을 적절한 담당자에게 자동 라우팅하는 규칙 정의
+#
+# 이론적 기반:
+# - FRAME (Feedback-Driven Refinement): 레벨별 피드백 분류
+# - Agentsway: Agent specialization에 따른 라우팅
+#
+# 사용법:
+# 1. 피드백 발생 시 triggers 매칭
+# 2. 매칭된 레벨의 route_to로 전달
+# 3. 필요 시 사용자 승인 요청
+
+version: "1.0"
+
+# ============================================================
+# 피드백 레벨 정의
+# ============================================================
+levels:
+  level_1:
+    name: "구현 수정"
+    description: "코드 레벨 수정, 설계 변경 없음"
+    approval_required: false
+    ssot_update: false
+
+  level_2:
+    name: "설계 수정"
+    description: "아키텍처/API 설계 변경 필요"
+    approval_required: false
+    ssot_update: true
+
+  level_3:
+    name: "기획 수정"
+    description: "요구사항/기획 변경 필요, 사용자 승인 필수"
+    approval_required: true
+    ssot_update: true
+
+# ============================================================
+# 라우팅 규칙
+# ============================================================
+routing:
+  # --------------------------------------------------------
+  # Level 1: 구현 수정 → Developer
+  # --------------------------------------------------------
+  level_1:
+    triggers:
+      # 테스트 관련
+      - pattern: "test_failure"
+        keywords: ["test failed", "assertion error", "expected", "actual"]
+
+      - pattern: "test_coverage"
+        keywords: ["coverage below", "uncovered lines", "missing tests"]
+
+      # 코드 품질
+      - pattern: "lint_error"
+        keywords: ["eslint", "prettier", "formatting", "lint error"]
+
+      - pattern: "type_error"
+        keywords: ["type error", "typescript", "cannot assign", "is not assignable"]
+
+      - pattern: "runtime_error"
+        keywords: ["runtime error", "exception", "crash", "undefined is not"]
+
+      # 코드 스타일
+      - pattern: "code_style"
+        keywords: ["naming convention", "code style", "formatting issue"]
+
+      - pattern: "code_smell"
+        keywords: ["code smell", "duplicate code", "long method", "complex"]
+
+      # 성능 (minor)
+      - pattern: "minor_performance"
+        keywords: ["slow query", "n+1", "unnecessary loop"]
+
+    route_to: "tsq-developer"
+
+    actions:
+      - type: "auto_fix"
+        enabled: true
+        max_attempts: 3
+
+      - type: "log"
+        destination: ".timsquad/logs/"
+
+    escalation:
+      condition: "attempts >= 3"
+      escalate_to: "level_2"
+      notify: ["tsq-planner"]
+
+  # --------------------------------------------------------
+  # Level 2: 설계 수정 → Planner (Architect 모드)
+  # --------------------------------------------------------
+  level_2:
+    triggers:
+      # 아키텍처 관련
+      - pattern: "architecture_issue"
+        keywords: ["architecture", "design pattern", "dependency", "coupling"]
+
+      - pattern: "api_mismatch"
+        keywords: ["api mismatch", "contract violation", "interface change"]
+
+      - pattern: "schema_mismatch"
+        keywords: ["schema mismatch", "migration needed", "db change"]
+
+      # 성능 (major)
+      - pattern: "performance_issue"
+        keywords: ["performance degradation", "timeout", "memory leak", "bottleneck"]
+
+      - pattern: "scalability_concern"
+        keywords: ["scalability", "load handling", "concurrent users"]
+
+      # 보안 (implementation level)
+      - pattern: "security_vulnerability"
+        keywords: ["vulnerability", "security issue", "injection", "xss", "csrf"]
+
+      # 통합 문제
+      - pattern: "integration_issue"
+        keywords: ["integration failed", "external api", "third party"]
+
+      # SSOT 불일치
+      - pattern: "ssot_violation"
+        keywords: ["ssot mismatch", "spec violation", "documentation outdated"]
+
+    route_to: "tsq-planner"
+    planner_mode: "architect"
+
+    actions:
+      - type: "analyze"
+        agent: "tsq-planner"
+
+      - type: "update_ssot"
+        documents: ["service-spec.md", "data-design.md", "error-codes.md"]
+
+      - type: "create_adr"
+        enabled: true
+        template: "ADR-000-template.md"
+
+      - type: "log"
+        destination: ".timsquad/logs/"
+
+    escalation:
+      condition: "impact >= high OR user_facing == true"
+      escalate_to: "level_3"
+      notify: ["user"]
+
+  # --------------------------------------------------------
+  # Level 3: 기획 수정 → User 승인 필요
+  # --------------------------------------------------------
+  level_3:
+    triggers:
+      # 요구사항 관련
+      - pattern: "requirement_ambiguity"
+        keywords: ["unclear requirement", "ambiguous", "need clarification"]
+
+      - pattern: "requirement_change"
+        keywords: ["requirement change", "scope change", "new feature"]
+
+      - pattern: "scope_creep"
+        keywords: ["scope creep", "out of scope", "additional feature"]
+
+      # 비즈니스 로직
+      - pattern: "business_logic_error"
+        keywords: ["business logic", "business rule", "domain error"]
+
+      - pattern: "stakeholder_feedback"
+        keywords: ["stakeholder", "client feedback", "user feedback"]
+
+      # 우선순위/일정
+      - pattern: "priority_change"
+        keywords: ["priority change", "timeline", "deadline", "milestone"]
+
+      # 기술 결정
+      - pattern: "technology_decision"
+        keywords: ["technology choice", "framework", "library selection"]
+
+      # 비용/리소스
+      - pattern: "resource_constraint"
+        keywords: ["budget", "resource", "cost", "infrastructure"]
+
+    route_to: "tsq-planner"
+    planner_mode: "planning"
+
+    actions:
+      - type: "notify_user"
+        priority: "high"
+
+      - type: "prepare_summary"
+        include: ["impact", "options", "recommendation"]
+
+      - type: "await_approval"
+        timeout: "24h"
+        reminder: "4h"
+
+      - type: "update_ssot"
+        documents: ["prd.md", "requirements.md", "planning.md"]
+        requires_approval: true
+
+      - type: "log"
+        destination: ".timsquad/logs/"
+
+    approval_flow:
+      - step: "present_options"
+        agent: "tsq-planner"
+
+      - step: "user_decision"
+        timeout: "24h"
+
+      - step: "apply_changes"
+        condition: "approved == true"
+
+      - step: "cascade_updates"
+        documents: ["affected_ssot_documents"]
+
+# ============================================================
+# 키워드 기반 자동 분류
+# ============================================================
+classification:
+  # 자동 분류 활성화
+  auto_classify: true
+
+  # 신뢰도 임계값 (0-1)
+  confidence_threshold: 0.7
+
+  # 낮은 신뢰도 시 동작
+  low_confidence_action: "ask_user"
+
+  # 분류 우선순위 (높은 레벨 우선)
+  priority: ["level_3", "level_2", "level_1"]
+
+  # 복합 패턴 처리
+  compound_patterns:
+    - patterns: ["security_vulnerability", "architecture_issue"]
+      result_level: "level_2"
+      priority: "critical"
+
+    - patterns: ["requirement_change", "scope_creep"]
+      result_level: "level_3"
+      priority: "high"
+
+# ============================================================
+# 에스컬레이션 규칙
+# ============================================================
+escalation:
+  # 시간 기반 에스컬레이션
+  time_based:
+    level_1:
+      timeout: "2h"
+      escalate_to: "level_2"
+
+    level_2:
+      timeout: "8h"
+      escalate_to: "level_3"
+
+  # 반복 기반 에스컬레이션
+  recurrence_based:
+    threshold: 3
+    window: "7d"
+    action: "escalate_and_create_pattern"
+
+  # 심각도 기반 에스컬레이션
+  severity_based:
+    critical:
+      immediate_escalate_to: "level_3"
+      notify: ["user", "tsq-planner"]
+
+    high:
+      escalate_after: "1h"
+
+    medium:
+      follow_normal_flow: true
+
+    low:
+      batch_process: true
+      batch_interval: "4h"
+
+# ============================================================
+# 알림 설정
+# ============================================================
+notifications:
+  channels:
+    # 콘솔 출력
+    console:
+      enabled: true
+      levels: ["level_1", "level_2", "level_3"]
+
+    # 로그 파일
+    log_file:
+      enabled: true
+      path: ".timsquad/logs/feedback.log"
+
+    # 사용자 프롬프트
+    user_prompt:
+      enabled: true
+      levels: ["level_3"]
+
+  templates:
+    level_1: |
+      [Level 1] 구현 수정 필요
+      패턴: {{pattern}}
+      대상: {{target_file}}
+      담당: @tsq-developer
+
+    level_2: |
+      [Level 2] 설계 수정 필요
+      패턴: {{pattern}}
+      영향: {{impact}}
+      담당: 메인세션(PM) - SSOT 직접 수정
+      SSOT 업데이트 필요
+
+    level_3: |
+      [Level 3] 기획 검토 필요 - 사용자 승인 대기
+      패턴: {{pattern}}
+      영향: {{impact}}
+      옵션: {{options}}
+
+      승인 대기 중...
+
+# ============================================================
+# 메트릭 수집
+# ============================================================
+metrics:
+  collect:
+    - feedback_count_by_level
+    - feedback_count_by_pattern
+    - resolution_time
+    - escalation_rate
+    - recurrence_rate
+
+  storage: ".timsquad/retrospective/metrics/feedback-stats.json"
+
+  aggregation:
+    interval: "daily"
+    retention: "90d"
+
+# ============================================================
+# 학습/개선
+# ============================================================
+learning:
+  # 패턴 자동 등록
+  auto_pattern_registration:
+    enabled: true
+    threshold: 3  # 3회 이상 반복 시
+
+  # 회고 시스템 연동
+  retrospective_integration:
+    enabled: true
+    report_to: ".timsquad/retrospective/patterns/"
+
+  # 라우팅 규칙 개선 제안
+  rule_improvement:
+    enabled: true
+    suggest_new_keywords: true
+    suggest_threshold_adjustments: true

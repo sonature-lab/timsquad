@@ -1,5 +1,5 @@
 /**
- * Project types supported by TimSquad
+ * Project types supported by TimSquad (= Architecture axis)
  */
 export type ProjectType =
   | 'web-service'
@@ -8,6 +8,27 @@ export type ProjectType =
   | 'platform'
   | 'fintech'
   | 'infra';
+
+/**
+ * AI platform axis (v4.0 Composition Layer)
+ */
+export type Platform =
+  | 'claude-code'
+  | 'cursor'
+  | 'windsurf'
+  | 'mcp'
+  | 'gemini';
+
+/**
+ * Domain axis (v4.0 Composition Layer)
+ */
+export type Domain =
+  | 'general-web'
+  | 'ml-engineering'
+  | 'fintech'
+  | 'mobile'
+  | 'gamedev'
+  | 'systems';
 
 /**
  * Project level (1=MVP, 2=Standard, 3=Enterprise)
@@ -29,14 +50,12 @@ export type Phase =
  * Agent types
  */
 export type AgentType =
-  | 'planner'
+  | 'architect'
   | 'developer'
   | 'qa'
   | 'security'
   | 'dba'
-  | 'designer'
-  | 'prompter'
-  | 'retro';
+  | 'designer';
 
 /**
  * Project info
@@ -125,6 +144,29 @@ export const REQUIRED_SSOT_BY_TYPE: Record<ProjectType, string[]> = {
   'platform': ['integration-spec', 'glossary'],
   'fintech': ['security-spec', 'error-codes', 'deployment-spec'],
   'infra': ['deployment-spec', 'env-config'],
+};
+
+/**
+ * Platform descriptions
+ */
+export const PLATFORM_DESCRIPTIONS: Record<Platform, string> = {
+  'claude-code': 'Claude Code (Anthropic CLI)',
+  'cursor': 'Cursor IDE',
+  'windsurf': 'Windsurf IDE',
+  'mcp': 'MCP Server 연동',
+  'gemini': 'Gemini Code Assist',
+};
+
+/**
+ * Domain descriptions
+ */
+export const DOMAIN_DESCRIPTIONS: Record<Domain, string> = {
+  'general-web': '일반 웹 서비스',
+  'ml-engineering': 'ML/AI 엔지니어링',
+  'fintech': '금융/결제 서비스',
+  'mobile': '모바일 앱',
+  'gamedev': '게임 개발',
+  'systems': '시스템 프로그래밍',
 };
 
 /**

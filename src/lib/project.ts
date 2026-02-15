@@ -142,7 +142,7 @@ export async function getAgentsStatus(projectRoot: string): Promise<AgentInfo[]>
       name,
       type: name as AgentInfo['type'],
       model: agentConfig?.model || 'sonnet',
-      available: true,
+      available: agentConfig?.enabled ?? true,
     };
   });
 }

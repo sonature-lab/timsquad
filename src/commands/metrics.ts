@@ -5,6 +5,7 @@ import { colors, printHeader, printError, printSuccess, printKeyValue } from '..
 import { findProjectRoot } from '../lib/project.js';
 import { exists, readFile, listFiles } from '../utils/fs.js';
 import { getDateString, getTimestamp } from '../utils/date.js';
+import type { TaskLogEntry, TaskStats } from '../types/index.js';
 
 // ============================================================
 // 지표 정의 및 의미
@@ -81,6 +82,7 @@ interface MetricsData {
     byType: Record<string, number>;
     decisionRatio: number;      // 결정 기록 비율 (%). 의사결정 투명도 지표
     errorRate: number;          // 에러 비율 (%). 프로세스 안정성 지표
+    tasks?: TaskStats;          // Task JSON 기반 태스크 수준 메트릭 (v3.0+)
   };
   feedback: {
     total: number;
@@ -92,6 +94,19 @@ interface MetricsData {
     completionRate: number;     // SSOT 완성률 (%). 문서 기반 개발 성숙도
   };
   sessions: SessionStats;
+  metaIndex?: {
+    totalFiles: number;
+    totalMethods: number;
+    healthScore: number;
+    freshness: number;
+    semanticCoverage: number;
+    driftedFiles: number;
+    alertCount: number;
+    uiComponents?: number;
+    uiHealthScore?: number;
+    uiSemanticCoverage?: number;
+    uiAccessibilityCoverage?: number;
+  };
 }
 
 export function registerMetricsCommand(program: Command): void {
@@ -176,11 +191,12 @@ async function collectMetrics(days: number): Promise<void> {
   const ssotDir = path.join(projectRoot, '.timsquad', 'ssot');
   const sessionsDir = path.join(projectRoot, '.timsquad', 'logs', 'sessions');
 
-  const [logStats, feedbackStats, ssotStats, sessionStats] = await Promise.all([
+  const [logStats, feedbackStats, ssotStats, sessionStats, metaIndexStats] = await Promise.all([
     collectLogStats(logsDir, startDate),
     collectFeedbackStats(logsDir, startDate),
     collectSSOTStats(ssotDir),
     collectSessionStats(sessionsDir, startDate),
+    collectMetaIndexStats(projectRoot),
   ]);
 
   const metrics: MetricsData = {
@@ -193,6 +209,7 @@ async function collectMetrics(days: number): Promise<void> {
     feedback: feedbackStats,
     ssot: ssotStats,
     sessions: sessionStats,
+    ...(metaIndexStats ? { metaIndex: metaIndexStats } : {}),
   };
 
   // Save metrics
@@ -227,10 +244,116 @@ async function collectLogStats(
 
   if (!await exists(logsDir)) return stats;
 
-  const files = await listFiles('*.md', logsDir);
   const startDateStr = startDate.toISOString().split('T')[0];
 
-  for (const file of files) {
+  // ── Phase 1: Task JSON 수집 (primary) ──
+  const tasksDir = path.join(logsDir, 'tasks');
+
+  if (await exists(tasksDir)) {
+    const taskFiles = await listFiles('*.json', tasksDir);
+    const taskEntries: TaskLogEntry[] = [];
+
+    for (const file of taskFiles) {
+      try {
+        const data: TaskLogEntry = await fs.readJson(path.join(tasksDir, file));
+
+        // completed_at 기반 날짜 필터
+        if (data.completed_at) {
+          const taskDate = data.completed_at.split('T')[0];
+          if (taskDate < startDateStr) continue;
+        }
+
+        taskEntries.push(data);
+      } catch {
+        // 파싱 불가 파일 무시
+      }
+    }
+
+    if (taskEntries.length > 0) {
+      const taskStats: TaskStats = {
+        total: taskEntries.length,
+        completed: 0,
+        failed: 0,
+        successRate: 0,
+        byAgent: {},
+        totalFilesChanged: 0,
+        avgFilesPerTask: 0,
+        fileActions: {},
+        withErrors: 0,
+        errorTypes: {},
+        withSemantic: 0,
+        semanticCoverage: 0,
+      };
+
+      for (const task of taskEntries) {
+        const isSuccess = task.status === 'completed' || task.status === 'success';
+
+        if (isSuccess) {
+          taskStats.completed++;
+        } else {
+          taskStats.failed++;
+        }
+
+        // 에이전트별 카운트
+        const agent = task.agent || 'unknown';
+        if (!taskStats.byAgent[agent]) {
+          taskStats.byAgent[agent] = { total: 0, completed: 0, failed: 0 };
+        }
+        taskStats.byAgent[agent].total++;
+        if (isSuccess) {
+          taskStats.byAgent[agent].completed++;
+        } else {
+          taskStats.byAgent[agent].failed++;
+        }
+
+        // 기존 byAgent에도 반영
+        stats.byAgent[agent] = (stats.byAgent[agent] || 0) + 1;
+
+        // 파일 변경 집계
+        const files = task.mechanical?.files || [];
+        taskStats.totalFilesChanged += files.length;
+        for (const f of files) {
+          const action = f.action || 'U';
+          taskStats.fileActions[action] = (taskStats.fileActions[action] || 0) + 1;
+        }
+
+        // 에러 집계
+        if (task.error) {
+          taskStats.withErrors++;
+          const errorType = task.error.type || 'unknown';
+          taskStats.errorTypes[errorType] = (taskStats.errorTypes[errorType] || 0) + 1;
+        }
+
+        // semantic 채움 여부
+        const sem = task.semantic || {};
+        const hasSemantic = !!(
+          sem.summary ||
+          (sem.decisions && sem.decisions.length > 0) ||
+          (sem.issues && sem.issues.length > 0) ||
+          (sem.techniques && sem.techniques.length > 0)
+        );
+        if (hasSemantic) {
+          taskStats.withSemantic++;
+        }
+      }
+
+      // 파생 지표
+      taskStats.successRate = taskStats.total > 0
+        ? Math.round((taskStats.completed / taskStats.total) * 100) : 0;
+      taskStats.avgFilesPerTask = taskStats.total > 0
+        ? Math.round((taskStats.totalFilesChanged / taskStats.total) * 10) / 10 : 0;
+      taskStats.semanticCoverage = taskStats.total > 0
+        ? Math.round((taskStats.withSemantic / taskStats.total) * 100) : 0;
+
+      stats.tasks = taskStats;
+      stats.total += taskEntries.length;
+    }
+  }
+
+  // ── Phase 2: 마크다운 폴백 (기존 로직 유지) ──
+  const mdFiles = await listFiles('*.md', logsDir);
+
+  for (const file of mdFiles) {
     if (file.startsWith('_')) continue;
 
     const match = file.match(/^(\d{4}-\d{2}-\d{2})-([a-z]+)\.md$/);
@@ -257,7 +380,7 @@ async function collectLogStats(
     }
   }
 
-  // 파생 지표 계산
+  // 파생 지표 계산 (마크다운 기반)
   const totalEntries = Object.values(stats.byType).reduce((a, b) => a + b, 0);
   if (totalEntries > 0) {
     stats.decisionRatio = Math.round(((stats.byType['decision'] || 0) / totalEntries) * 100);
@@ -369,6 +492,44 @@ async function collectSSOTStats(ssotDir: string): Promise<MetricsData['ssot']> {
     : 0;
 
   return stats;
+}
+
+// ============================================================
+// Meta Index Statistics
+// ============================================================
+
+async function collectMetaIndexStats(
+  projectRoot: string
+): Promise<MetricsData['metaIndex'] | undefined> {
+  const summaryPath = path.join(projectRoot, '.timsquad', 'state', 'meta-index', 'summary.json');
+  if (!await exists(summaryPath)) return undefined;
+
+  try {
+    const summary = await fs.readJson(summaryPath);
+    const result: MetricsData['metaIndex'] = {
+      totalFiles: summary.totalFiles || 0,
+      totalMethods: summary.totalMethods || 0,
+      healthScore: summary.health?.overall || 0,
+      freshness: summary.health?.freshness || 0,
+      semanticCoverage: summary.health?.semanticCoverage || 0,
+      driftedFiles: summary.alerts?.driftDetected?.length || 0,
+      alertCount: (summary.alerts?.oversizedFiles?.length || 0) +
+                  (summary.alerts?.missingSemantics?.length || 0) +
+                  (summary.alerts?.driftDetected?.length || 0),
+    };
+
+    // UI Health (있을 때만)
+    if (summary.uiHealth) {
+      result.uiComponents = summary.uiHealth.componentCount || 0;
+      result.uiHealthScore = summary.uiHealth.overall || 0;
+      result.uiSemanticCoverage = summary.uiHealth.semanticCoverage || 0;
+      result.uiAccessibilityCoverage = summary.uiHealth.accessibilityCoverage || 0;
+    }
+
+    return result;
+  } catch {
+    return undefined;
+  }
 }
 
 // ============================================================
@@ -526,6 +687,58 @@ async function displayMetrics(metrics: MetricsData): Promise<void> {
   printKeyValue('  Error Rate', `${metrics.logs.errorRate}%`);
   console.log(colors.dim('    에러 로그 비율. 낮을수록 안정적'));
 
+  // ── 태스크 지표 ──
+  if (metrics.logs.tasks && metrics.logs.tasks.total > 0) {
+    const t = metrics.logs.tasks;
+    console.log(colors.subheader('\n  Task Metrics'));
+    console.log(colors.dim('  서브에이전트 태스크 실행 결과. 작업 품질과 효율성 추적\n'));
+
+    printKeyValue('  Total tasks', String(t.total));
+    printKeyValue('  Completed', `${t.completed} (${t.successRate}%)`);
+    if (t.failed > 0) {
+      printKeyValue('  Failed', String(t.failed));
+    }
+
+    if (Object.keys(t.byAgent).length > 0) {
+      console.log(colors.dim('  By Agent:'));
+      Object.entries(t.byAgent)
+        .sort(([, a], [, b]) => b.total - a.total)
+        .forEach(([agent, data]) => {
+          const rate = data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0;
+          console.log(`    ${agent.padEnd(12)} ${colors.highlight(String(data.total))} tasks, ${rate}% success`);
+        });
+    }
+
+    printKeyValue('  Files changed', String(t.totalFilesChanged));
+    printKeyValue('  Avg files/task', String(t.avgFilesPerTask));
+
+    if (Object.keys(t.fileActions).length > 0) {
+      const actionLabels: Record<string, string> = { 'A': 'Added', 'M': 'Modified', 'D': 'Deleted', 'R': 'Renamed' };
+      console.log(colors.dim('  File actions:'));
+      Object.entries(t.fileActions)
+        .sort(([, a], [, b]) => b - a)
+        .forEach(([action, count]) => {
+          const label = actionLabels[action] || action;
+          console.log(`    ${(action + '(' + label + ')').padEnd(16)} ${colors.highlight(String(count))}`);
+        });
+    }
+
+    printKeyValue('  Semantic coverage', `${t.semanticCoverage}%`);
+    console.log(colors.dim('    semantic 필드 채움 비율. PM이 에이전트 리턴에서 병합'));
+
+    if (t.withErrors > 0) {
+      printKeyValue('  Tasks with errors', String(t.withErrors));
+      if (Object.keys(t.errorTypes).length > 0) {
+        console.log(colors.dim('  Error types:'));
+        Object.entries(t.errorTypes)
+          .sort(([, a], [, b]) => b - a)
+          .forEach(([type, count]) => {
+            console.log(`    ${type.padEnd(20)} ${colors.highlight(String(count))}`);
+          });
+      }
+    }
+  }
+
   // ── 피드백 지표 ──
   console.log(colors.subheader('\n  Feedback Metrics'));
   console.log(colors.dim('  피드백 레벨별 분포. Level 3이 잦으면 요구사항 정의 개선 필요\n'));
@@ -555,6 +768,39 @@ async function displayMetrics(metrics: MetricsData): Promise<void> {
   printKeyValue('  Completion', `${metrics.ssot.completionRate}%`);
   if (metrics.ssot.completionRate < 50) {
     console.log(colors.dim('    SSOT 완성률이 낮음. 문서 작성을 우선 진행하세요'));
+  }
+
+  // ── Meta Index 지표 ──
+  if (metrics.metaIndex) {
+    const mi = metrics.metaIndex;
+    console.log(colors.subheader('\n  Meta Index Health'));
+    console.log(colors.dim('  코드 구조 인덱스 건강도. AST 기반 자동 생성\n'));
+
+    printKeyValue('  Files indexed', String(mi.totalFiles));
+    printKeyValue('  Methods', String(mi.totalMethods));
+    printKeyValue('  Health Score', `${mi.healthScore}%`);
+    printKeyValue('  Freshness', `${mi.freshness}%`);
+    console.log(colors.dim('    인덱스가 최신인 파일 비율'));
+    printKeyValue('  Semantic Coverage', `${mi.semanticCoverage}%`);
+    console.log(colors.dim('    semantic 데이터가 있는 파일 비율'));
+    if (mi.driftedFiles > 0) {
+      printKeyValue('  Drifted files', `${mi.driftedFiles}`);
+      console.log(colors.dim('    파이프라인 외부에서 변경된 파일. `tsq mi check`로 상세 확인'));
+    }
+    if (mi.alertCount > 0) {
+      printKeyValue('  Alerts', String(mi.alertCount));
+    }
+
+    // UI Components (있을 때만)
+    if (mi.uiComponents && mi.uiComponents > 0) {
+      console.log('');
+      printKeyValue('  UI Components', String(mi.uiComponents));
+      printKeyValue('  UI Health Score', `${mi.uiHealthScore || 0}%`);
+      printKeyValue('  UI Semantic', `${mi.uiSemanticCoverage || 0}%`);
+      console.log(colors.dim('    디자인 의도가 기록된 컴포넌트 비율'));
+      printKeyValue('  Accessibility', `${mi.uiAccessibilityCoverage || 0}%`);
+      console.log(colors.dim('    접근성 메타가 있는 컴포넌트 비율'));
+    }
   }
 
   // ── 세션 지표 ──
@@ -671,6 +917,44 @@ async function showTrend(count: number): Promise<void> {
   const erValues = periods.map(p => `${p.logs.errorRate || 0}%`);
   console.log(`  ${'Error Rate'.padEnd(22)} ${erValues.map(v => v.padStart(8)).join('')}`);
 
+  // Task metrics (if available)
+  if (periods.some(p => p.logs.tasks && p.logs.tasks.total > 0)) {
+    console.log('');
+
+    const tsrValues = periods.map(p =>
+      p.logs.tasks ? `${p.logs.tasks.successRate}%` : '-'
+    );
+    console.log(`  ${'Task Success Rate'.padEnd(22)} ${tsrValues.map(v => v.padStart(8)).join('')}`);
+
+    const tscValues = periods.map(p =>
+      p.logs.tasks ? String(p.logs.tasks.total) : '-'
+    );
+    console.log(`  ${'Task Count'.padEnd(22)} ${tscValues.map(v => v.padStart(8)).join('')}`);
+
+    const semValues = periods.map(p =>
+      p.logs.tasks ? `${p.logs.tasks.semanticCoverage}%` : '-'
+    );
+    console.log(`  ${'Semantic Coverage'.padEnd(22)} ${semValues.map(v => v.padStart(8)).join('')}`);
+  }
+
+  // Meta Index metrics (if available)
+  if (periods.some(p => p.metaIndex)) {
+    console.log('');
+
+    const mhValues = periods.map(p =>
+      p.metaIndex ? `${p.metaIndex.healthScore}%` : '-'
+    );
+    console.log(`  ${'Meta Health'.padEnd(22)} ${mhValues.map(v => v.padStart(8)).join('')}`);
+
+    // UI Health trend (있을 때만)
+    if (periods.some(p => p.metaIndex?.uiComponents && p.metaIndex.uiComponents > 0)) {
+      const uhValues = periods.map(p =>
+        p.metaIndex?.uiHealthScore ? `${p.metaIndex.uiHealthScore}%` : '-'
+      );
+      console.log(`  ${'UI Health'.padEnd(22)} ${uhValues.map(v => v.padStart(8)).join('')}`);
+    }
+  }
+
   // Session metrics (if available)
   if (periods.some(p => p.sessions?.totalSessions > 0)) {
     console.log('');
@@ -700,6 +984,20 @@ async function showTrend(count: number): Promise<void> {
     const ssotDelta = curr.ssot.completionRate - prev.ssot.completionRate;
     if (ssotDelta !== 0) {
       changes.push(`  SSOT Completion: ${ssotDelta > 0 ? colors.success(`+${ssotDelta}%`) : colors.error(`${ssotDelta}%`)}`);
+    }
+
+    if (curr.logs.tasks && prev.logs.tasks) {
+      const taskDelta = curr.logs.tasks.successRate - prev.logs.tasks.successRate;
+      if (taskDelta !== 0) {
+        changes.push(`  Task Success:    ${taskDelta > 0 ? colors.success(`+${taskDelta}%`) : colors.error(`${taskDelta}%`)}`);
+      }
+    }
+
+    if (curr.metaIndex && prev.metaIndex) {
+      const metaDelta = curr.metaIndex.healthScore - prev.metaIndex.healthScore;
+      if (metaDelta !== 0) {
+        changes.push(`  Meta Health:     ${metaDelta > 0 ? colors.success(`+${metaDelta}%`) : colors.error(`${metaDelta}%`)}`);
+      }
     }
 
     if (curr.sessions && prev.sessions) {

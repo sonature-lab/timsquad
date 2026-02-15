@@ -86,13 +86,13 @@ async function logFullTask(
   const date = getDateString();
   const time = getTimeString();
   const logDir = path.join(projectRoot, '.timsquad', 'logs');
-  const logFile = path.join(logDir, `${date}-planner.md`);
+  const logFile = path.join(logDir, `${date}-pm.md`);
 
   let content = '';
   if (await exists(logFile)) {
     content = await readFile(logFile);
   } else {
-    content = `# Planner Log - ${date}\n\n`;
+    content = `# PM Log - ${date}\n\n`;
   }
 
   content += `## ${time} [work] 📝\n\n`;

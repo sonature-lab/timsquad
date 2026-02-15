@@ -18,3 +18,44 @@ dist/
 # Temp
 *.tmp
 *.temp
+
+# ============================================================
+# 비공개: 비즈니스 전략 & 내부 분석
+# ============================================================
+docs/business-model-roadmap.md
+docs/software-3.0-comparison.md
+docs/extension-plans.md
+docs/competency-consortium.md
+
+# 비공개: v4.0 미구현 설계 (전략 노출)
+docs/composition-layer-architecture.md
+docs/composition-layer/
+
+# 비공개: 내부 감사/분석/진척 보고서
+docs/v3.3-completion-report.md
+docs/v3.1-prompt-optimization.md
+docs/v3-pipeline-audit.md
+docs/v3-architecture-analysis.md
+docs/v2.1-vs-current-analysis.md
+docs/external-skill-audit.md
+
+# 비공개: 도메인 오버레이 (MCP 유료 콘텐츠)
+templates/domains/
+
+# ============================================================
+# 공개 대상 (참고용 주석)
+# ============================================================
+# src/                    → CLI 전체 코드
+# templates/base/         → 에이전트 skeleton + 기본 스킬 + knowledge
+# templates/platforms/    → 플랫폼별 설정 (claude-code)
+# templates/project-types/→ 프로젝트 타입별 워크플로우
+# tests/                  → 테스트 전체
+# docs/PRD.md             → 프레임워크 소개
+# docs/core-concepts.md   → 핵심 개념
+# docs/authoring-guide.md → 작성 가이드
+# docs/log-architecture.md           → 로그 체계
+# docs/knowledge-architecture.md     → Knowledge 시스템
+# docs/meta-index-architecture.md    → Meta Index
+# docs/token-efficiency.md           → 토큰 효율성
+# docs/feedback-and-retrospective.md → 피드백/회고
+# docs/file-structure.md             → 파일 구조
