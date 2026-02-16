@@ -248,7 +248,7 @@ export const DOMAIN_SKILL_MAP: Partial<Record<Domain, string[]>> = {
   'general-web': [],  // web 스킬은 SKILL_PRESETS[type]에서 이미 커버
   'ml-engineering': ['methodology/tdd'],
   'fintech': ['methodology/ddd'],  // DDD는 도메인 고유 (security는 type에서 커버)
-  'mobile': [],  // 모바일 전용 스킬 아직 없음
+  'mobile': ['mobile/flutter', 'mobile/dart'],
   'gamedev': [],
   'systems': [],  // security는 type에서 커버
 };
@@ -278,6 +278,8 @@ export const STACK_SKILL_MAP: Record<string, string[]> = {
   'typescript': ['typescript'],
   'postgresql': ['database'],
   'mysql': ['database'],
+  'flutter': ['mobile/flutter'],
+  'dart': ['mobile/dart'],
 };
 
 /**
