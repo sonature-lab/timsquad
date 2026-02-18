@@ -40,6 +40,7 @@ export class MetaCache {
   private loadedAt = '';
   public totalFiles = 0;
   public totalMethods = 0;
+  public onNotify: ((event: string, params: Record<string, unknown>) => void) | null = null;
 
   constructor(projectRoot: string) {
     this.projectRoot = projectRoot;
@@ -241,12 +242,20 @@ export class MetaCache {
         const paths = (req.params?.paths as string[]) || [];
         return { context: this.filterByScope(paths) };
       }
+      case 'notify': {
+        const event = String(req.params?.event || '');
+        if (this.onNotify) {
+          this.onNotify(event, req.params || {});
+        }
+        return { ok: true, event };
+      }
       case 'status':
         return {
           loadedAt: this.loadedAt,
           totalFiles: this.totalFiles,
           totalMethods: this.totalMethods,
           modules: Object.keys(this.modules),
+          mode: this.onNotify ? 'hook-based' : 'jsonl',
         };
       default:
         return { error: `unknown method: ${req.method}` };

@@ -684,7 +684,14 @@ TASK-03-qa-r2.json     ← 2차 재시도 (있을 경우)
 ### 트랜잭션 흐름
 
 ```
-L1 생성:
+L1 생성 (훅 기반 IPC 모드 — v3.4+):
+  SubagentStart 훅 → `tsq daemon notify subagent-start` → IPC → baseline 저장 + 세션 상태 갱신
+  서브에이전트 작업 실행
+  SubagentStop 훅 → `tsq daemon notify subagent-stop` → IPC → baseline 비교 → L1 JSON 생성 (semantic: {})
+  서브에이전트 → tsq log enrich {agent} --json '{...}' → semantic 데이터 병합
+  ✓ L1 완료
+
+L1 생성 (JSONL 감시 모드 — 레거시):
   SubagentStart Hook → baseline HEAD 기록 (/tmp/tsq-task-baseline-{SESSION}-{AGENT})
   서브에이전트 작업 실행
   SubagentStop Hook → mechanical 데이터 자동 수집 → JSON 생성 (semantic: {})
@@ -777,6 +784,7 @@ Hook 생성 → task JSON {mechanical: {...}, semantic: {}}
 
 | 확장 | 설명 | 시점 |
 |------|------|------|
-| 토큰 비용 추적 | `execution.tokens` 필드 추가 (input/output/cache) | Hook에서 transcript 파싱 시 |
+| 훅 기반 IPC 모드 | JSONL 의존 제거. `tsq daemon notify`로 이벤트 수신, `session-state.json`으로 상태 영속화 | v3.4 (구현 완료) |
+| 토큰 비용 추적 | `execution.tokens` 필드 추가 (input/output/cache) | Stop 훅에서 usage 데이터 수신 시 |
 | 대시보드 | 로그 기반 시각화 (DORA 차트, 성공률 추세) | Phase 3 |
 | 로그 압축/아카이빙 | 오래된 로그 gzip 압축 | 프로젝트 성숙 후 |

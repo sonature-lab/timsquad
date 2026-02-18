@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **데몬 JSONL 디커플링**: `tsq daemon start`가 `CLAUDE_TRANSCRIPT_PATH` 없이도 실행 가능 (#1)
+  - 메타 인덱스, 파일 워처, IPC가 JSONL 없이 즉시 동작
+  - `tsq daemon notify` 서브커맨드: 훅 기반 이벤트 알림 (subagent-start/stop, tool-use, stop, session-end)
+  - settings.json 훅 7종 확장 (SubagentStart/Stop, PostToolUse/Failure, Stop, SessionEnd)
+  - 파일 기반 세션 상태 (`session-state.ts`): 메트릭/베이스라인 영속화
+  - IPC `notify` 프로토콜: 향후 모든 이벤트 소스(MCP, Cursor, CI/CD)의 공통 인터페이스
+
+### Added
+- **mobile/dart 스킬**: Dart 언어 가이드라인 (4 rules)
+  - `null-safety` (CRITICAL): Sound null safety 패턴, bang operator 금지
+  - `async-patterns` (CRITICAL): async/await 우선, Stream dispose, Isolate
+  - `type-system` (HIGH): Sealed class, 패턴 매칭, Records, Extension type
+  - `code-style` (HIGH): Effective Dart, 네이밍, import 정리
+- **mobile/flutter 스킬**: Flutter 개발 가이드라인 (8 rules + 2 refs)
+  - `architecture` (CRITICAL): Feature-first + MVVM + 3계층
+  - `state-management` (CRITICAL): Riverpod Provider/Notifier 패턴
+  - `widget-conventions` (CRITICAL): const 생성자, 위젯 분리 기준
+  - `navigation-routing` (HIGH): go_router 선언적 라우팅
+  - `performance` (HIGH): 리빌드 최적화, ListView.builder
+  - `testing` (HIGH): Unit/Widget/Integration (mocktail, Patrol)
+  - `platform-adaptive` (MEDIUM): iOS/Android 적응형 UI
+  - `animations` (MEDIUM): 암시적/명시적 애니메이션 선택 기준
+  - `project-structure` (REF): Feature-first + melos 모노레포
+  - `freezed-patterns` (REF): 불변 모델 + JSON 직렬화
+- **mobile/flutter/push-notifications 서브스킬**: 푸시 알림 + 백그라운드 (7 rules + 2 refs)
+  - `fcm-setup` (CRITICAL): FCM 초기화, 토큰 관리, 토픽 구독
+  - `notification-handling` (CRITICAL): 포그라운드/백그라운드/종료 상태별 처리
+  - `local-notifications` (CRITICAL): 로컬 알림 채널, 스케줄
+  - `notification-permissions` (HIGH): 권한 요청 타이밍, 프리프롬프트
+  - `deep-linking` (HIGH): 알림 탭 → 네비게이션, 인증 가드
+  - `rich-notifications` (HIGH): 이미지, 액션 버튼, 그룹
+  - `background-processing` (HIGH): Workmanager, Isolate
+  - `platform-setup` (REF): iOS APNs + Android 채널 설정
+  - `notification-architecture` (REF): 서비스 아키텍처, 테스트
+- **경쟁 분석 문서**: OmO/OMC/OMX 비교 분석 (`docs/competitive-analysis-2026-02.md`)
+
+### Changed
+- `DOMAIN_SKILL_MAP`: mobile 도메인에 `mobile/flutter`, `mobile/dart` 매핑
+- `STACK_SKILL_MAP`: flutter → `mobile/flutter`, dart → `mobile/dart` 매핑
+
+---
+
 ## [3.3.0] - 2026-02-15
 
 ### Added

@@ -168,8 +168,11 @@ export async function cleanupDaemonFiles(projectRoot: string): Promise<void> {
   const pidFile = path.join(projectRoot, '.timsquad', '.daemon.pid');
   const sockFile = path.join(projectRoot, '.timsquad', '.daemon.sock');
   const contextFile = path.join(projectRoot, '.timsquad', '.daemon', 'task-context.json');
+  const sessionStateFile = path.join(projectRoot, '.timsquad', '.daemon', 'session-state.json');
+  const baselinesDir = path.join(projectRoot, '.timsquad', '.daemon', 'baselines');
 
-  for (const f of [pidFile, sockFile, contextFile]) {
+  for (const f of [pidFile, sockFile, contextFile, sessionStateFile]) {
     try { await fs.remove(f); } catch { /* ok */ }
   }
+  try { await fs.remove(baselinesDir); } catch { /* ok */ }
 }

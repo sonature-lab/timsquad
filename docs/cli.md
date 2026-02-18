@@ -324,12 +324,18 @@ tsq wf check                                           # 자동화 체크 + 실�
 
 ### `tsq daemon`
 
-백그라운드 데몬. JSONL 실시간 감시, L1/L2/L3 로그 자동화, Meta Index 캐시 등.
+백그라운드 데몬. 파일 워처, Meta Index 캐시, IPC 서버, L1/L2/L3 로그 자동화.
+JSONL 없이도 동작하며 (lite mode), 훅 기반 IPC notify로 이벤트를 수신한다.
 
 ```bash
-tsq daemon start [--jsonl <path>]    # 데몬 시작
+tsq daemon start [--jsonl <path>]    # 데몬 시작 (JSONL 옵셔널)
 tsq daemon stop                      # 데몬 중지
 tsq daemon status                    # 데몬 상태
+tsq daemon notify subagent-start     # 서브에이전트 시작 알림
+tsq daemon notify subagent-stop      # 서브에이전트 종료 알림
+tsq daemon notify tool-use           # 도구 사용 알림
+tsq daemon notify stop               # 세션 중지 알림 (토큰 사용량)
+tsq daemon notify session-end        # 세션 종료 알림
 ```
 
 ---

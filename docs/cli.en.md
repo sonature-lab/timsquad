@@ -324,12 +324,18 @@ tsq wf check                                           # Run automation check + 
 
 ### `tsq daemon`
 
-Background daemon. JSONL real-time monitoring, L1/L2/L3 log automation, Meta Index cache, etc.
+Background daemon. File watcher, Meta Index cache, IPC server, L1/L2/L3 log automation.
+Works without JSONL (lite mode), receives events via hook-based IPC notify.
 
 ```bash
-tsq daemon start [--jsonl <path>]    # Start daemon
+tsq daemon start [--jsonl <path>]    # Start daemon (JSONL optional)
 tsq daemon stop                      # Stop daemon
 tsq daemon status                    # Daemon status
+tsq daemon notify subagent-start     # Notify subagent start
+tsq daemon notify subagent-stop      # Notify subagent stop
+tsq daemon notify tool-use           # Notify tool use
+tsq daemon notify stop               # Notify session stop (token usage)
+tsq daemon notify session-end        # Notify session end
 ```
 
 ---

@@ -79,9 +79,9 @@ automation:
     logic: yaml_rules
     tokens: 0
 
-  log_automation:       # JSONL stream watch → event-driven processing
+  log_automation:       # IPC notify or JSONL stream watch → event-driven processing
     type: daemon_process
-    trigger: jsonl_stream_watch
+    trigger: ipc_notify | jsonl_stream_watch
     tokens: 0
 
   agent_scheduler:      # Dependency-based agent scheduling

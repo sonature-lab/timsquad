@@ -110,10 +110,10 @@
 - EventQueue가 완료 추적, isSequenceComplete()로 판정
 - 없는 것: 파일 소유권 파티셔닝 (플랫폼 의존)
 
-### "Hook이 3개뿐" → 숫자 틀림, 본질은 맞음
-- SessionStart/SessionEnd 2개 이벤트 타입
-- 데몬 JSONL 감시로 SubagentStart/Stop 감지 (기능적으로 더 많음)
-- PreToolUse/PostToolUse는 미구현
+### "Hook이 3개뿐" → v3.4-F에서 7종으로 확장 완료
+- SessionStart, SubagentStart/Stop, PostToolUse/Failure, Stop, SessionEnd
+- `tsq daemon notify` IPC 프로토콜로 JSONL 의존 제거
+- PreToolUse 품질 가드 스크립트는 Q4에서 추가 예정
 
 ---
 

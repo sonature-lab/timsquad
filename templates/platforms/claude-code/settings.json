@@ -5,8 +5,63 @@
         "hooks": [
           {
             "type": "command",
-            "command": "tsq daemon start --jsonl \"$CLAUDE_TRANSCRIPT_PATH\" 2>/dev/null || true",
+            "command": "tsq daemon start 2>/dev/null || true",
             "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "tsq daemon notify subagent-start 2>/dev/null || true",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "tsq daemon notify subagent-stop 2>/dev/null || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "tsq daemon notify tool-use --status success 2>/dev/null || true",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "tsq daemon notify tool-use --status failure 2>/dev/null || true",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "tsq daemon notify stop 2>/dev/null || true",
+            "timeout": 3
           }
         ]
       }
@@ -16,8 +71,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "tsq daemon stop 2>/dev/null || true",
-            "timeout": 10
+            "command": "tsq daemon notify session-end 2>/dev/null || true && tsq daemon stop 2>/dev/null || true",
+            "timeout": 15
           }
         ]
       }
