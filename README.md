@@ -85,6 +85,9 @@ my-app/
 │   │   ├── frontend/(react|nextjs)/ # Frontend + 22 Vercel rules
 │   │   ├── backend/node/          # Node.js backend + rules/
 │   │   ├── database/prisma/       # Prisma ORM + rules/
+│   │   ├── mobile/dart/             # Dart language + rules/
+│   │   ├── mobile/flutter/          # Flutter dev + rules/ + refs/
+│   │   │   └── push-notifications/  # FCM + local + background
 │   │   ├── methodology/(tdd|bdd|ddd|debugging)/
 │   │   └── ...
 │   └── knowledge/                 # Agent reference knowledge

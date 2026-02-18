@@ -8,7 +8,7 @@ import { getActiveAgents } from '../../src/lib/agent-generator.js';
 import { createTmpDir } from '../helpers/tmp-dir.js';
 import type { ProjectType } from '../../src/types/project.js';
 
-const ALL_TYPES: ProjectType[] = ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra'];
+const ALL_TYPES: ProjectType[] = ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra', 'mobile-app'];
 
 let tmpDir: string;
 let cleanup: () => Promise<void>;

@@ -21,7 +21,9 @@ import { registerMetaIndexCommand } from './commands/meta-index.js';
 import { registerKnowledgeCommand } from './commands/knowledge.js';
 import { registerWorkflowCommand } from './commands/workflow.js';
 import { registerDaemonCommand } from './commands/daemon.js';
+import { registerSkillsCommand } from './commands/skills.js';
 import { registerUpgradeCommand } from './commands/upgrade.js';
+import { registerCompileCommand } from './commands/compile.js';
 import { checkForUpdates } from './lib/update-check.js';
 import { getInstalledVersion } from './lib/version.js';
 
@@ -53,6 +55,8 @@ registerMetaIndexCommand(program);
 registerKnowledgeCommand(program);
 registerWorkflowCommand(program);
 registerDaemonCommand(program);
+registerSkillsCommand(program);
+registerCompileCommand(program);
 registerUpgradeCommand(program);
 
 // Default action (show help)

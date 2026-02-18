@@ -85,6 +85,9 @@ my-app/
 │   │   ├── frontend/(react|nextjs)/ # 프론트엔드 + Vercel 22개 룰
 │   │   ├── backend/node/          # Node.js 백엔드 + rules/
 │   │   ├── database/prisma/       # Prisma ORM + rules/
+│   │   ├── mobile/dart/             # Dart 언어 + rules/
+│   │   ├── mobile/flutter/          # Flutter 개발 + rules/ + refs/
+│   │   │   └── push-notifications/  # FCM + 로컬 알림 + 백그라운드
 │   │   ├── methodology/(tdd|bdd|ddd|debugging)/
 │   │   └── ...
 │   └── knowledge/                 # 에이전트 참조 지식

@@ -3,7 +3,7 @@ import { createDefaultConfig, validateConfig } from '../../src/lib/config.js';
 import { buildAgentsConfig, AGENT_PRESETS, SKILL_PRESETS, KNOWLEDGE_PRESETS, BASE_SKILLS, BASE_KNOWLEDGE } from '../../src/types/config.js';
 import type { ProjectType, ProjectLevel } from '../../src/types/project.js';
 
-const ALL_TYPES: ProjectType[] = ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra'];
+const ALL_TYPES: ProjectType[] = ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra', 'mobile-app'];
 const ALL_LEVELS: ProjectLevel[] = [1, 2, 3];
 
 describe('createDefaultConfig', () => {

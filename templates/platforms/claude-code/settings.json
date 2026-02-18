@@ -1,5 +1,17 @@
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/phase-guard.sh 2>/dev/null || true",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [
@@ -62,6 +74,11 @@
             "type": "command",
             "command": "tsq daemon notify stop 2>/dev/null || true",
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/completion-guard.sh 2>/dev/null || true",
+            "timeout": 5
           }
         ]
       }

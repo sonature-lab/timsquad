@@ -207,7 +207,7 @@ describe('References Files - Frontmatter', () => {
 // Cross-Reference Integrity
 // ─────────────────────────────────────────
 
-const ALL_TYPES: ProjectType[] = ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra'];
+const ALL_TYPES: ProjectType[] = ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra', 'mobile-app'];
 
 describe('Cross-Reference - Agent Presets → Template Files', () => {
   it.each(ALL_TYPES)('all agents for %s should have template files', (type) => {

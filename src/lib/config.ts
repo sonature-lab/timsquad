@@ -42,7 +42,7 @@ export function createDefaultConfig(
   name: string,
   type: ProjectType,
   level: ProjectLevel,
-  options?: { domain?: Domain; platform?: Platform; stack?: string[] },
+  options?: { domain?: Domain; platform?: Platform; stack?: string[]; workspaces?: string[] },
 ): TimsquadConfig {
   const baseConfig: TimsquadConfig = {
     project: {
@@ -54,11 +54,17 @@ export function createDefaultConfig(
       domain: options?.domain ?? 'general-web',
       platform: options?.platform ?? 'claude-code',
       stack: options?.stack ?? [],
+      workspaces: options?.workspaces,
     },
     ...DEFAULT_CONFIG,
     agents: buildAgentsConfig(type),
     naming: { ...DEFAULT_NAMING },
   };
+
+  // Default domain to 'mobile' for mobile-app
+  if (type === 'mobile-app' && !options?.domain) {
+    baseConfig.project.domain = 'mobile';
+  }
 
   // Apply fintech-specific overrides
   if (type === 'fintech') {
@@ -97,6 +103,7 @@ export function validateConfig(config: unknown): config is TimsquadConfig {
   if (project.domain !== undefined && !isValidDomain(project.domain)) return false;
   if (project.platform !== undefined && !isValidPlatform(project.platform)) return false;
   if (project.stack !== undefined && !Array.isArray(project.stack)) return false;
+  if (project.workspaces !== undefined && !Array.isArray(project.workspaces)) return false;
 
   return true;
 }
@@ -105,7 +112,7 @@ export function validateConfig(config: unknown): config is TimsquadConfig {
  * Check if value is a valid project type
  */
 function isValidProjectType(value: unknown): value is ProjectType {
-  const validTypes: ProjectType[] = ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra'];
+  const validTypes: ProjectType[] = ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra', 'mobile-app'];
   return typeof value === 'string' && validTypes.includes(value as ProjectType);
 }
 

@@ -7,7 +7,8 @@ export type ProjectType =
   | 'api-backend'
   | 'platform'
   | 'fintech'
-  | 'infra';
+  | 'infra'
+  | 'mobile-app';
 
 /**
  * AI platform axis (v4.0 Composition Layer)
@@ -144,6 +145,7 @@ export const REQUIRED_SSOT_BY_TYPE: Record<ProjectType, string[]> = {
   'platform': ['integration-spec', 'glossary'],
   'fintech': ['security-spec', 'error-codes', 'deployment-spec'],
   'infra': ['deployment-spec', 'env-config'],
+  'mobile-app': ['ui-ux-spec'],
 };
 
 /**
@@ -179,6 +181,7 @@ export const PROJECT_TYPE_DESCRIPTIONS: Record<ProjectType, string> = {
   'platform': '프레임워크, SDK',
   'fintech': '거래소, 결제',
   'infra': 'DevOps, 자동화',
+  'mobile-app': '모바일 앱 (Flutter, React Native 등)',
 };
 
 /**

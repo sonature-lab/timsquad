@@ -37,9 +37,34 @@
 
 ## 서브에이전트 위임 규칙
 
+<rules>
+  <must>서브에이전트 위임은 controller skill의 프로세스를 따를 것</must>
+  <must>위임 전 해당 에이전트의 prerequisites가 compiled spec으로 존재하는지 확인</must>
+  <must>compiled spec의 stale 여부를 .compile-manifest.json으로 확인</must>
+  <must-not>controller 우회하여 Task() 직접 호출</must-not>
+  <must-not>compiled spec 없이 서브에이전트 실행</must-not>
+</rules>
+
 {{DELEGATION_RULES}}
 
 ---
+
+## 작업 모드 분류
+
+<task-classification>
+  사용자가 `tsq f` 또는 `tsq q` 없이 직접 작업을 지시하면, 실행 전에 반드시 모드를 분류한다.
+
+  <quick-indicators>CSS, 스타일, 오타, typo, 색상, 텍스트, 변수명, 간단한 버그, 1-2줄 수정</quick-indicators>
+  <full-indicators>새 기능, API, DB, 구조 변경, 인증, 아키텍처, 리팩토링, 여러 파일 수정</full-indicators>
+
+  <rules>
+    <must>Full로 판단되면 사용자에게 확인 후 진행:
+      "이 작업은 Full 모드로 진행합니다 (SSOT 검증 + controller 경유). 진행할까요?"</must>
+    <must>Quick으로 판단되면 바로 진행하되 모드를 명시:
+      "Quick 모드로 바로 진행합니다."</must>
+    <must>판단이 모호하면 사용자에게 선택지를 제시</must>
+  </rules>
+</task-classification>
 
 ## 작업 원칙
 

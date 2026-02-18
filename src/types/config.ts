@@ -133,6 +133,7 @@ export interface TimsquadConfig {
     domain?: Domain;
     platform?: Platform;
     stack?: string[];
+    workspaces?: string[];
   };
   methodology: MethodologyConfig;
   stack: StackConfig;
@@ -160,6 +161,7 @@ export const AGENT_PRESETS: Record<ProjectType, AgentType[]> = {
   'web-app': ['architect', 'developer', 'designer', 'qa'],
   'platform': ['architect', 'developer', 'qa'],
   'infra': ['architect', 'developer', 'security'],
+  'mobile-app': ['architect', 'developer', 'designer', 'qa'],
 };
 
 /**
@@ -191,11 +193,16 @@ export const SKILL_PRESETS: Record<ProjectType, string[]> = {
   'infra': [
     'security',
   ],
+  'mobile-app': [
+    'mobile/flutter', 'mobile/dart',
+    'security', 'methodology/tdd',
+  ],
 };
 
 /** Skills always deployed regardless of project type */
 export const BASE_SKILLS: string[] = [
   'tsq-protocol',
+  'controller',
   'coding', 'testing', 'typescript',
   'planning', 'architecture',
   'retrospective', 'prompt-engineering',
@@ -227,6 +234,9 @@ export const KNOWLEDGE_PRESETS: Record<ProjectType, string[]> = {
     'checklists/architecture-review', 'checklists/database-standards',
   ],
   'infra': [
+    'checklists/security', 'checklists/architecture-review',
+  ],
+  'mobile-app': [
     'checklists/security', 'checklists/architecture-review',
   ],
 };

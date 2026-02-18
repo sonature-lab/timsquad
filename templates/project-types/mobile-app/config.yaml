@@ -1,0 +1,123 @@
+# TimSquad Mobile App Template Configuration
+# 모바일 앱 (Flutter, React Native 등) 전용
+
+template:
+  name: mobile-app
+  description: 크로스플랫폼 모바일 앱을 위한 템플릿
+  version: 1.0.0
+
+# ============================================================
+# 프로젝트 기본값 (덮어쓰기 가능)
+# ============================================================
+project:
+  type: mobile-app
+  level: 2
+
+# ============================================================
+# 개발 방법론 기본값
+# ============================================================
+methodology:
+  development: tdd
+  process: agile
+  branching: github-flow
+  review: required
+
+# ============================================================
+# 권장 기술 스택
+# ============================================================
+stack:
+  language: dart
+
+  mobile:
+    enabled: true
+    framework: flutter
+    state: riverpod
+    routing: go_router
+    code_gen: freezed     # freezed + json_serializable
+
+  backend:
+    enabled: false         # BaaS 또는 별도 서비스
+    baas: firebase         # firebase | supabase
+    runtime: cloud_functions
+
+  database:
+    local: drift           # drift (sqlite) | hive | isar
+    remote: firestore      # firestore | supabase_pg
+
+  infrastructure:
+    ci_cd: codemagic       # codemagic | fastlane | github_actions
+    store_deploy: manual   # manual | automated
+
+# ============================================================
+# 스킬 자동 로딩 규칙
+# ============================================================
+skills:
+  base:
+    - coding
+    - testing
+    - security
+    - planning
+    - architecture
+
+  # mobile-app 타입 추가 스킬
+  type-specific:
+    - mobile/dart
+    - mobile/flutter
+    - methodology/tdd
+
+# ============================================================
+# 추가 SSOT 문서
+# ============================================================
+ssot:
+  additional:
+    - ui-ux-spec.md
+
+# ============================================================
+# 추가 에이전트
+# ============================================================
+additional_agents:
+  - name: tsq-mobile-dev
+    description: 모바일 전문 개발자
+    base: tsq-developer
+    skills: [mobile/flutter, mobile/dart]
+
+# ============================================================
+# 레벨별 권장 사항
+# ============================================================
+level_recommendations:
+  1:  # MVP
+    focus:
+      - 핵심 기능 구현
+      - 기본 인증
+      - 최소 UI (Material 기본)
+    skip:
+      - 성능 최적화
+      - 접근성
+      - 다국어 지원
+    suggested_stack:
+      mobile:
+        framework: flutter
+        state: riverpod
+      database:
+        local: drift
+        remote: firestore
+
+  2:  # Standard
+    focus:
+      - 완전한 기능
+      - 테스트 커버리지 80%+
+      - UI/UX 품질
+      - 기본 모니터링 (Crashlytics)
+    skip:
+      - 엔터프라이즈 보안
+      - 멀티 리전
+
+  3:  # Enterprise
+    focus:
+      - 전체 기능
+      - 테스트 커버리지 90%+
+      - 보안 강화 (obfuscation, SSL pinning)
+      - 상세 모니터링
+      - 문서화 완성
+    additional_agents:
+      - tsq-security

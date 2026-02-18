@@ -16,6 +16,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - IPC `notify` 프로토콜: 향후 모든 이벤트 소스(MCP, Cursor, CI/CD)의 공통 인터페이스
 
 ### Added
+- **`mobile-app` 프로젝트 타입**: `tsq init --type mobile-app` 으로 모바일 앱 프로젝트 초기화
+  - 에이전트 프리셋: architect, developer, designer, qa
+  - 스킬 프리셋: mobile/flutter, mobile/dart, security, methodology/tdd
+  - domain 기본값 `mobile` 자동 설정
+  - 템플릿: config.yaml + workflow.xml (Feature/Core 병렬 트랙, 스토어 배포)
+  - 모바일 도메인 오버레이 (Material Design/HIG, 오프라인, 배터리 효율)
+- **`tsq skills` 커맨드**: 프로젝트 스킬 관리 CLI
+  - `tsq skills list` — 배치된 스킬 목록 (이름, 버전, rules/refs 수)
+  - `tsq skills search <query>` — 외부 스킬 검색 (skills.sh 연동)
+  - `tsq skills add <source>` — GitHub URL 또는 레지스트리에서 스킬 설치
+  - `tsq skills remove <name>` — 스킬 제거
+- **Flutter 인프라/운영 서브스킬 5종** (D2 Phase 2):
+  - `mobile/flutter/networking` (6 rules + 1 ref): Dio, Retrofit, interceptors, connectivity, caching
+  - `mobile/flutter/security` (6 rules + 1 ref): secure storage, biometric, SSL pinning, obfuscation
+  - `mobile/flutter/i18n` (5 rules + 1 ref): flutter_localizations, ARB, RTL, plural/gender
+  - `mobile/flutter/ci-cd` (6 rules + 1 ref): code signing, Fastlane, Codemagic, store deployment
+  - `mobile/flutter/monitoring` (5 rules + 1 ref): Crashlytics, Analytics, performance, Sentry
+- **모노레포 라이트**: `--workspaces` 옵션으로 workspace glob 설정 (Phase A 선행 작업)
 - **mobile/dart 스킬**: Dart 언어 가이드라인 (4 rules)
   - `null-safety` (CRITICAL): Sound null safety 패턴, bang operator 금지
   - `async-patterns` (CRITICAL): async/await 우선, Stream dispose, Isolate
@@ -43,6 +61,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `platform-setup` (REF): iOS APNs + Android 채널 설정
   - `notification-architecture` (REF): 서비스 아키텍처, 테스트
 - **경쟁 분석 문서**: OmO/OMC/OMX 비교 분석 (`docs/competitive-analysis-2026-02.md`)
+- **`tsq compile` — SSOT 컴파일러**: SSOT 문서를 에이전트용 spec 파일로 변환
+  - `tsq compile` — 전체 SSOT → compiled specs 변환
+  - `tsq compile --validate` — 컴파일 없이 schema + 의존성 그래프 검증
+  - `tsq compile --status` — stale 여부 확인 (hash 비교)
+  - 컴파일 규칙: service-spec(H3 분할), data-design(H2 분할), error-codes/requirements(전체)
+  - section marker 자동 삽입 (`<!-- source: ... -->`, `<!-- ssot-hash: ... -->`)
+  - `.compile-manifest.json` — stale detection용 해시 매니페스트
+- **controller 스킬 (Context DI)**: 서브에이전트 위임 시 compiled spec 의존성 주입
+  - 에이전트 prerequisites 파싱 → spec resolve → phase 제약 로드 → 프롬프트 조합
+  - Mode Declaration: 서브에이전트 응답마다 `[MODE: {phase}] [TASK: {id}] [SPEC: {spec}]`
+  - Rationalization Prevention Table
+- **Phase Guard 훅**: phase별 파일 쓰기 제한 (PreToolUse)
+  - planning/design phase → 코드 수정 deny
+  - implementation phase → SSOT 수정 deny
+- **Completion Guard 훅**: implementation phase 종료 시 테스트 실행 여부 확인 (Stop)
+- **작업 모드 분류**: `tsq f`/`tsq q` 없이 직접 지시 시 PM이 Quick/Full 자동 분류
 
 ### Changed
 - `DOMAIN_SKILL_MAP`: mobile 도메인에 `mobile/flutter`, `mobile/dart` 매핑

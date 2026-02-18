@@ -211,6 +211,12 @@ async function executeUpgrade(
     report.rulesUpdated = true;
   }
 
+  // Step 3.5: scripts/ (enforcement hooks)
+  const scriptsSrc = path.join(platformDir, 'scripts');
+  if (await fs.pathExists(scriptsSrc)) {
+    await copyDirectoryWithSubstitution(scriptsSrc, path.join(projectRoot, '.claude', 'scripts'), variables);
+  }
+
   // Step 4: agents
   printStep(4, totalSteps, 'Syncing agent templates...');
   const activeAgents = getActiveAgents(config);

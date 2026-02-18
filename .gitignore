@@ -32,6 +32,8 @@ docs/composition-layer-architecture.md
 docs/composition-layer/
 
 # 비공개: 내부 감사/분석/진척 보고서
+docs/context-di-architecture-review.md
+docs/context-di-harness-diagram.md
 docs/v3.3-completion-report.md
 docs/v3.1-prompt-optimization.md
 docs/v3-pipeline-audit.md

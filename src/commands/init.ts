@@ -18,6 +18,7 @@ interface InitOptions {
   level?: string;
   domain?: string;
   stack?: string;
+  workspaces?: string;
   dir?: string;
   yes?: boolean;
 }
@@ -27,10 +28,11 @@ export function registerInitCommand(program: Command): void {
     .command('init')
     .description('Initialize a new TimSquad project')
     .option('-n, --name <name>', 'Project name')
-    .option('-t, --type <type>', 'Project type (web-service|web-app|api-backend|platform|fintech|infra)')
+    .option('-t, --type <type>', 'Project type (web-service|web-app|api-backend|platform|fintech|infra|mobile-app)')
     .option('-l, --level <level>', 'Project level (1=MVP|2=Standard|3=Enterprise)')
     .option('--domain <domain>', 'Project domain (general-web|ml-engineering|fintech|mobile|gamedev|systems)')
     .option('--stack <items>', 'Technology stack (comma-separated: react,node,prisma,typescript,nextjs,postgresql,mysql)')
+    .option('--workspaces <pattern>', 'Workspace glob patterns for monorepo (comma-separated)')
     .option('-d, --dir <path>', 'Target directory', '.')
     .option('-y, --yes', 'Skip confirmation prompts')
     .action(async (options: InitOptions) => {
@@ -69,6 +71,7 @@ async function runInit(options: InitOptions): Promise<void> {
       { name: 'platform', value: 'platform', description: PROJECT_TYPE_DESCRIPTIONS['platform'] },
       { name: 'fintech', value: 'fintech', description: PROJECT_TYPE_DESCRIPTIONS['fintech'] },
       { name: 'infra', value: 'infra', description: PROJECT_TYPE_DESCRIPTIONS['infra'] },
+      { name: 'mobile-app', value: 'mobile-app', description: PROJECT_TYPE_DESCRIPTIONS['mobile-app'] },
     ]);
   }
 
@@ -109,6 +112,11 @@ async function runInit(options: InitOptions): Promise<void> {
     ? options.stack.split(',').map(s => s.trim()).filter(Boolean)
     : [];
 
+  // 5b. Parse workspaces option
+  const workspaces = options.workspaces
+    ? options.workspaces.split(',').map(s => s.trim()).filter(Boolean)
+    : undefined;
+
   // 6. Ask about automated backup process
   let automationEnabled = true;
   if (!options.yes) {
@@ -141,6 +149,9 @@ async function runInit(options: InitOptions): Promise<void> {
   if (stack.length > 0) {
     printKeyValue('Stack', stack.join(', '));
   }
+  if (workspaces?.length) {
+    printKeyValue('Workspaces', workspaces.join(', '));
+  }
   printKeyValue('Automation', automationEnabled ? 'ON (logging, metrics, retro)' : 'OFF (manual)');
   printKeyValue('Directory', targetDir);
   console.log('\n');
@@ -162,7 +173,7 @@ async function runInit(options: InitOptions): Promise<void> {
 
   // Step 1: Create config (에이전트 동적 생성에 필요)
   printStep(1, totalSteps, 'Creating configuration...');
-  const config = createDefaultConfig(name, type, level, { domain, platform: 'claude-code', stack });
+  const config = createDefaultConfig(name, type, level, { domain, platform: 'claude-code', stack, workspaces });
 
   // Step 2: Create directories
   printStep(2, totalSteps, 'Creating directory structure...');
@@ -242,7 +253,7 @@ async function runInit(options: InitOptions): Promise<void> {
 }
 
 function isValidProjectType(value: string): value is ProjectType {
-  return ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra'].includes(value);
+  return ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra', 'mobile-app'].includes(value);
 }
 
 function isValidProjectLevel(value: string): boolean {

@@ -5,7 +5,7 @@ import { BASE_SKILLS, BASE_KNOWLEDGE, DOMAIN_SKILL_MAP, DOMAIN_KNOWLEDGE_MAP } f
 import type { ProjectType } from '../../src/types/project.js';
 import type { Domain } from '../../src/types/project.js';
 
-const ALL_TYPES: ProjectType[] = ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra'];
+const ALL_TYPES: ProjectType[] = ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra', 'mobile-app'];
 
 describe('getActiveSkills', () => {
   it.each(ALL_TYPES)('should always include BASE_SKILLS for %s', (type) => {

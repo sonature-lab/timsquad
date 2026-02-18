@@ -186,6 +186,13 @@ export async function initializeProject(
     await copyDirectoryWithSubstitution(srcRulesDir, destRulesDir, variables);
   }
 
+  // 2.5. Deploy .claude/scripts/ (enforcement hooks)
+  const srcScriptsDir = path.join(platformDir, 'scripts');
+  const destScriptsDir = path.join(destClaudeDir, 'scripts');
+  if (await fs.pathExists(srcScriptsDir)) {
+    await copyDirectoryWithSubstitution(srcScriptsDir, destScriptsDir, variables);
+  }
+
   // 3. Config 기반 에이전트 동적 생성 (활성 에이전트만 배치)
   if (config) {
     const activeAgents = getActiveAgents(config);

@@ -4,7 +4,7 @@ import { AGENT_PRESETS } from '../../src/types/config.js';
 import { createDefaultConfig } from '../../src/lib/config.js';
 import type { ProjectType } from '../../src/types/project.js';
 
-const ALL_TYPES: ProjectType[] = ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra'];
+const ALL_TYPES: ProjectType[] = ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra', 'mobile-app'];
 
 describe('getActiveAgents', () => {
   it.each(ALL_TYPES)('should return preset agents for %s', (type) => {
