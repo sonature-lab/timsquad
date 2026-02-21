@@ -10,15 +10,14 @@
             "timeout": 3
           }
         ]
-      }
-    ],
-    "SessionStart": [
+      },
       {
+        "matcher": "Task",
         "hooks": [
           {
             "type": "command",
-            "command": "tsq daemon start 2>/dev/null || true",
-            "timeout": 5
+            "command": "tsq daemon notify subagent-start 2>/dev/null || true",
+            "timeout": 3
           }
         ]
       }
@@ -40,6 +39,17 @@
           {
             "type": "command",
             "command": "tsq daemon notify subagent-stop 2>/dev/null || true",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "tsq daemon start 2>/dev/null || true",
             "timeout": 5
           }
         ]
@@ -88,8 +98,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "tsq daemon notify session-end 2>/dev/null || true && tsq daemon stop 2>/dev/null || true",
-            "timeout": 15
+            "command": "tsq daemon notify session-end 2>/dev/null || true",
+            "timeout": 5
           }
         ]
       }

@@ -1,9 +1,9 @@
 import path from 'path';
 import type { ProjectInfo, PhaseInfo, ProjectStatus, SSOTDocument, AgentInfo } from '../types/index.js';
 import { REQUIRED_SSOT_BY_LEVEL, REQUIRED_SSOT_BY_TYPE } from '../types/project.js';
+import fs from 'fs-extra';
 import { loadConfig, configExists } from './config.js';
 import { exists, listFiles, isFileFilled, countLines } from '../utils/fs.js';
-import { loadYaml } from '../utils/yaml.js';
 
 const TIMSQUAD_DIR = '.timsquad';
 const CLAUDE_DIR = '.claude';
@@ -61,8 +61,12 @@ export async function getCurrentPhase(projectRoot: string): Promise<PhaseInfo> {
   }
 
   try {
-    const data = await loadYaml<PhaseInfo>(phasePath);
-    return data;
+    const raw = await fs.readJson(phasePath);
+    return {
+      current: raw.current || raw.current_phase || 'planning',
+      startedAt: raw.startedAt || raw.entered_at || new Date().toISOString(),
+      progress: raw.progress ?? 0,
+    };
   } catch {
     return {
       current: 'planning',

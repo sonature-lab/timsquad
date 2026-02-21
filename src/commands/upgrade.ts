@@ -16,6 +16,7 @@ import { getActiveAgents, generateAgentFiles } from '../lib/agent-generator.js';
 import { getActiveSkills, deploySkills, getActiveKnowledge, deployKnowledge } from '../lib/skill-generator.js';
 import { getInstalledVersion, isNewer, LEGACY_VERSION } from '../lib/version.js';
 import { createUpgradeBackup, restoreFromBackup, getBackupManifest, removeBackup } from '../lib/upgrade-backup.js';
+import { rebuildIndex } from '../lib/meta-index.js';
 import type { TimsquadConfig } from '../types/config.js';
 
 interface UpgradeReport {
@@ -180,7 +181,7 @@ async function executeUpgrade(
     workflowUpdated: false,
   };
 
-  const totalSteps = 9;
+  const totalSteps = 10;
   const templatesDir = getTemplatesDir();
   const platformDir = path.join(templatesDir, 'platforms', config.project.platform ?? 'claude-code');
   const variables = createTemplateVariables(
@@ -275,6 +276,15 @@ async function executeUpgrade(
   printStep(9, totalSteps, 'Updating config version...');
   config.project.framework_version = targetVersion;
   await saveConfig(projectRoot, config);
+
+  // Step 10: Rebuild meta index
+  printStep(10, totalSteps, 'Rebuilding meta index...');
+  try {
+    const summary = await rebuildIndex(projectRoot);
+    printSuccess(`Meta index rebuilt: ${summary.totalFiles} files, ${summary.totalMethods} methods`);
+  } catch {
+    printWarning('Meta index rebuild skipped (no parseable source files)');
+  }
 
   return report;
 }
