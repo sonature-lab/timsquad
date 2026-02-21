@@ -6,6 +6,7 @@ import { AGENT_PRESETS } from '../types/config.js';
 import type { TemplateVariables } from './template.js';
 import { substituteVariables } from './template.js';
 import { composeAgent } from './agent-composer.js';
+import { getActiveSkills } from './skill-generator.js';
 
 /**
  * Agent file name mapping
@@ -18,6 +19,64 @@ const AGENT_FILE_MAP: Record<AgentType, string> = {
   dba: 'tsq-dba.md',
   designer: 'tsq-designer.md',
 };
+
+/**
+ * Stack skill categories each agent role should receive
+ */
+const AGENT_SKILL_CATEGORIES: Record<AgentType, string[]> = {
+  developer: ['frontend', 'backend', 'database', 'mobile'],
+  designer:  ['frontend'],
+  dba:       ['database'],
+  architect: [],
+  qa:        [],
+  security:  [],
+};
+
+/**
+ * Inject active stack skills into agent YAML frontmatter
+ */
+export function injectSkillsIntoFrontmatter(
+  content: string,
+  agent: AgentType,
+  activeSkills: string[],
+): string {
+  const categories = AGENT_SKILL_CATEGORIES[agent] || [];
+  if (categories.length === 0) return content;
+
+  // Filter active skills matching this agent's categories
+  const agentSkills = activeSkills.filter(skill => {
+    const category = skill.split('/')[0];
+    return categories.includes(category);
+  });
+
+  if (agentSkills.length === 0) return content;
+
+  // Parse YAML frontmatter
+  const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  if (!fmMatch) return content;
+
+  const frontmatter = fmMatch[1];
+
+  // Extract existing skills
+  const skillsMatch = frontmatter.match(/^skills:\s*\[([^\]]*)\]/m);
+  if (!skillsMatch) return content;
+
+  const existingSkills = skillsMatch[1]
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  // Merge and deduplicate
+  const mergedSkills = [...new Set([...existingSkills, ...agentSkills])];
+
+  // Replace skills line in frontmatter
+  const newFm = frontmatter.replace(
+    /^skills:\s*\[([^\]]*)\]/m,
+    `skills: [${mergedSkills.join(', ')}]`,
+  );
+
+  return content.replace(/^---\n[\s\S]*?\n---/, `---\n${newFm}\n---`);
+}
 
 /**
  * Get active agents from config
@@ -48,6 +107,7 @@ export async function generateAgentFiles(
   const srcAgentsDir = path.join(templatesDir, 'base', 'agents');
   const baseDir = path.join(srcAgentsDir, 'base');
   const useComposition = await fs.pathExists(baseDir);
+  const activeSkills = config ? getActiveSkills(config) : [];
 
   // 1. 활성 에이전트 배포
   for (const agent of activeAgents) {
@@ -71,10 +131,13 @@ export async function generateAgentFiles(
     }
 
     const processed = substituteVariables(content, variables);
+    const withSkills = activeSkills.length > 0
+      ? injectSkillsIntoFrontmatter(processed, agent, activeSkills)
+      : processed;
     const destPath = path.join(destAgentsDir, fileName);
 
     await fs.ensureDir(path.dirname(destPath));
-    await fs.writeFile(destPath, processed, 'utf-8');
+    await fs.writeFile(destPath, withSkills, 'utf-8');
   }
 
   // 2. 비활성 에이전트 파일이 있으면 제거
