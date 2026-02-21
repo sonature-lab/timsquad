@@ -21,6 +21,7 @@ export interface IncrementalMetrics {
   tokenCacheRead: number;
   bashCommands: number;
   tsqCommands: number;
+  tokenDataReceived?: boolean;
 }
 
 export interface SubagentBaseline {

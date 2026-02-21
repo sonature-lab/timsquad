@@ -61,6 +61,7 @@ interface SessionStats {
     cacheHitRate: number;       // 캐시 적중률 (%). 높을수록 비용 효율적
     avgOutputPerTurn: number;   // 턴당 평균 출력 토큰. 비정상 고비용 감지용
     maxOutputPerTurn: number;   // 턴당 최대 출력 토큰. 이상치 감지용
+    available?: boolean;        // 토큰 데이터 수신 여부 (hook 기반 모드)
   };
   toolBreakdown: Record<string, number>;
   cliAdoption: {
@@ -259,7 +260,7 @@ async function collectLogStats(
 
         // completed_at 기반 날짜 필터
         if (data.completed_at) {
-          const taskDate = data.completed_at.split('T')[0];
+          const taskDate = data.completed_at?.split('T')[0];
           if (taskDate < startDateStr) continue;
         }
 
@@ -821,7 +822,10 @@ async function displayMetrics(metrics: MetricsData): Promise<void> {
   }
 
   // 토큰
-  if (s.tokens.totalOutput > 0) {
+  if (s.tokens.available === false && s.tokens.totalOutput === 0) {
+    console.log('');
+    console.log(colors.dim('  Token Usage: N/A (hook 기반 모드에서 토큰 데이터 미수신)'));
+  } else if (s.tokens.totalOutput > 0) {
     console.log('');
     console.log(colors.dim('  Token Usage:'));
     printKeyValue('    Input', formatTokens(s.tokens.totalInput));

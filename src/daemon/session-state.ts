@@ -90,6 +90,7 @@ export async function updateSessionState(
         state.metrics.tokenOutput += usage.output_tokens || usage.output || 0;
         state.metrics.tokenCacheCreate += usage.cache_creation_input_tokens || usage.cache_create || 0;
         state.metrics.tokenCacheRead += usage.cache_read_input_tokens || usage.cache_read || 0;
+        state.metrics.tokenDataReceived = true;
       }
       break;
     }

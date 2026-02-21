@@ -603,7 +603,7 @@ function renderReportMarkdown(report: AggregatedReport): string {
   lines.push(`# [retro] ${report.project} - Retrospective Report`);
   lines.push('');
   lines.push(`> Generated: ${report.generated_at}`);
-  lines.push(`> Period: ${report.period.start.split('T')[0]} ~ ${report.period.end.split('T')[0]}`);
+  lines.push(`> Period: ${report.period.start?.split('T')[0] ?? 'N/A'} ~ ${report.period.end?.split('T')[0] ?? 'N/A'}`);
   lines.push('');
 
   // Summary
@@ -635,7 +635,7 @@ function renderReportMarkdown(report: AggregatedReport): string {
     lines.push('');
 
     for (const phase of report.phases) {
-      lines.push(`### ${phase.phase} (${phase.timestamp.split('T')[0]})`);
+      lines.push(`### ${phase.phase} (${phase.timestamp?.split('T')[0] ?? 'N/A'})`);
       lines.push('');
 
       if (phase.keep.length > 0) {
@@ -666,7 +666,7 @@ function renderReportMarkdown(report: AggregatedReport): string {
     lines.push('|------|:-----:|---------|---------|');
 
     for (const fb of report.feedbacks) {
-      const date = fb.timestamp.split('T')[0];
+      const date = fb.timestamp?.split('T')[0] ?? 'N/A';
       lines.push(`| ${date} | ${fb.level ?? '-'} | ${fb.trigger ?? '-'} | ${fb.message.substring(0, 60)} |`);
     }
     lines.push('');

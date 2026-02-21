@@ -150,6 +150,7 @@ export async function updateMetrics(
       totalCacheCreate: metrics.tokenCacheCreate,
       totalCacheRead: metrics.tokenCacheRead,
       cacheHitRate: 0,
+      available: metrics.tokenDataReceived === true,
     },
     cliAdoption: {
       totalBashCommands: newBash,

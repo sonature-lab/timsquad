@@ -186,7 +186,7 @@ async function viewSession(
   console.log(colors.dim(`  File: ${path.basename(logFile)}\n`));
 
   for (const ev of shown) {
-    const time = ev.timestamp.split('T')[1]?.replace('Z', '') || '';
+    const time = ev.timestamp?.split('T')[1]?.replace('Z', '') || '';
     const icon = getEventIcon(ev.event);
     const toolStr = ev.tool ? colors.primary(ev.tool) : '';
     const statusStr = ev.status === 'failure' ? colors.error(' FAIL') : '';
@@ -369,8 +369,8 @@ async function showSummary(file?: string): Promise<void> {
 
     console.log('');
     printKeyValue('Duration', `~${durationMin}min`);
-    printKeyValue('Started', first.split('T')[1]?.replace('Z', '') || first);
-    printKeyValue('Last event', last.split('T')[1]?.replace('Z', '') || last);
+    printKeyValue('Started', first?.split('T')[1]?.replace('Z', '') || first || 'N/A');
+    printKeyValue('Last event', last?.split('T')[1]?.replace('Z', '') || last || 'N/A');
   }
 }
 

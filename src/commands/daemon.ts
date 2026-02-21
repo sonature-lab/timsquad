@@ -171,10 +171,11 @@ async function notifyDaemon(event: string, params: Record<string, unknown>): Pro
     }
 
     // stdin 컨텍스트에서 기본값 추출 (CLI 옵션이 우선)
+    const toolInput = (hookContext.tool_input || {}) as Record<string, unknown>;
     const merged = {
       ...hookContext,
       event,
-      agent: params.agent || hookContext.subagent_type || 'unknown',
+      agent: params.agent || toolInput.subagent_type || hookContext.subagent_type || 'unknown',
       tool: params.tool || hookContext.tool_name || 'unknown',
       status: params.status || 'success',
       session_id: hookContext.session_id || 'unknown',

@@ -45,10 +45,11 @@ function getLogPath(projectRoot: string): string {
 export async function runDaemon(options: DaemonOptions): Promise<void> {
   const { jsonlPath, projectRoot } = options;
 
-  // PID 파일 생성
+  // PID 파일 생성 (PID + session-id — session-id는 첫 IPC에서 캡처)
   const pidPath = getPidPath(projectRoot);
+  let daemonSessionId = 'unknown';
   await fs.ensureDir(path.dirname(pidPath));
-  await fs.writeFile(pidPath, String(process.pid));
+  await fs.writeFile(pidPath, `${process.pid}\n${daemonSessionId}`);
 
   // 로그 파일
   const logPath = getLogPath(projectRoot);
@@ -101,6 +102,38 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
     const sessionId = String(params.session_id || 'unknown');
     const sessionShort = sessionId.substring(0, 8);
 
+    // 첫 IPC 알림에서 session-id 캡처 → PID 파일 갱신
+    if (daemonSessionId === 'unknown' && sessionId !== 'unknown') {
+      daemonSessionId = sessionId;
+      try {
+        await fs.writeFile(pidPath, `${process.pid}\n${daemonSessionId}`);
+      } catch { /* PID 파일 갱신 실패 무시 */ }
+      log(`Session ID captured: ${sessionShort}`);
+    }
+
+    // 서브에이전트 완료 처리 (SubagentStop + Task proxy 공통)
+    // baseline 존재 여부로 이중 처리 방지 (네이티브 훅 + Task proxy 동시 발화 대비)
+    const handleSubagentStop = async (agent: string, source: string) => {
+      const baseline = await loadBaseline(projectRoot, agent);
+      if (!baseline) {
+        log(`[IPC] ${source}: ${agent} skipped (no baseline — already processed)`);
+        return;
+      }
+      eventQueue.updateSessionShort(sessionShort);
+      eventQueue.enqueue({
+        type: 'task-complete',
+        agent,
+        timestamp: getTimestamp(),
+        baseline,
+      });
+      await clearBaseline(projectRoot, agent);
+      await updateSessionState(projectRoot, {
+        sessionShort, sessionId,
+        event: 'SubagentStop', agent,
+      });
+      log(`[IPC] ${source}: ${agent} → task-complete queued`);
+    };
+
     switch (event) {
       case 'subagent-start': {
         const agent = String(params.agent || 'unknown');
@@ -115,20 +148,7 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
       }
       case 'subagent-stop': {
         const agent = String(params.agent || 'unknown');
-        const baseline = await loadBaseline(projectRoot, agent);
-        eventQueue.updateSessionShort(sessionShort);
-        eventQueue.enqueue({
-          type: 'task-complete',
-          agent,
-          timestamp: getTimestamp(),
-          baseline,
-        });
-        await clearBaseline(projectRoot, agent);
-        await updateSessionState(projectRoot, {
-          sessionShort, sessionId,
-          event: 'SubagentStop', agent,
-        });
-        log(`[IPC] SubagentStop: ${agent} → task-complete queued`);
+        await handleSubagentStop(agent, 'SubagentStop');
         break;
       }
       case 'tool-use': {
@@ -140,6 +160,12 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
           tool, status, detail: params,
         });
         log(`[IPC] ToolUse: ${tool} (${status})`);
+
+        // Task proxy fallback: SubagentStop 훅이 발화되지 않는 환경에서의 폴백
+        if (tool === 'Task' && status === 'success') {
+          const agent = String(params.agent || params.subagent_type || 'unknown');
+          await handleSubagentStop(agent, 'Task proxy');
+        }
         break;
       }
       case 'stop': {
@@ -151,6 +177,13 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
         break;
       }
       case 'session-end': {
+        const incomingSessionId = String(params.session_id || 'unknown');
+        // Ignore stale SessionEnd from a different session
+        if (daemonSessionId !== 'unknown' && incomingSessionId !== 'unknown' &&
+            daemonSessionId !== incomingSessionId) {
+          log(`[IPC] SessionEnd ignored (stale session: ${incomingSessionId}, daemon: ${daemonSessionId})`);
+          break;
+        }
         await updateSessionState(projectRoot, {
           sessionShort, sessionId,
           event: 'SessionEnd',
@@ -277,7 +310,8 @@ export async function killZombie(projectRoot: string): Promise<boolean> {
   if (!await fs.pathExists(pidPath)) return false;
 
   try {
-    const pid = parseInt(await fs.readFile(pidPath, 'utf-8'), 10);
+    const content = await fs.readFile(pidPath, 'utf-8');
+    const pid = parseInt(content.trim().split('\n')[0], 10);
     if (isNaN(pid)) {
       await fs.remove(pidPath);
       return false;
@@ -288,8 +322,8 @@ export async function killZombie(projectRoot: string): Promise<boolean> {
       process.kill(pid, 0); // signal 0 = 존재 확인만
       // 살아있으면 kill
       process.kill(pid, 'SIGTERM');
-      // 정리 시간
-      await new Promise(r => setTimeout(r, 1000));
+      // 정리 시간 (충분히 대기)
+      await new Promise(r => setTimeout(r, 2500));
     } catch {
       // 이미 죽은 프로세스
     }
@@ -308,17 +342,19 @@ export async function killZombie(projectRoot: string): Promise<boolean> {
 /**
  * 데몬 실행 중인지 확인
  */
-export async function isDaemonRunning(projectRoot: string): Promise<{ running: boolean; pid?: number }> {
+export async function isDaemonRunning(projectRoot: string): Promise<{ running: boolean; pid?: number; sessionId?: string }> {
   const pidPath = getPidPath(projectRoot);
   if (!await fs.pathExists(pidPath)) return { running: false };
 
   try {
-    const pid = parseInt(await fs.readFile(pidPath, 'utf-8'), 10);
+    const content = await fs.readFile(pidPath, 'utf-8');
+    const [pidStr, sessionId] = content.trim().split('\n');
+    const pid = parseInt(pidStr, 10);
     if (isNaN(pid)) return { running: false };
 
     // 프로세스 존재 확인
     process.kill(pid, 0);
-    return { running: true, pid };
+    return { running: true, pid, sessionId };
   } catch {
     // 프로세스 없음 — 좀비 PID 정리
     try { await fs.remove(pidPath); } catch { /* ok */ }

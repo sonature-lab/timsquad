@@ -108,7 +108,7 @@ function showPhaseStatus(status: ProjectStatus): void {
   const progressBar = createProgressBar(phase.progress);
 
   printKeyValue('Current', colors.phase(phase.current));
-  printKeyValue('Started', phase.startedAt.split('T')[0]);
+  printKeyValue('Started', phase.startedAt?.split('T')[0] ?? 'N/A');
   console.log(`  ${colors.label('Progress:')} ${progressBar} ${phase.progress}%`);
   console.log('');
 }
