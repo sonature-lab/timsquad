@@ -254,6 +254,7 @@ Agentsway의 Prompting Agent 개념 적용. Planner의 의도를 최적화된 �
 | v3.1 | 프롬프트 아키텍처 최적화 (CLAUDE.md 슬리밍, XML 표준화, tsq-protocol 분리) |
 | v3.2 | 고급 스킬 아키텍처 (rules/references/scripts 체계, Vercel 22개 룰) |
 | v3.3 | 멀티 플랫폼 기반 (templates/ 리팩토링, L2/L3 피드백 자동 액션) |
+| v3.4 | 독포딩 + JSONL 디커플링 + 실행 품질 강화 (세션 노트, 품질 가드 7종, 빌드 게이트) |
 
 ---
 

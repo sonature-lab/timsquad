@@ -19,6 +19,17 @@ dist/
 *.tmp
 *.temp
 
+# Security: Secrets & Credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account*.json
+
 # ============================================================
 # 비공개: 비즈니스 전략 & 내부 분석
 # ============================================================

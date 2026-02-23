@@ -1262,9 +1262,10 @@ async function autoFeedbackFromIssues(projectRoot: string, semantic: TaskSemanti
 
     for (const issue of l2l3Issues) {
       try {
-        const { execSync } = await import('child_process');
-        execSync(
-          `npx tsq feedback route "${issue.description.replace(/"/g, '\\"')}"`,
+        const { execFileSync } = await import('child_process');
+        execFileSync(
+          'npx',
+          ['tsq', 'feedback', 'route', issue.description],
           { cwd: projectRoot, timeout: 10000, stdio: 'ignore' },
         );
       } catch { /* 피드백 라우팅 실패 무시 */ }

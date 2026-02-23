@@ -1,0 +1,85 @@
+{
+  "threshold": 4,
+  "rules": [
+    {
+      "skill": "mobile/flutter",
+      "keywords": ["flutter", "widget", "riverpod", "stateless", "stateful", "플러터"],
+      "patterns": ["(build|create|implement|add).*?(app|screen|page|widget)"]
+    },
+    {
+      "skill": "mobile/dart",
+      "keywords": ["dart", "freezed", "isolate"],
+      "patterns": []
+    },
+    {
+      "skill": "frontend/react",
+      "keywords": ["react", "component", "hook", "useState", "useEffect", "리액트", "컴포넌트"],
+      "patterns": ["(create|build|refactor).*?(component|page|layout)"]
+    },
+    {
+      "skill": "frontend/nextjs",
+      "keywords": ["nextjs", "next.js", "app router", "server component", "middleware"],
+      "patterns": ["(ssr|server.*render|static.*generat)"]
+    },
+    {
+      "skill": "backend/node",
+      "keywords": ["express", "fastify", "middleware", "api endpoint", "route"],
+      "patterns": ["(create|add|implement).*?(api|endpoint|route|server)"]
+    },
+    {
+      "skill": "database",
+      "keywords": ["database", "sql", "migration", "schema", "table", "index", "데이터베이스", "스키마"],
+      "patterns": ["(create|modify|add|alter).*?(table|column|index|migration)"]
+    },
+    {
+      "skill": "database/prisma",
+      "keywords": ["prisma", "prisma schema", "prisma migrate"],
+      "patterns": []
+    },
+    {
+      "skill": "methodology/debugging",
+      "keywords": ["debug", "bug", "error", "crash", "fix", "디버그", "버그", "에러"],
+      "patterns": ["(why|how).*?(fail|break|crash|error|not work)"]
+    },
+    {
+      "skill": "methodology/tdd",
+      "keywords": ["tdd", "test-driven", "vitest", "jest", "테스트 주도"],
+      "patterns": ["(write|add|create).*?test"]
+    },
+    {
+      "skill": "methodology/ddd",
+      "keywords": ["ddd", "domain-driven", "aggregate", "bounded context", "도메인 주도"],
+      "patterns": []
+    },
+    {
+      "skill": "security",
+      "keywords": ["security", "owasp", "vulnerability", "xss", "csrf", "injection", "보안", "취약점"],
+      "patterns": ["(security|auth|permission).*?(review|audit|check)"]
+    },
+    {
+      "skill": "testing",
+      "keywords": ["test", "coverage", "assertion", "mock", "stub", "테스트"],
+      "patterns": ["(increase|improve).*?coverage"]
+    },
+    {
+      "skill": "architecture",
+      "keywords": ["architecture", "system design", "api design", "adr", "아키텍처", "설계"],
+      "patterns": ["(design|architect|structure).*?(system|api|service)"]
+    },
+    {
+      "skill": "typescript",
+      "keywords": ["typescript", "type", "interface", "generic", "타입"],
+      "patterns": ["(type|typing).*?(error|issue|strict)"]
+    },
+    {
+      "skill": "ui-design",
+      "keywords": ["ui", "ux", "design system", "responsive", "accessibility", "a11y"],
+      "patterns": ["(design|redesign|improve).*?(ui|layout|interface)"]
+    },
+    {
+      "skill": "planning",
+      "keywords": ["prd", "requirements", "specification", "기획", "요구사항"],
+      "patterns": ["(write|create|draft).*?(prd|spec|requirement)"]
+    }
+  ]
+}

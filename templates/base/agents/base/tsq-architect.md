@@ -1,8 +1,8 @@
 ---
 name: tsq-architect
 description: |
-  시퀀스 단위 분석: 태스크 로그 대조, SSOT 적합성 검증, 크로스시퀀스 연속성 확인.
-  Use when: "시퀀스 분석", "아키텍처 리뷰", "태스크 로그 분석", "구조 검토"
+  시퀀스 단위 분석 + 계획 품질 검증: 태스크 로그 대조, SSOT 적합성 검증, 크로스시퀀스 연속성 확인.
+  Use when: "시퀀스 분석", "아키텍처 리뷰", "태스크 로그 분석", "구조 검토", "계획 검증", "plan review"
 model: opus
 tools: [Read, Bash, Grep, Glob]
 skills: [tsq-protocol, architecture]

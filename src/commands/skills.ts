@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import path from 'path';
 import os from 'os';
 import fs from 'fs-extra';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { colors, printHeader, printError, printSuccess, printWarning } from '../utils/colors.js';
 import { findProjectRoot } from '../lib/project.js';
 import { exists } from '../utils/fs.js';
@@ -114,9 +114,9 @@ async function searchSkills(query: string): Promise<void> {
   printHeader(`Searching Skills: "${query}"`);
 
   try {
-    const sanitized = query.replace(/["`$\\]/g, '');
-    const result = execSync(
-      `npx --yes @anthropic-ai/skills find "${sanitized}"`,
+    const result = execFileSync(
+      'npx',
+      ['--yes', '@anthropic-ai/skills', 'find', query],
       { encoding: 'utf-8', timeout: 30000, stdio: ['pipe', 'pipe', 'pipe'] }
     );
     console.log(result);
@@ -146,9 +146,9 @@ async function addFromRegistry(name: string, destDir: string): Promise<void> {
   printHeader(`Installing Skill: ${name}`);
 
   try {
-    const sanitized = name.replace(/["`$\\]/g, '');
-    execSync(
-      `npx --yes @anthropic-ai/skills install "${sanitized}"`,
+    execFileSync(
+      'npx',
+      ['--yes', '@anthropic-ai/skills', 'install', name],
       { encoding: 'utf-8', timeout: 60000, stdio: ['pipe', 'pipe', 'pipe'] }
     );
     printSuccess(`Skill "${name}" installed.`);
@@ -165,9 +165,9 @@ async function addFromGitHub(url: string, destDir: string): Promise<void> {
   const tmpDir = path.join(os.tmpdir(), `tsq-skill-${Date.now()}`);
 
   try {
-    const sanitizedUrl = url.replace(/["`$\\]/g, '');
-    execSync(
-      `git clone --depth 1 "${sanitizedUrl}" "${tmpDir}"`,
+    execFileSync(
+      'git',
+      ['clone', '--depth', '1', url, tmpDir],
       { encoding: 'utf-8', timeout: 60000, stdio: ['pipe', 'pipe', 'pipe'] }
     );
 

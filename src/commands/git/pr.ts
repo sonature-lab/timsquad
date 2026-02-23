@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { simpleGit, SimpleGit } from 'simple-git';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import { colors, printHeader, printError, printSuccess, printKeyValue, printWarning } from '../../utils/colors.js';
 import { findProjectRoot } from '../../lib/project.js';
 import { promptInput, promptConfirm } from '../../utils/prompts.js';
@@ -119,10 +119,10 @@ async function createPR(title?: string, baseBranch = 'main', draft = false): Pro
   console.log(colors.dim('\nCreating PR...'));
 
   try {
-    const draftFlag = draft ? '--draft' : '';
-    const cmd = `gh pr create --title "${prTitle.replace(/"/g, '\\"')}" --body "${body.replace(/"/g, '\\"')}" --base ${baseBranch} ${draftFlag}`;
+    const args = ['pr', 'create', '--title', prTitle, '--body', body, '--base', baseBranch];
+    if (draft) args.push('--draft');
 
-    const result = execSync(cmd, {
+    const result = execFileSync('gh', args, {
       cwd: workDir,
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -138,7 +138,7 @@ async function createPR(title?: string, baseBranch = 'main', draft = false): Pro
 
       // Get existing PR URL
       try {
-        const prUrl = execSync('gh pr view --json url -q .url', {
+        const prUrl = execFileSync('gh', ['pr', 'view', '--json', 'url', '-q', '.url'], {
           cwd: workDir,
           encoding: 'utf-8',
         });

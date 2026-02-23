@@ -98,6 +98,12 @@ if [[ -z "$PROJECT_NAME" || -z "$PROJECT_TYPE" || -z "$PROJECT_LEVEL" ]]; then
     exit 1
 fi
 
+# 프로젝트 이름 검증 (안전한 문자만 허용: 알파벳, 숫자, 하이픈, 언더스코어)
+if [[ ! "$PROJECT_NAME" =~ ^[a-zA-Z][a-zA-Z0-9_-]{0,63}$ ]]; then
+    echo -e "${RED}Error: 프로젝트 이름은 영문자로 시작하고, [a-zA-Z0-9_-]만 허용됩니다 (최대 64자).${NC}"
+    exit 1
+fi
+
 # 타입 검증
 VALID_TYPES=("web-service" "api-backend" "platform" "fintech" "infra")
 if [[ ! " ${VALID_TYPES[@]} " =~ " ${PROJECT_TYPE} " ]]; then

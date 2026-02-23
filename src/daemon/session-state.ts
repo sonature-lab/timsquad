@@ -20,6 +20,10 @@ export interface SessionState {
   sessionLogPath: string;
   metrics: IncrementalMetrics;
   startedAt: string;
+  turnCount: number;
+  lastTurnInput: number;
+  recentFiles: string[];
+  recentTools: string[];
 }
 
 // ── Session State ──
@@ -59,6 +63,10 @@ export async function updateSessionState(
         bashCommands: 0, tsqCommands: 0,
       },
       startedAt: getTimestamp(),
+      turnCount: 0,
+      lastTurnInput: 0,
+      recentFiles: [],
+      recentTools: [],
     };
   }
 
@@ -75,6 +83,16 @@ export async function updateSessionState(
           state.metrics.tsqCommands++;
         }
       }
+      // 최근 도구/파일 추적 (session-notes 스냅샷용)
+      if (!state.recentTools.includes(tool)) {
+        state.recentTools.push(tool);
+      }
+      if ((tool === 'Write' || tool === 'Edit') && event.detail) {
+        const filePath = String((event.detail as Record<string, unknown>).file_path || '');
+        if (filePath && !state.recentFiles.includes(filePath)) {
+          state.recentFiles.push(filePath);
+        }
+      }
       break;
     }
     case 'PostToolUseFailure':
@@ -84,6 +102,7 @@ export async function updateSessionState(
       state.metrics.subagentCount++;
       break;
     case 'Stop': {
+      state.turnCount++;
       const usage = event.usage as Record<string, number> | undefined;
       if (usage) {
         state.metrics.tokenInput += usage.input_tokens || usage.input || 0;
@@ -91,6 +110,11 @@ export async function updateSessionState(
         state.metrics.tokenCacheCreate += usage.cache_creation_input_tokens || usage.cache_create || 0;
         state.metrics.tokenCacheRead += usage.cache_read_input_tokens || usage.cache_read || 0;
         state.metrics.tokenDataReceived = true;
+        // 최신 턴의 input 토큰 = 현재 컨텍스트 윈도우 사용량 근사치
+        const turnInput = (usage.input_tokens || usage.input || 0)
+          + (usage.cache_creation_input_tokens || usage.cache_create || 0)
+          + (usage.cache_read_input_tokens || usage.cache_read || 0);
+        state.lastTurnInput = turnInput;
       }
       break;
     }
@@ -114,6 +138,18 @@ function appendSessionLog(logPath: string, entry: Record<string, unknown>): void
     fs.ensureDirSync(path.dirname(logPath));
     fs.appendFileSync(logPath, JSON.stringify(entry) + '\n');
   } catch { /* ignore */ }
+}
+
+/**
+ * 스냅샷 기록 후 recentFiles/recentTools 초기화
+ */
+export async function resetRecentTracking(projectRoot: string): Promise<void> {
+  const state = await loadSessionState(projectRoot);
+  if (!state) return;
+  state.recentFiles = [];
+  state.recentTools = [];
+  const filePath = path.join(projectRoot, STATE_DIR, SESSION_STATE_FILE);
+  await fs.writeJson(filePath, state, { spaces: 2 });
 }
 
 // ── Baselines (파일 기반) ──

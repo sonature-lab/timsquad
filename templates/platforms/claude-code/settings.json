@@ -1,12 +1,33 @@
 {
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/skill-suggest.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Write|Edit",
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/scripts/phase-guard.sh 2>/dev/null || true",
+            "command": "bash .claude/scripts/phase-guard.sh",
+            "timeout": 3
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/safe-guard.sh",
             "timeout": 3
           }
         ]
@@ -87,8 +108,13 @@
           },
           {
             "type": "command",
-            "command": "bash .claude/scripts/completion-guard.sh 2>/dev/null || true",
+            "command": "bash .claude/scripts/completion-guard.sh",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/build-gate.sh",
+            "timeout": 30
           }
         ]
       }

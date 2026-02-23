@@ -64,6 +64,7 @@ async function runFullMode(task: string): Promise<void> {
   console.log(`Execute this task with full SSOT compliance:\n`);
   console.log(colors.highlight(`  ${task}\n`));
   console.log(colors.subheader('Required Steps:'));
+  console.log(colors.dim('  0. Plan Review — 3축 검증 후 PASS/REVISE/ESCALATE 판정'));
   console.log(colors.dim('  1. Check SSOT documents for requirements'));
   console.log(colors.dim('  2. Validate against service-spec.md'));
   console.log(colors.dim('  3. Follow architecture patterns'));

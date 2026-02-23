@@ -255,9 +255,10 @@ export class EventQueue {
           await fs.ensureDir(phasesDir);
 
           // tsq log phase create를 직접 실행
-          const { execSync } = await import('child_process');
-          execSync(
-            `tsq log phase create ${phaseId} --sequences "${seqIds.join(',')}"`,
+          const { execFileSync } = await import('child_process');
+          execFileSync(
+            'tsq',
+            ['log', 'phase', 'create', phaseId, '--sequences', seqIds.join(',')],
             { cwd: this.projectRoot, timeout: 30000, stdio: 'ignore' },
           );
         } catch {

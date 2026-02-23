@@ -163,9 +163,9 @@ export function generateDelegationRules(activeAgents: AgentType[]): string {
   // Architect rule (시퀀스 분석)
   if (activeAgents.includes('architect')) {
     rules.push(`  <rule id="DEL-${String(ruleId).padStart(3, '0')}">
-    <trigger>시퀀스 분석, 아키텍처 리뷰, 태스크 로그 분석, 구조 검토</trigger>
+    <trigger>시퀀스 분석, 아키텍처 리뷰, 태스크 로그 분석, 구조 검토, 계획 검증, plan review</trigger>
     <delegate-to>@tsq-architect</delegate-to>
-    <context>시퀀스 완료 후 로그 분석 및 보고서 작성</context>
+    <context>시퀀스 완료 후 로그 분석 및 보고서 작성. 계획 단계에서는 3축 Plan Review 수행.</context>
   </rule>`);
     ruleId++;
   }

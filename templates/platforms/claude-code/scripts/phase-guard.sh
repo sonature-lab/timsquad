@@ -22,7 +22,7 @@ if [ -z "$INPUT" ]; then
 fi
 
 # Extract file path from tool input
-FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // ""' 2>/dev/null)
+FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // ""' 2>/dev/null || echo "")
 
 # If no file path, allow (not a file operation)
 if [ -z "$FILE_PATH" ] || [ "$FILE_PATH" = "null" ]; then
@@ -52,7 +52,7 @@ if [ ! -f "$PHASE_FILE" ]; then
   exit 0
 fi
 
-PHASE=$(jq -r '.phase // "unknown"' "$PHASE_FILE" 2>/dev/null)
+PHASE=$(jq -r '.current // .current_phase // .phase // "unknown"' "$PHASE_FILE" 2>/dev/null)
 
 # Normalize file path (make relative to project root)
 REL_PATH="${FILE_PATH#$PROJECT_ROOT/}"
@@ -62,14 +62,14 @@ case "$PHASE" in
   planning|design)
     # Block source code modifications during planning/design
     if echo "$REL_PATH" | grep -qE '^src/|^lib/|^app/|^pages/|^components/'; then
-      echo "{\"hookSpecificOutput\":{\"permissionDecision\":\"deny\"},\"systemMessage\":\"[Phase Guard] $PHASE phase에서 코드 수정이 금지됩니다. SSOT 문서 작성을 먼저 완료하세요.\"}"
+      jq -n --arg phase "$PHASE" '{hookSpecificOutput:{permissionDecision:"deny"},systemMessage:("[Phase Guard] " + $phase + " phase에서 코드 수정이 금지됩니다. SSOT 문서 작성을 먼저 완료하세요.")}'
       exit 0
     fi
     ;;
   implementation)
     # Block SSOT modifications during implementation (prevent drift)
     if echo "$REL_PATH" | grep -qE '^\.timsquad/ssot/'; then
-      echo "{\"hookSpecificOutput\":{\"permissionDecision\":\"deny\"},\"systemMessage\":\"[Phase Guard] implementation phase에서 SSOT 직접 수정이 금지됩니다. 변경이 필요하면 PM에게 L2 피드백을 보고하세요.\"}"
+      echo '{"hookSpecificOutput":{"permissionDecision":"deny"},"systemMessage":"[Phase Guard] implementation phase에서 SSOT 직접 수정이 금지됩니다. 변경이 필요하면 PM에게 L2 피드백을 보고하세요."}'
       exit 0
     fi
     ;;

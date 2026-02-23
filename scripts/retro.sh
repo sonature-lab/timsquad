@@ -256,15 +256,17 @@ cmd_report() {
 
     local metrics_file="$RETRO_DIR/metrics/cycle-$cycle.json"
     local report_file="$RETRO_DIR/cycles/cycle-$cycle.md"
-    local template_file="$TIMSQUAD_DIR/../templates/common/timsquad/retrospective/cycle-report.template.md"
+    local template_file="$TIMSQUAD_DIR/../templates/base/timsquad/retrospective/cycle-report.template.md"
     local timestamp=$(date +%Y-%m-%d)
 
     # 템플릿이 없으면 기본 템플릿 사용
     if [[ ! -f "$template_file" ]]; then
-        # TIMSQUAD_ROOT에서 템플릿 찾기
+        # TIMSQUAD_ROOT에서 템플릿 찾기 (source 대신 안전한 grep 추출)
         if [[ -f "$HOME/.timsquad" ]]; then
-            source "$HOME/.timsquad"
-            template_file="$TIMSQUAD_ROOT/templates/common/timsquad/retrospective/cycle-report.template.md"
+            TIMSQUAD_ROOT=$(grep -m1 '^TIMSQUAD_ROOT=' "$HOME/.timsquad" 2>/dev/null | cut -d'=' -f2- | tr -d '"')
+            if [[ -n "$TIMSQUAD_ROOT" ]]; then
+                template_file="$TIMSQUAD_ROOT/templates/base/timsquad/retrospective/cycle-report.template.md"
+            fi
         fi
     fi
 

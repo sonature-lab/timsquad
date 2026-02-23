@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import path from 'path';
 import fs from 'fs-extra';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import { colors, printHeader, printError, printSuccess, printKeyValue } from '../utils/colors.js';
 import { findProjectRoot, getProjectInfo } from '../lib/project.js';
 import { exists, writeFile, listFiles } from '../utils/fs.js';
@@ -692,8 +692,9 @@ function createGitHubIssue(title: string, body: string): string | null {
     const tmpFile = path.join('/tmp', `tsq-retro-${Date.now()}.md`);
     fs.writeFileSync(tmpFile, body, 'utf-8');
 
-    const result = execSync(
-      `gh issue create --repo ericson/timsquad --title "${title}" --label "retro-feedback" --body-file "${tmpFile}"`,
+    const result = execFileSync(
+      'gh',
+      ['issue', 'create', '--repo', 'ericson/timsquad', '--title', title, '--label', 'retro-feedback', '--body-file', tmpFile],
       { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
     );
 
@@ -953,12 +954,12 @@ async function runAutoRetro(localOnly?: boolean): Promise<void> {
     console.log(colors.dim('\n  Improvement analysis 자동 실행 중...'));
 
     try {
-      execSync('npx tsq improve fetch --limit 20', {
+      execFileSync('npx', ['tsq', 'improve', 'fetch', '--limit', '20'], {
         cwd: projectRoot,
         stdio: 'ignore',
         timeout: 15000,
       });
-      execSync('npx tsq improve analyze', {
+      execFileSync('npx', ['tsq', 'improve', 'analyze'], {
         cwd: projectRoot,
         stdio: 'ignore',
         timeout: 15000,
@@ -988,7 +989,7 @@ async function showRetroStatus(): Promise<void> {
   printKeyValue('Status', state.status);
 
   if (state.startedAt) {
-    printKeyValue('Started', state.startedAt.split('T')[0]);
+    printKeyValue('Started', state.startedAt?.split('T')[0] ?? 'N/A');
   }
 
   // Count pending feedback

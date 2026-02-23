@@ -77,6 +77,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - implementation phase → SSOT 수정 deny
 - **Completion Guard 훅**: implementation phase 종료 시 테스트 실행 여부 확인 (Stop)
 - **작업 모드 분류**: `tsq f`/`tsq q` 없이 직접 지시 시 PM이 Quick/Full 자동 분류
+- **실행 품질 강화 (Q1~Q7)**:
+  - Q1: **Plan Review** — 3축 계획 검증 (요구사항/기술분해/리스크), Full Mode Step 0
+  - Q2: **Session Notes** — 데몬 자동 스냅샷 + Stop 훅 systemMessage 주입, 컨텍스트 압축 후 상태 복원
+  - Q3: **Context Window 모니터** — 85% 경고, 70% 표시, `lastTurnInput` 기반 사용률 추적
+  - Q4: **Safe Guard** — PreToolUse/Bash 파괴적 명령 차단 (rm -rf, force push, reset --hard 등)
+  - Q5: **완료 검증 루프** — Stop 훅 `decision:block`으로 테스트 미실행 시 강제 속행
+  - Q6: **런타임 스킬 제안** — UserPromptSubmit 훅, 키워드/패턴 매칭 → 관련 스킬 추천
+  - Q7: **Build Gate** — Stop 훅에서 변경 파일 tsc 체크, 에러 시 차단
 
 ### Changed
 - `DOMAIN_SKILL_MAP`: mobile 도메인에 `mobile/flutter`, `mobile/dart` 매핑

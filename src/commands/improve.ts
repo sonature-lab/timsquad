@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import path from 'path';
 import fs from 'fs-extra';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import { colors, printHeader, printError, printSuccess, printKeyValue, printStep } from '../utils/colors.js';
 import { exists, writeFile, listFiles } from '../utils/fs.js';
 import { getTimestamp, getDateString } from '../utils/date.js';
@@ -90,8 +90,9 @@ async function fetchRetroIssues(repo: string, limit: number): Promise<void> {
 
   let issuesJson: string;
   try {
-    issuesJson = execSync(
-      `gh issue list --repo ${repo} --label "retro-feedback" --state all --limit ${limit} --json number,title,body,labels,createdAt`,
+    issuesJson = execFileSync(
+      'gh',
+      ['issue', 'list', '--repo', repo, '--label', 'retro-feedback', '--state', 'all', '--limit', String(limit), '--json', 'number,title,body,labels,createdAt'],
       { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
     );
   } catch {

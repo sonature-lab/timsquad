@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { simpleGit, SimpleGit } from 'simple-git';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import { colors, printHeader, printError, printSuccess, printKeyValue, printWarning } from '../../utils/colors.js';
 import { findProjectRoot } from '../../lib/project.js';
 import { promptInput, promptConfirm, promptSelect } from '../../utils/prompts.js';
@@ -163,13 +163,11 @@ async function createRelease(
       console.log(colors.dim('Creating GitHub Release...'));
 
       try {
-        const cmd = `gh release create ${tagName} --title "${tagName}" --notes "${releaseNotes.replace(/"/g, '\\"')}"`;
-
-        const result = execSync(cmd, {
-          cwd: workDir,
-          encoding: 'utf-8',
-          stdio: ['pipe', 'pipe', 'pipe'],
-        });
+        const result = execFileSync(
+          'gh',
+          ['release', 'create', tagName, '--title', tagName, '--notes', releaseNotes],
+          { cwd: workDir, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+        );
 
         printSuccess('GitHub Release created!');
         console.log(colors.path(`\n${result.trim()}`));
