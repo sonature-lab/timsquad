@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0] - 2026-02-23
+
+### Fixed
+- **npm v11 bin 경로 호환성**: `./bin/tsq.js` → `bin/tsq.js` (`npm pkg fix` 적용)
+  - npm v11의 엄격해진 bin 경로 검증으로 publish 시 bin 엔트리가 제거되던 문제 해결
+- **데몬 JIT 베이스라인**: Task proxy fallback 시 JIT 베이스라인 누락 수정 (#4)
+- **스택 설정 정규화**: skill mapping 시 stack config 정규화 오류 수정 (#3)
+- **상태 표시 크래시 방지**: 잘못된 phase JSON 파싱 시 status 명령 크래시 수정 (#2)
+
+### Added
+- **파이프라인 안정성 검증 리포트**: 6-Layer 8-method 분석, 7.8/10 점수
+
+---
+
 ## [3.4.0] - 2026-02-18
 
 ### Fixed
@@ -240,6 +254,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[3.5.0]: https://github.com/sonature-lab/timsquad/compare/v3.4.0...v3.5.0
+[3.4.0]: https://github.com/sonature-lab/timsquad/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/sonature-lab/timsquad/compare/v3.2.0...v3.3.0
 [3.2.0]: https://github.com/sonature-lab/timsquad/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/sonature-lab/timsquad/compare/v3.0.0...v3.1.0
