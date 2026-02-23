@@ -62,10 +62,11 @@ export async function getCurrentPhase(projectRoot: string): Promise<PhaseInfo> {
 
   try {
     const raw = await fs.readJson(phasePath);
+    const rawStarted = String(raw.startedAt || raw.entered_at || new Date().toISOString());
     return {
       current: raw.current || raw.current_phase || 'planning',
-      startedAt: raw.startedAt || raw.entered_at || new Date().toISOString(),
-      progress: raw.progress ?? 0,
+      startedAt: rawStarted.includes('T') ? rawStarted : new Date().toISOString(),
+      progress: typeof raw.progress === 'number' ? raw.progress : 0,
     };
   } catch {
     return {

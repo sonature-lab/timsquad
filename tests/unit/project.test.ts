@@ -72,6 +72,32 @@ describe('getCurrentPhase', () => {
     expect(result.progress).toBe(0);
   });
 
+  it('should handle non-ISO startedAt value', async () => {
+    await fs.writeJson(
+      path.join(tmpDir, '.timsquad', 'state', 'current-phase.json'),
+      { current: 'design', startedAt: 12345, progress: 10 },
+      { spaces: 2 },
+    );
+
+    const result = await getCurrentPhase(tmpDir);
+    expect(result.current).toBe('design');
+    expect(result.startedAt).toContain('T'); // must be valid ISO format
+    expect(result.progress).toBe(10);
+  });
+
+  it('should handle null startedAt value', async () => {
+    await fs.writeJson(
+      path.join(tmpDir, '.timsquad', 'state', 'current-phase.json'),
+      { current: 'review', startedAt: null, progress: 0 },
+      { spaces: 2 },
+    );
+
+    const result = await getCurrentPhase(tmpDir);
+    expect(result.current).toBe('review');
+    expect(result.startedAt).toContain('T');
+    expect(result.progress).toBe(0);
+  });
+
   it('should handle malformed JSON gracefully', async () => {
     await fs.writeFile(
       path.join(tmpDir, '.timsquad', 'state', 'current-phase.json'),
