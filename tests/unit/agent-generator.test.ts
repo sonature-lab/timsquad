@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { getActiveAgents, generateDelegationRules, formatActiveAgentsList, injectSkillsIntoFrontmatter } from '../../src/lib/agent-generator.js';
+import { getActiveSkills } from '../../src/lib/skill-generator.js';
 import { AGENT_PRESETS } from '../../src/types/config.js';
 import { createDefaultConfig } from '../../src/lib/config.js';
+import type { TimsquadConfig } from '../../src/types/config.js';
 import type { ProjectType } from '../../src/types/project.js';
 import type { AgentType } from '../../src/types/index.js';
 
@@ -63,6 +65,12 @@ describe('generateDelegationRules', () => {
     expect(rules).toContain('DEL-001');
     expect(rules).toContain('DEL-002');
     expect(rules).toContain('DEL-003');
+  });
+
+  it('should include plan review triggers in architect rule', () => {
+    const rules = generateDelegationRules(['architect']);
+    expect(rules).toContain('계획 검증');
+    expect(rules).toContain('plan review');
   });
 });
 
@@ -193,5 +201,38 @@ describe('injectSkillsIntoFrontmatter', () => {
     expect(result).toContain('frontend/react');
     expect(result).toContain('## Agent Instructions');
     expect(result).toContain('Do stuff here.');
+  });
+});
+
+describe('getActiveSkills — stack normalization', () => {
+  it('should derive skills from project.stack array', () => {
+    const config = createDefaultConfig('test', 'web-service', 2, { stack: ['react', 'node'] });
+    const skills = getActiveSkills(config);
+    expect(skills).toContain('frontend/react');
+    expect(skills).toContain('backend/node');
+  });
+
+  it('should not add stack-derived skills when project.stack is empty array', () => {
+    const config = createDefaultConfig('test', 'api-backend', 2, { stack: [] });
+    // Empty array = intentional "no stack skills" (type preset only)
+    const skills = getActiveSkills(config);
+    // api-backend preset does NOT include frontend/nextjs, but top-level stack has nextjs
+    // With empty array, stack fallback should NOT activate
+    expect(skills).not.toContain('frontend/nextjs');
+  });
+
+  it('should derive skills from top-level stack when project.stack is missing', () => {
+    const config = createDefaultConfig('test', 'web-service', 2);
+    (config.project as Record<string, unknown>).stack = undefined;
+    const skills = getActiveSkills(config);
+    // Should fallback to top-level stack config values
+    expect(skills.length).toBeGreaterThan(0);
+  });
+
+  it('should handle object-shaped project.stack gracefully', () => {
+    const config = createDefaultConfig('test', 'web-service', 2);
+    (config.project as Record<string, unknown>).stack = { language: 'typescript', frontend: 'react' };
+    const skills = getActiveSkills(config);
+    expect(skills).toContain('frontend/react');
   });
 });

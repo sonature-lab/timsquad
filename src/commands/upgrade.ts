@@ -274,6 +274,15 @@ async function executeUpgrade(
 
   // Step 9: Update framework_version in config
   printStep(9, totalSteps, 'Updating config version...');
+
+  // Migrate: derive project.stack from top-level stack if missing (v2 → v3.3+ compat)
+  if (!config.project.stack || !Array.isArray(config.project.stack) || config.project.stack.length === 0) {
+    if (config.stack) {
+      config.project.stack = Object.values(config.stack)
+        .filter((v): v is string => typeof v === 'string' && v !== 'none');
+    }
+  }
+
   config.project.framework_version = targetVersion;
   await saveConfig(projectRoot, config);
 

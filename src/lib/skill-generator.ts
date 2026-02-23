@@ -27,10 +27,36 @@ export function getActiveSkills(config: TimsquadConfig): string[] {
   const domainSkills = config.project.domain
     ? (DOMAIN_SKILL_MAP[config.project.domain] || [])
     : [];
-  const stackSkills = (config.project.stack || [])
+  const stackSkills = normalizeStack(config)
     .flatMap(s => STACK_SKILL_MAP[s] || []);
 
   return [...new Set([...BASE_SKILLS, ...typeSkills, ...domainSkills, ...stackSkills])];
+}
+
+/**
+ * Normalize stack to string[].
+ * Handles: string[] (v3.3+), missing (derive from top-level stack), object (legacy v2).
+ */
+function normalizeStack(config: TimsquadConfig): string[] {
+  const projectStack = config.project.stack;
+
+  // Normal case: already an array (empty = intentional "no stack skills")
+  if (Array.isArray(projectStack)) {
+    return projectStack;
+  }
+
+  // Legacy: object format ({language: 'typescript', frontend: 'nextjs'})
+  if (projectStack && typeof projectStack === 'object') {
+    return Object.values(projectStack as Record<string, string>).filter(Boolean);
+  }
+
+  // Fallback: project.stack is undefined → derive from top-level stack config
+  if (projectStack === undefined && config.stack) {
+    return Object.values(config.stack)
+      .filter((v): v is string => typeof v === 'string' && v !== 'none');
+  }
+
+  return [];
 }
 
 /**
