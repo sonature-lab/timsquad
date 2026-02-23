@@ -18,9 +18,10 @@ import { MetaCache } from './meta-cache.js';
 import { clearContext } from './context-writer.js';
 import { generateWorklog, updateMetrics, cleanupDaemonFiles } from './shutdown.js';
 import {
-  loadSessionState, updateSessionState,
+  loadSessionState, updateSessionState, resetRecentTracking,
   saveBaseline, loadBaseline, clearBaseline,
 } from './session-state.js';
+import { appendSnapshot } from './session-notes.js';
 import { getTimestamp } from '../utils/date.js';
 
 const PID_FILE = '.timsquad/.daemon.pid';
@@ -114,11 +115,24 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
     // 서브에이전트 완료 처리 (SubagentStop + Task proxy 공통)
     // baseline 존재 여부로 이중 처리 방지 (네이티브 훅 + Task proxy 동시 발화 대비)
     const handleSubagentStop = async (agent: string, source: string) => {
-      const baseline = await loadBaseline(projectRoot, agent);
+      let baseline = await loadBaseline(projectRoot, agent);
+
+      // JIT baseline: SubagentStart 훅이 발화되지 않는 환경에서의 폴백
+      // Task proxy에서만 활성화 (네이티브 SubagentStop에서는 phantom baseline 방지)
+      if (!baseline && source === 'Task proxy') {
+        log(`[IPC] ${source}: ${agent} — creating JIT baseline (no SubagentStart)`);
+        baseline = {
+          agent,
+          gitHead: '',  // start 시점 HEAD 없음 → diff 생략
+          startedAt: Math.floor(Date.now() / 1000),
+        };
+      }
+
       if (!baseline) {
         log(`[IPC] ${source}: ${agent} skipped (no baseline — already processed)`);
         return;
       }
+
       eventQueue.updateSessionShort(sessionShort);
       eventQueue.enqueue({
         type: 'task-complete',
@@ -163,7 +177,12 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
 
         // Task proxy fallback: SubagentStop 훅이 발화되지 않는 환경에서의 폴백
         if (tool === 'Task' && status === 'success') {
-          const agent = String(params.agent || params.subagent_type || 'unknown');
+          const toolInput = (params.tool_input || {}) as Record<string, unknown>;
+          const agent = String(
+            params.agent || params.subagent_type ||
+            toolInput.subagent_type || toolInput.agent ||
+            'unknown'
+          );
           await handleSubagentStop(agent, 'Task proxy');
         }
         break;
@@ -173,7 +192,14 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
           sessionShort, sessionId,
           event: 'Stop', usage: params.usage,
         });
-        log('[IPC] Stop (token usage recorded)');
+        // 세션 노트 스냅샷
+        const stopState = await loadSessionState(projectRoot);
+        if (stopState) {
+          const activeAgents = await getActiveSubagents(projectRoot);
+          appendSnapshot(projectRoot, stopState, activeAgents);
+          await resetRecentTracking(projectRoot);
+        }
+        log('[IPC] Stop (token usage + snapshot)');
         break;
       }
       case 'session-end': {
@@ -300,6 +326,20 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
   }
   fileWatcher.start();
   log(`All watchers started${jsonlWatcher ? '' : ' (no JSONL watcher)'}`);
+}
+
+/**
+ * 현재 활성 서브에이전트 목록 (baselines 디렉토리 기반)
+ */
+async function getActiveSubagents(projectRoot: string): Promise<string[]> {
+  const dir = path.join(projectRoot, '.timsquad', '.daemon', 'baselines');
+  if (!await fs.pathExists(dir)) return [];
+  try {
+    const files = await fs.readdir(dir);
+    return files.filter(f => f.endsWith('.json')).map(f => f.replace('.json', ''));
+  } catch {
+    return [];
+  }
 }
 
 /**
