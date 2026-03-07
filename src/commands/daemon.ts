@@ -10,6 +10,8 @@ import { colors, printHeader, printError, printSuccess, printKeyValue } from '..
 import { findProjectRoot } from '../lib/project.js';
 import { isDaemonRunning, killZombie } from '../daemon/index.js';
 import { queryDaemon } from '../daemon/meta-cache.js';
+import { loadSessionState } from '../daemon/session-state.js';
+import { loadWorkflowState } from '../lib/workflow-state.js';
 
 export function registerDaemonCommand(program: Command): void {
   const cmd = program
@@ -220,13 +222,60 @@ async function showStatus(): Promise<void> {
 
   if (!status.running) {
     console.log(colors.dim('  Not running'));
+
+    // Still show session state if available
+    const session = await loadSessionState(projectRoot);
+    if (session) {
+      console.log(colors.subheader('\n  Last Session'));
+      printKeyValue('  Session', session.sessionShort);
+      printKeyValue('  Started', session.startedAt);
+      printKeyValue('  Turns', String(session.turnCount));
+    }
     return;
   }
 
   printKeyValue('  PID', String(status.pid));
   printKeyValue('  Status', colors.success('running'));
 
-  // IPC로 상세 정보 조회
+  // Session state (file-based — always available)
+  const session = await loadSessionState(projectRoot);
+  if (session) {
+    const uptimeMs = Date.now() - new Date(session.startedAt).getTime();
+    const uptimeMin = Math.floor(uptimeMs / 60000);
+    const uptimeSec = Math.floor((uptimeMs % 60000) / 1000);
+    printKeyValue('  Uptime', `${uptimeMin}m ${uptimeSec}s`);
+    printKeyValue('  Session', session.sessionShort);
+
+    console.log(colors.subheader('\n  Session Metrics'));
+    printKeyValue('  Turns', String(session.turnCount));
+    printKeyValue('  Tool Uses', String(session.metrics.toolUses));
+    if (session.metrics.toolFailures > 0) {
+      printKeyValue('  Tool Failures', colors.error(String(session.metrics.toolFailures)));
+    }
+    printKeyValue('  Subagents', String(session.metrics.subagentCount));
+    printKeyValue('  Bash Commands', String(session.metrics.bashCommands));
+    printKeyValue('  TSQ Commands', String(session.metrics.tsqCommands));
+
+    if (session.metrics.tokenDataReceived) {
+      console.log(colors.subheader('\n  Token Usage'));
+      printKeyValue('  Input', session.metrics.tokenInput.toLocaleString());
+      printKeyValue('  Output', session.metrics.tokenOutput.toLocaleString());
+      printKeyValue('  Cache Create', session.metrics.tokenCacheCreate.toLocaleString());
+      printKeyValue('  Cache Read', session.metrics.tokenCacheRead.toLocaleString());
+    }
+  }
+
+  // Automation toggles
+  try {
+    const wfState = await loadWorkflowState(projectRoot);
+    console.log(colors.subheader('\n  Automation'));
+    for (const [key, val] of Object.entries(wfState.automation)) {
+      const icon = val ? colors.success('ON') : colors.dim('OFF');
+      console.log(`    ${key.padEnd(16)} ${icon}`);
+    }
+  } catch { /* skip */ }
+
+  // IPC로 메타인덱스 정보 조회
   try {
     const info = await queryDaemon(projectRoot, 'status') as {
       loadedAt?: string;
@@ -236,10 +285,10 @@ async function showStatus(): Promise<void> {
       mode?: string;
     };
 
+    console.log(colors.subheader('\n  Meta Index'));
     if (info.mode) {
       printKeyValue('  Mode', info.mode);
     }
-
     if (info.loadedAt) {
       printKeyValue('  Index Loaded', info.loadedAt);
     }
@@ -253,6 +302,6 @@ async function showStatus(): Promise<void> {
       printKeyValue('  Modules', info.modules.join(', '));
     }
   } catch {
-    console.log(colors.dim('  (IPC not available)'));
+    console.log(colors.dim('\n  (IPC not available — meta index info unavailable)'));
   }
 }

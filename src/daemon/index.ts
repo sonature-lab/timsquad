@@ -25,7 +25,7 @@ import { appendSnapshot } from './session-notes.js';
 import { getTimestamp } from '../utils/date.js';
 
 const PID_FILE = '.timsquad/.daemon.pid';
-const LOG_FILE = '.timsquad/.daemon.log';
+const LOG_FILE = '.timsquad/.daemon.jsonl';
 
 export interface DaemonOptions {
   jsonlPath?: string;
@@ -52,23 +52,28 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
   await fs.ensureDir(path.dirname(pidPath));
   await fs.writeFile(pidPath, `${process.pid}\n${daemonSessionId}`);
 
-  // 로그 파일
+  // 로그 파일 (JSONL)
   const logPath = getLogPath(projectRoot);
-  const log = (msg: string) => {
-    const ts = new Date().toISOString();
-    fs.appendFileSync(logPath, `[${ts}] ${msg}\n`);
+  const log = (msg: string, event = 'info', detail?: Record<string, unknown>) => {
+    const entry: Record<string, unknown> = {
+      ts: new Date().toISOString(),
+      event,
+      msg,
+    };
+    if (detail) entry.detail = detail;
+    fs.appendFileSync(logPath, JSON.stringify(entry) + '\n');
   };
 
-  log(`Daemon started (PID: ${process.pid})`);
-  log(`JSONL: ${jsonlPath || '(not provided — hook-based logging mode)'}`);
-  log(`Project: ${projectRoot}`);
+  log(`Daemon started (PID: ${process.pid})`, 'daemon_start', { pid: process.pid });
+  log(`JSONL: ${jsonlPath || '(not provided — hook-based logging mode)'}`, 'info', { jsonlPath: jsonlPath || null });
+  log(`Project: ${projectRoot}`, 'info', { projectRoot });
 
   // Git 사용 가능 여부 확인
   try {
     const git = simpleGit(projectRoot);
     await git.revparse(['--git-dir']);
   } catch {
-    log('WARNING: git not available — mechanical.files in task logs will be empty');
+    log('WARNING: git not available — mechanical.files in task logs will be empty', 'warning');
   }
 
   // 1. 이벤트 큐
@@ -89,14 +94,14 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
   // 메타인덱스 로드
   try {
     await metaCache.load();
-    log(`Meta cache loaded: ${metaCache.totalFiles} files, ${metaCache.totalMethods} methods`);
+    log(`Meta cache loaded: ${metaCache.totalFiles} files, ${metaCache.totalMethods} methods`, 'meta_cache', { files: metaCache.totalFiles, methods: metaCache.totalMethods });
   } catch (err) {
-    log(`Meta cache load failed: ${(err as Error).message}`);
+    log(`Meta cache load failed: ${(err as Error).message}`, 'error', { error: (err as Error).message });
   }
 
   // IPC 서버 시작
   metaCache.startIPC();
-  log('IPC server started');
+  log('IPC server started', 'ipc_notify');
 
   // IPC notify → EventQueue 연결 (훅 기반 로깅 모드)
   metaCache.onNotify = async (event: string, params: Record<string, unknown>) => {
@@ -109,7 +114,7 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
       try {
         await fs.writeFile(pidPath, `${process.pid}\n${daemonSessionId}`);
       } catch { /* PID 파일 갱신 실패 무시 */ }
-      log(`Session ID captured: ${sessionShort}`);
+      log(`Session ID captured: ${sessionShort}`, 'info', { sessionId, sessionShort });
     }
 
     // 서브에이전트 완료 처리 (SubagentStop + Task proxy 공통)
@@ -120,7 +125,7 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
       // JIT baseline: SubagentStart 훅이 발화되지 않는 환경에서의 폴백
       // Task proxy에서만 활성화 (네이티브 SubagentStop에서는 phantom baseline 방지)
       if (!baseline && source === 'Task proxy') {
-        log(`[IPC] ${source}: ${agent} — creating JIT baseline (no SubagentStart)`);
+        log(`[IPC] ${source}: ${agent} — creating JIT baseline (no SubagentStart)`, 'subagent_start', { agent, source, jit: true });
         baseline = {
           agent,
           gitHead: '',  // start 시점 HEAD 없음 → diff 생략
@@ -129,7 +134,7 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
       }
 
       if (!baseline) {
-        log(`[IPC] ${source}: ${agent} skipped (no baseline — already processed)`);
+        log(`[IPC] ${source}: ${agent} skipped (no baseline — already processed)`, 'info', { agent, source });
         return;
       }
 
@@ -145,7 +150,7 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
         sessionShort, sessionId,
         event: 'SubagentStop', agent,
       });
-      log(`[IPC] ${source}: ${agent} → task-complete queued`);
+      log(`[IPC] ${source}: ${agent} → task-complete queued`, 'subagent_stop', { agent, source });
     };
 
     switch (event) {
@@ -157,7 +162,7 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
           event: 'SubagentStart', agent,
         });
         eventQueue.updateSessionShort(sessionShort);
-        log(`[IPC] SubagentStart: ${agent}`);
+        log(`[IPC] SubagentStart: ${agent}`, 'subagent_start', { agent });
         break;
       }
       case 'subagent-stop': {
@@ -173,7 +178,7 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
           event: status === 'success' ? 'PostToolUse' : 'PostToolUseFailure',
           tool, status, detail: params,
         });
-        log(`[IPC] ToolUse: ${tool} (${status})`);
+        log(`[IPC] ToolUse: ${tool} (${status})`, 'tool_use', { tool, status });
 
         // Task proxy fallback: SubagentStop 훅이 발화되지 않는 환경에서의 폴백
         if (tool === 'Task' && status === 'success') {
@@ -199,7 +204,7 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
           appendSnapshot(projectRoot, stopState, activeAgents);
           await resetRecentTracking(projectRoot);
         }
-        log('[IPC] Stop (token usage + snapshot)');
+        log('[IPC] Stop (token usage + snapshot)', 'info', { usage: params.usage });
         break;
       }
       case 'session-end': {
@@ -207,26 +212,26 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
         // Ignore stale SessionEnd from a different session
         if (daemonSessionId !== 'unknown' && incomingSessionId !== 'unknown' &&
             daemonSessionId !== incomingSessionId) {
-          log(`[IPC] SessionEnd ignored (stale session: ${incomingSessionId}, daemon: ${daemonSessionId})`);
+          log(`[IPC] SessionEnd ignored (stale session: ${incomingSessionId}, daemon: ${daemonSessionId})`, 'warning', { incomingSessionId, daemonSessionId });
           break;
         }
         await updateSessionState(projectRoot, {
           sessionShort, sessionId,
           event: 'SessionEnd',
         });
-        log('[IPC] SessionEnd detected');
+        log('[IPC] SessionEnd detected', 'session_end');
         eventQueue.enqueue({ type: 'session-end' });
         break;
       }
       default:
-        log(`[IPC] Unknown notify event: ${event}`);
+        log(`[IPC] Unknown notify event: ${event}`, 'warning', { event, params });
     }
   };
 
   // 소스 변경 → 메타 캐시 갱신
   eventQueue.onSourceChanged = (paths: string[]) => {
     metaCache.updateFiles(paths);
-    log(`Source changed: ${paths.join(', ')}`);
+    log(`Source changed: ${paths.join(', ')}`, 'info', { paths });
   };
 
   // JSONL 워처 이벤트 바인딩 (있을 때만)
@@ -244,7 +249,7 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
         }
       }
       eventQueue.updateSessionShort(jsonlWatcher!.getSessionShort());
-      log(`SubagentStart: ${data.agent}`);
+      log(`SubagentStart: ${data.agent}`, 'subagent_start', { agent: data.agent });
     });
 
     // SubagentStop → task-complete 큐잉
@@ -256,19 +261,19 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
         timestamp: data.timestamp,
         baseline: data.baseline as undefined,
       });
-      log(`SubagentStop: ${data.agent} → task-complete queued`);
+      log(`SubagentStop: ${data.agent} → task-complete queued`, 'subagent_stop', { agent: data.agent });
     });
 
     // SessionEnd → shutdown
     jsonlWatcher.on('session-end', () => {
-      log('SessionEnd detected');
+      log('SessionEnd detected', 'session_end');
       eventQueue.enqueue({ type: 'session-end' });
     });
   }
 
   // Shutdown 핸들러
   eventQueue.onShutdown = async () => {
-    log('Shutdown sequence starting...');
+    log('Shutdown sequence starting...', 'shutdown');
 
     // 1. worklog + 메트릭 (JSONL 워처 있을 때만)
     if (jsonlWatcher) {
@@ -277,26 +282,26 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
         jsonlWatcher.getSessionLogPath(),
         jsonlWatcher.getSessionShort(),
       );
-      log('Worklog generated');
+      log('Worklog generated', 'info');
 
       await updateMetrics(projectRoot, jsonlWatcher.metrics, jsonlWatcher.getSessionShort());
-      log('Metrics updated');
+      log('Metrics updated', 'info');
     } else {
       // 훅 기반 모드: session-state에서 worklog/metrics 생성
       const sessionState = await loadSessionState(projectRoot);
       if (sessionState) {
         await generateWorklog(projectRoot, sessionState.sessionLogPath, sessionState.sessionShort);
-        log('Worklog generated (from session-state)');
+        log('Worklog generated (from session-state)', 'info');
         await updateMetrics(projectRoot, sessionState.metrics, sessionState.sessionShort);
-        log('Metrics updated (from session-state)');
+        log('Metrics updated (from session-state)', 'info');
       } else {
-        log('No session state — skipping worklog/metrics');
+        log('No session state — skipping worklog/metrics', 'warning');
       }
     }
 
     // 2. 메타 캐시 디스크 flush
     await metaCache.flushToDisk();
-    log('Meta cache flushed');
+    log('Meta cache flushed', 'meta_cache');
 
     // 3. 정리
     await fileWatcher.stop();
@@ -305,13 +310,13 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
     await clearContext(projectRoot);
     await cleanupDaemonFiles(projectRoot);
 
-    log('Daemon stopped gracefully');
+    log('Daemon stopped gracefully', 'shutdown');
     process.exit(0);
   };
 
   // SIGTERM/SIGINT 핸들러
   const gracefulStop = async () => {
-    log('Signal received, shutting down...');
+    log('Signal received, shutting down...', 'shutdown');
     if (eventQueue.onShutdown) {
       await eventQueue.onShutdown();
     }
@@ -325,7 +330,7 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
     await jsonlWatcher.start();
   }
   fileWatcher.start();
-  log(`All watchers started${jsonlWatcher ? '' : ' (no JSONL watcher)'}`);
+  log(`All watchers started${jsonlWatcher ? '' : ' (no JSONL watcher)'}`, 'daemon_start');
 }
 
 /**

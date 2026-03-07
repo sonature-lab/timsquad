@@ -7,7 +7,7 @@ import {
   computeHash,
   parseAgentPrerequisites,
 } from '../../src/lib/compiler.js';
-import { getCompileRules, getDefaultRule } from '../../src/lib/compile-rules.js';
+import { getCompileRules, getDefaultRule, COMPILE_RULES } from '../../src/lib/compile-rules.js';
 
 // ─── Markdown Parser ────────────────────────────────────────────
 
@@ -241,5 +241,29 @@ describe('getDefaultRule', () => {
     expect(rule.splitBy).toBe('none');
     expect(rule.output).toBe('references');
     expect(rule.filenamePattern).toBe('custom-doc.spec.md');
+  });
+});
+
+// ─── E2E Impact Analysis (5-B) ─────────────────────────────────
+
+describe('affected_e2e field', () => {
+  it('service-spec rule should have affected_e2e pattern', () => {
+    const rule = COMPILE_RULES.find(r => r.source === 'service-spec');
+    expect(rule?.affected_e2e).toBe('__tests__/e2e/{section}.test.ts');
+  });
+
+  it('ui-ux-spec rule should have affected_e2e pattern', () => {
+    const rule = COMPILE_RULES.find(r => r.source === 'ui-ux-spec');
+    expect(rule?.affected_e2e).toBe('__tests__/e2e/{section}.test.ts');
+  });
+
+  it('rules without E2E mapping should have undefined affected_e2e', () => {
+    const rule = COMPILE_RULES.find(r => r.source === 'error-codes');
+    expect(rule?.affected_e2e).toBeUndefined();
+  });
+
+  it('default rule should not have affected_e2e', () => {
+    const rule = getDefaultRule('custom');
+    expect(rule.affected_e2e).toBeUndefined();
   });
 });

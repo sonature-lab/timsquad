@@ -100,12 +100,20 @@ description: {description}
 
 </rationalization-prevention>
 
+## Delegation Method
+
+<delegation-method>
+  <supported>Task() — 순차 호출. 도구(Bash/Edit/Write) 실행 가능. 유일한 지원 방식.</supported>
+  <unsupported>TeamCreate — SDK 레벨 제한으로 도구 실행 불가 (2026-03 확인). 사용 금지.</unsupported>
+</delegation-method>
+
 ## Checklist
 
 | Priority | Item |
 |----------|------|
 | CRITICAL | 서브에이전트 위임 전 spec resolve 완료 |
 | CRITICAL | compiled spec의 stale 여부 확인 |
+| CRITICAL | Task() 사용 (TeamCreate 사용 금지) |
 | HIGH | phase 제약이 프롬프트에 포함됨 |
 | HIGH | tsq-protocol이 프롬프트에 포함됨 |
 | MEDIUM | 태스크에 관련된 섹션만 선별 주입 (전체 주입 지양) |

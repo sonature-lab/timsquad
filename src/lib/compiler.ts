@@ -47,6 +47,13 @@ export interface ValidationResult {
   score: number;
 }
 
+/** E2E mapping for a compiled spec */
+export interface E2eMapping {
+  specFile: string;
+  e2eFile: string;
+  exists: boolean;
+}
+
 /** Overall compile result */
 export interface CompileResult {
   success: boolean;
@@ -54,6 +61,7 @@ export interface CompileResult {
   validations: ValidationResult[];
   skipped: string[];
   errors: string[];
+  affected_e2e: E2eMapping[];
 }
 
 // ─── Markdown Parser ────────────────────────────────────────────
@@ -192,7 +200,8 @@ export async function compileSsotDocument(
   rule: CompileRule,
   controllerDir: string,
   sourceName: string,
-): Promise<{ outputFiles: string[]; validation: ValidationResult }> {
+  projectRoot?: string,
+): Promise<{ outputFiles: string[]; validation: ValidationResult; e2eMappings: E2eMapping[] }> {
   const content = await readFile(ssotPath);
   const now = new Date().toISOString();
   const outputDir = path.join(controllerDir, rule.output);
@@ -275,7 +284,32 @@ export async function compileSsotDocument(
       ? Math.round((validation.validSections / validation.totalSections) * 100)
       : 0;
 
-  return { outputFiles, validation };
+  // E2E mapping: resolve affected_e2e patterns to actual test files
+  const e2eMappings: E2eMapping[] = [];
+  if (rule.affected_e2e && projectRoot) {
+    if (rule.splitBy === 'none') {
+      const e2eFile = rule.affected_e2e.replace('{section}', sourceName);
+      const e2ePath = path.join(projectRoot, e2eFile);
+      e2eMappings.push({
+        specFile: path.join(rule.output, rule.filenamePattern),
+        e2eFile,
+        exists: await fs.pathExists(e2ePath),
+      });
+    } else {
+      const sections = parseMarkdownSections(content, rule.splitBy);
+      for (const section of sections) {
+        const e2eFile = rule.affected_e2e.replace('{section}', section.anchor);
+        const e2ePath = path.join(projectRoot, e2eFile);
+        e2eMappings.push({
+          specFile: path.join(rule.output, rule.filenamePattern.replace('{section}', section.anchor)),
+          e2eFile,
+          exists: await fs.pathExists(e2ePath),
+        });
+      }
+    }
+  }
+
+  return { outputFiles, validation, e2eMappings };
 }
 
 // ─── Full Compile Pipeline ──────────────────────────────────────
@@ -298,6 +332,7 @@ export async function compileAll(
     validations: [],
     skipped: [],
     errors: [],
+    affected_e2e: [],
   };
 
   // Find all SSOT documents
@@ -331,14 +366,16 @@ export async function compileAll(
       : getDefaultRule(ssotName);
 
     try {
-      const { outputFiles, validation } = await compileSsotDocument(
+      const { outputFiles, validation, e2eMappings } = await compileSsotDocument(
         ssotPath,
         rule,
         controllerDir,
         ssotName,
+        projectRoot,
       );
       result.compiled.push({ source: ssotName, outputFiles });
       result.validations.push(validation);
+      result.affected_e2e.push(...e2eMappings);
     } catch (err) {
       result.success = false;
       result.errors.push(

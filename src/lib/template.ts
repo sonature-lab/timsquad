@@ -410,6 +410,7 @@ out/
 .timsquad/.daemon/
 .timsquad/.daemon.pid
 .timsquad/.daemon.log
+.timsquad/.daemon.jsonl
 .timsquad/.daemon.sock
 .timsquad/.upgrade-backup/
 `;

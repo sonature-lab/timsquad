@@ -26,6 +26,8 @@ export interface CompileRule {
   requiredFields: string[];
   /** Human-readable description */
   description: string;
+  /** E2E test file glob pattern. Available vars: {section}. e.g. "__tests__/e2e/{section}.test.ts" */
+  affected_e2e?: string;
 }
 
 /** Metadata embedded in compiled spec files */
@@ -67,6 +69,7 @@ export const COMPILE_RULES: CompileRule[] = [
     filenamePattern: '{section}.spec.md',
     requiredFields: ['Endpoint', 'Request', 'Response'],
     description: 'API 엔드포인트별 분할 (H3 = 개별 API)',
+    affected_e2e: '__tests__/e2e/{section}.test.ts',
   },
   {
     source: 'data-design',
@@ -107,6 +110,7 @@ export const COMPILE_RULES: CompileRule[] = [
     filenamePattern: '{section}.spec.md',
     requiredFields: [],
     description: 'UI/UX 화면별 분할',
+    affected_e2e: '__tests__/e2e/{section}.test.ts',
   },
   {
     source: 'security-spec',

@@ -250,19 +250,19 @@ export class EventQueue {
       const seqIds = state.current_phase?.sequences || [];
       if (seqIds.length > 0) {
         try {
-          // buildPhaseLogData와 동일한 로직 (createPhaseLog에서 추출)
           const phasesDir = getPhasesDir(this.projectRoot);
-          await fs.ensureDir(phasesDir);
+          const phaseLogPath = path.join(phasesDir, `${phaseId}.json`);
 
-          // tsq log phase create를 직접 실행
-          const { execFileSync } = await import('child_process');
-          execFileSync(
-            'tsq',
-            ['log', 'phase', 'create', phaseId, '--sequences', seqIds.join(',')],
-            { cwd: this.projectRoot, timeout: 30000, stdio: 'ignore' },
-          );
+          if (!await fs.pathExists(phaseLogPath)) {
+            // Direct function call instead of execFileSync('tsq')
+            // to avoid PATH dependency issues
+            const { buildPhaseLogData } = await import('../commands/workflow.js');
+            const phaseLog = await buildPhaseLogData(this.projectRoot, phaseId, seqIds);
+            await fs.ensureDir(phasesDir);
+            await fs.writeJson(phaseLogPath, phaseLog, { spaces: 2 });
+          }
         } catch {
-          // 실패 시 무시
+          // L3 creation failure — checkAndAutomate fallback will retry
         }
       }
     }

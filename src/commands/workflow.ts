@@ -30,9 +30,10 @@ export function registerWorkflowCommand(program: Command): void {
   wfCmd
     .command('set-phase <phase-id>')
     .description('Set the current active phase')
-    .action(async (phaseId: string) => {
+    .option('--force', 'Force phase transition even if gate conditions are not met')
+    .action(async (phaseId: string, options: { force?: boolean }) => {
       try {
-        await setPhase(phaseId);
+        await setPhase(phaseId, options.force);
       } catch (error) {
         printError((error as Error).message);
         process.exit(1);
@@ -139,11 +140,47 @@ export function registerWorkflowCommand(program: Command): void {
 // Commands
 // ============================================================
 
-async function setPhase(phaseId: string): Promise<void> {
+async function setPhase(phaseId: string, force?: boolean): Promise<void> {
   const projectRoot = await findProjectRoot();
   if (!projectRoot) throw new Error('Not a TimSquad project');
 
   const state = await loadWorkflowState(projectRoot);
+
+  // Phase Gate enforcement: check current phase before transitioning
+  if (state.current_phase && state.current_phase.id !== phaseId && state.automation.phase_gate) {
+    const gateResult = await buildPhaseGateData(projectRoot, state.current_phase.id);
+
+    if (!gateResult.can_transition) {
+      if (force) {
+        console.log(colors.warning(`\n  ⚠ Phase gate BLOCKED for "${state.current_phase.id}" — forced override`));
+        for (const condition of gateResult.blocking_conditions) {
+          console.log(colors.dim(`    - ${condition}`));
+        }
+        for (const report of gateResult.missing_reports) {
+          console.log(colors.dim(`    - Missing report: ${report}`));
+        }
+        console.log('');
+      } else {
+        const lines = [
+          `Phase gate BLOCKED for "${state.current_phase.id}". Cannot transition to "${phaseId}".`,
+        ];
+        if (gateResult.blocking_conditions.length > 0) {
+          lines.push('Blocking conditions:');
+          for (const c of gateResult.blocking_conditions) {
+            lines.push(`  - ${c}`);
+          }
+        }
+        if (gateResult.missing_reports.length > 0) {
+          lines.push('Missing reports:');
+          for (const r of gateResult.missing_reports) {
+            lines.push(`  - ${r}`);
+          }
+        }
+        lines.push('', 'Use --force to override.');
+        throw new Error(lines.join('\n'));
+      }
+    }
+  }
 
   // Archive current phase if exists
   if (state.current_phase && state.current_phase.id !== phaseId) {
@@ -156,10 +193,44 @@ async function setPhase(phaseId: string): Promise<void> {
     sequences: [],
   };
 
-  await saveWorkflowState(projectRoot, state);
+  // Atomic sync: update workflow.json and current-phase.json together
+  await syncPhaseFiles(projectRoot, state);
 
   printSuccess(`Phase set: ${phaseId}`);
   printKeyValue('Automation', formatAutomation(state.automation));
+}
+
+/**
+ * Atomically sync workflow.json and current-phase.json
+ * Uses write-to-temp + rename pattern to prevent desync on failure
+ */
+async function syncPhaseFiles(projectRoot: string, state: WorkflowState): Promise<void> {
+  const stateDir = path.join(projectRoot, '.timsquad', 'state');
+  await fs.ensureDir(stateDir);
+
+  const workflowPath = path.join(stateDir, 'workflow.json');
+  const phasePath = path.join(stateDir, 'current-phase.json');
+  const workflowTmp = workflowPath + '.tmp';
+  const phaseTmp = phasePath + '.tmp';
+
+  const phaseData = state.current_phase
+    ? { current: state.current_phase.id, startedAt: state.current_phase.started_at, progress: 0 }
+    : { current: 'planning', startedAt: getTimestamp(), progress: 0 };
+
+  try {
+    // 1. Write both temp files
+    await fs.writeJson(workflowTmp, state, { spaces: 2 });
+    await fs.writeJson(phaseTmp, phaseData, { spaces: 2 });
+
+    // 2. Rename atomically (rename is atomic on POSIX filesystems)
+    await fs.rename(workflowTmp, workflowPath);
+    await fs.rename(phaseTmp, phasePath);
+  } catch (err) {
+    // Cleanup temp files on failure
+    await fs.remove(workflowTmp).catch(() => {});
+    await fs.remove(phaseTmp).catch(() => {});
+    throw new Error(`Phase sync failed: ${(err as Error).message}`);
+  }
 }
 
 async function addSequence(
@@ -317,6 +388,14 @@ async function taskStart(options: { agent: string; scope?: string }): Promise<vo
     return;
   }
 
+  // SCR (Single Change Rule) enforcement: detect compound tasks
+  const topLevelDirs = new Set(scopePaths.map(p => p.split('/')[0]));
+  if (topLevelDirs.size > 2) {
+    console.log(colors.warning(`\n  ⚠ SCR Warning: Scope spans ${topLevelDirs.size} top-level directories`));
+    console.log(colors.dim(`    Directories: ${[...topLevelDirs].join(', ')}`));
+    console.log(colors.dim('    Consider splitting into sequential single-scope tasks.\n'));
+  }
+
   // 데몬 IPC로 scope 쿼리
   let scopedData: ScopedContext | null = null;
   try {
@@ -343,6 +422,7 @@ async function taskStart(options: { agent: string; scope?: string }): Promise<vo
 /**
  * Track a completed task in workflow state.
  * Called by SubagentStop hook: tsq workflow track-task <agent> <task-log-path>
+ * Creates L2 sequence log inline when sequence is completed (no daemon dependency).
  */
 async function trackTask(agent: string, taskLogPath: string): Promise<void> {
   const projectRoot = await findProjectRoot();
@@ -368,6 +448,22 @@ async function trackTask(agent: string, taskLogPath: string): Promise<void> {
 
   if (isSequenceComplete(seq)) {
     seq.status = 'completed';
+
+    // Inline L2 creation — don't wait for daemon or SessionEnd
+    if (state.automation.sequence_log && !seq.l2_created) {
+      try {
+        const entry = await buildSequenceLogData(projectRoot, seqId, {
+          phase: seq.phase,
+          report: seq.report_path || '(auto) no report',
+          verdict: 'proceed',
+        });
+        const seqDir = getSequencesDir(projectRoot);
+        await fs.ensureDir(seqDir);
+        await fs.writeJson(path.join(seqDir, `${seqId}.json`), entry, { spaces: 2 });
+        seq.l2_created = true;
+        await appendWorkflowLog(projectRoot, `[AUTO] L2 sequence log created: ${seqId}`);
+      } catch { /* L2 creation failure — checkAndAutomate fallback will retry */ }
+    }
   }
 
   await saveWorkflowState(projectRoot, state);
@@ -495,7 +591,7 @@ async function checkAndAutomate(): Promise<void> {
 // Internal helpers
 // ============================================================
 
-async function buildPhaseLogData(
+export async function buildPhaseLogData(
   projectRoot: string,
   phaseId: string,
   seqIds: string[],
