@@ -115,10 +115,10 @@
 
 ## 4. 미결 사항 (Open Items)
 
-| ID | 내용 | 결정 시점 | 담당 |
-|----|------|-----------|------|
-| O-001 | #10 독립 커맨드 vs mi 확장 최종 확정 | Phase 1 Wave 1-A | Architect |
-| O-002 | #13 Database/Prisma 소유권 경계 Option A vs B | Phase 2 Wave 2-A | Developer-Skill |
-| O-003 | #8 Archiv confidence 임계값 | 다음 스프린트 | PM |
-| O-004 | #16 Designer 활성화 기준 구체화 | Phase 2 Wave 2-C | PM |
-| O-005 | Phase Gate 감사 점수 임계값 (프로젝트별) | Phase 0 구현 시 | Developer |
+| ID | 내용 | 결정 시점 | 담당 | 상태 |
+|----|------|-----------|------|------|
+| O-001 | #10 독립 커맨드 vs mi 확장 최종 확정 | Phase 1 Wave 1-A | Architect | 미결 |
+| O-002 | #13 Database/Prisma 소유권 경계 Option A vs B | Phase 2 Wave 2-A | Developer-Skill | 미결 |
+| O-003 | #8 Archiv confidence 임계값 | 다음 스프린트 | PM | 미결 |
+| O-004 | #16 Designer 활성화 기준 구체화 | Phase 2 Wave 2-C | PM | 미결 |
+| O-005 | Phase Gate 감사 점수 임계값 (프로젝트별) | Phase 0 구현 시 | Developer | **해결** — buildPhaseGateData 기반, 시퀀스 verdict + feedback 조건 사용 |

@@ -143,35 +143,35 @@ Wave 0-D (마무리, 1d):
 ## 체크리스트
 
 ### #5 DoD 체크리스트
-- [ ] 5-A: TeamCreate 에이전트가 Bash/Edit/Write 실행 (또는 fallback 문서화)
-- [ ] 5-B: `tsq compile` 출력에 `affected_e2e` 필드 포함
-- [ ] 5-C: 컨트롤러가 다중 태스크 위임 거부 + 순차 분할
-- [ ] 5-D: `tsq wf set-phase` 원자적 업데이트 (desync 없음)
-- [ ] 단위 테스트 통과: 5-B, 5-C, 5-D
-- [ ] 통합 테스트 통과: 5-A, 5-D
+- [x] 5-A: TeamCreate 에이전트가 Bash/Edit/Write 실행 (또는 fallback 문서화) — Task() 패턴 문서화 (ec1d52d)
+- [x] 5-B: `tsq compile` 출력에 `affected_e2e` 필드 포함 — CompileRule + E2eMapping (ec1d52d)
+- [x] 5-C: 컨트롤러가 다중 태스크 위임 거부 + 순차 분할 — SCR 경고 (ec1d52d)
+- [x] 5-D: `tsq wf set-phase` 원자적 업데이트 (desync 없음) — syncPhaseFiles (ec1d52d)
+- [x] 단위 테스트 통과: 5-B (4), 5-C (3), 5-D (3) — 549 total
+- [x] 통합 테스트 통과: 5-A (문서화), 5-D (30 integration tests)
 
 ### #17 DoD 체크리스트
-- [ ] 17-A: 시퀀스 완료 시 L2 로그 자동 생성 + `l2_created: true`
-- [ ] 17-B: 페이즈 완료 시 L3 로그 자동 생성
-- [ ] 17-C: `tsq wf set-phase` gate 미충족 시 차단 + 진단 메시지
-- [ ] 17-D: `tsq daemon status` 출력 정상
-- [ ] 17-E: 데몬 로그 JSONL 형식 검증
-- [ ] 단위 테스트 통과: 17-C, 17-E
-- [ ] 통합 테스트 통과: 17-A, 17-B, 17-D
+- [x] 17-A: 시퀀스 완료 시 L2 로그 자동 생성 + `l2_created: true` — inline in trackTask (ec1d52d)
+- [x] 17-B: 페이즈 완료 시 L3 로그 자동 생성 — direct import in event-queue (ec1d52d)
+- [x] 17-C: `tsq wf set-phase` gate 미충족 시 차단 + 진단 메시지 — --force 포함 (ec1d52d)
+- [x] 17-D: `tsq daemon status` 출력 정상 — uptime, metrics, tokens, automation (ec1d52d)
+- [x] 17-E: 데몬 로그 JSONL 형식 검증 — 30개 log() 호출 이벤트 타입 (ec1d52d)
+- [x] 단위 테스트 통과: 17-C (2), 17-E (기존)
+- [x] 통합 테스트 통과: 17-A, 17-B (30 integration), 17-D (수동 확인)
 
 ### 품질 게이트
-- [ ] `npm test` 전체 통과
-- [ ] `npm run test:integration` 통과
-- [ ] ShellCheck: 변경된 .sh 파일 통과
-- [ ] 보안 리뷰: 파일 쓰기 시 path traversal 없음
-- [ ] 기존 API 하위 호환성 유지
+- [x] `npm test` 전체 통과 — 549 unit tests
+- [x] `npm run test:integration` 통과 — 30 tests
+- [x] ShellCheck: 변경된 .sh 파일 없음 (Phase 0에서 .sh 미변경)
+- [x] 보안 리뷰: 파일 쓰기 시 path traversal 없음 — atomic write는 stateDir 내부만 사용
+- [x] 기존 API 하위 호환성 유지 — affected_e2e optional, --force optional
 
 ---
 
 ## 리스크
 
-| 리스크 | 영향 | 대응 |
-|--------|------|------|
-| TeamCreate SDK 제한 해결 불가 | 5-A fallback 필요 | Task() proxy 문서화로 DoD 충족 |
-| L2 미발동 원인 불명 | 17-A 장기화 | 이벤트 큐 디버그 로깅 추가 후 재추적 |
-| Phase Gate 조건 정의 모호 | 17-C 기준 불명확 | 최소 기준: test pass rate >= 80%, no critical issues |
+| 리스크 | 영향 | 대응 | 결과 |
+|--------|------|------|------|
+| TeamCreate SDK 제한 해결 불가 | 5-A fallback 필요 | Task() proxy 문서화로 DoD 충족 | **해결**: controller/SKILL.md에 문서화 |
+| L2 미발동 원인 불명 | 17-A 장기화 | 이벤트 큐 디버그 로깅 추가 후 재추적 | **해결**: trackTask 내 inline L2 생성으로 근본 해결 |
+| Phase Gate 조건 정의 모호 | 17-C 기준 불명확 | 최소 기준: test pass rate >= 80%, no critical issues | **해결**: buildPhaseGateData 기반 + --force 우회 |
