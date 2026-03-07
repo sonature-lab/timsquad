@@ -25,6 +25,9 @@ export interface MethodSemantic {
   timeComplexity?: string;     // e.g. "O(1)"
   spaceComplexity?: string;
   description?: string;
+  intent?: string;             // e.g. "validate-input", "transform-data", "persist"
+  errors?: string[];           // e.g. ["AUTH_INVALID_TOKEN", "AUTH_EXPIRED"]
+  sideEffects?: string[];      // e.g. ["writes-db", "sends-email", "modifies-cache"]
 }
 
 export interface MethodEntry {
@@ -74,6 +77,11 @@ export interface FileSemantic {
   description?: string;
   pattern?: string;            // e.g. "clean-architecture/use-case"
   semanticTag?: string;        // e.g. "authentication"
+  intent?: string;             // e.g. "api-handler", "data-model", "utility", "config"
+  domain?: string;             // e.g. "auth", "payment", "user"
+  layer?: string;              // e.g. "presentation", "application", "domain", "infrastructure"
+  reusability?: 'project' | 'domain' | 'universal';  // scope of reuse
+  constraints?: string[];      // e.g. ["no-side-effects", "idempotent", "rate-limited"]
 }
 
 export interface FileEntry {

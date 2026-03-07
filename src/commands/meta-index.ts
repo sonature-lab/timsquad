@@ -12,7 +12,7 @@ import {
 } from '../lib/meta-index.js';
 import { appendUIPending } from '../lib/ui-index.js';
 import { queryDaemon, MetaCache, type SearchResult } from '../daemon/meta-cache.js';
-import type { PendingEntry, MetaIndexSummary, DriftReport } from '../types/meta-index.js';
+import type { PendingEntry, MetaIndexSummary, DriftReport, ModuleIndex } from '../types/meta-index.js';
 import type { UIPendingEntry } from '../types/ui-meta.js';
 
 export function registerMetaIndexCommand(program: Command): void {
@@ -74,6 +74,13 @@ export function registerMetaIndexCommand(program: Command): void {
     .option('--desc <description>', 'Description')
     .option('--pattern <pattern>', 'Architecture pattern')
     .option('--tag <tag>', 'Semantic tag')
+    .option('--intent <intent>', 'File/method intent (api-handler, data-model, utility)')
+    .option('--domain <domain>', 'Business domain (auth, payment, user)')
+    .option('--layer <layer>', 'Architecture layer (presentation, application, domain, infrastructure)')
+    .option('--reusability <scope>', 'Reuse scope (project, domain, universal)')
+    .option('--constraints <list>', 'Constraints (comma-separated: no-side-effects, idempotent)')
+    .option('--errors <list>', 'Method error codes (comma-separated)')
+    .option('--side-effects <list>', 'Method side effects (comma-separated: writes-db, sends-email)')
     .option('--layout <type>', 'UI layout intent (flex-column, grid, stack)')
     .option('--color-scheme <scheme>', 'UI color scheme (primary, secondary)')
     .option('--spacing <level>', 'UI spacing (compact, normal, spacious)')
@@ -125,6 +132,14 @@ interface StageOptions {
   desc?: string;
   pattern?: string;
   tag?: string;
+  // Semantic options (8-B)
+  intent?: string;
+  domain?: string;
+  layer?: string;
+  reusability?: string;
+  constraints?: string;
+  errors?: string;
+  sideEffects?: string;
   // UI options
   layout?: string;
   colorScheme?: string;
@@ -293,6 +308,13 @@ async function runStage(file: string, options: StageOptions): Promise<void> {
       ...(options.algo ? { algorithm: options.algo } : {}),
       ...(options.tc ? { timeComplexity: options.tc } : {}),
       ...(options.sc ? { spaceComplexity: options.sc } : {}),
+      ...(options.intent ? { intent: options.intent } : {}),
+      ...(options.domain ? { domain: options.domain } : {}),
+      ...(options.layer ? { layer: options.layer } : {}),
+      ...(options.reusability ? { reusability: options.reusability as 'project' | 'domain' | 'universal' } : {}),
+      ...(options.constraints ? { constraints: options.constraints.split(',').map(s => s.trim()) } : {}),
+      ...(options.errors ? { errors: options.errors.split(',').map(s => s.trim()) } : {}),
+      ...(options.sideEffects ? { sideEffects: options.sideEffects.split(',').map(s => s.trim()) } : {}),
     },
     source: 'cli',
   };
@@ -356,6 +378,21 @@ async function runStats(): Promise<void> {
   printKeyValue('  Semantic Coverage', `${h.semanticCoverage}% (files with semantic data)`);
   printKeyValue('  Interface Health', `${h.interfaceHealth}% (clean exports/imports)`);
   printKeyValue('  Alert Count', String(h.alertCount));
+
+  // Semantic coverage per module (8-C)
+  console.log(colors.subheader('\n  Semantic Coverage by Module'));
+  for (const moduleName of Object.keys(summary.modules)) {
+    const modulePath = path.join(metaDir, `${moduleName}.json`);
+    if (!await exists(modulePath)) continue;
+    try {
+      const mod: ModuleIndex = await fs.readJson(modulePath);
+      const files = Object.values(mod.files);
+      const withSemantic = files.filter(f => f.semantic && Object.keys(f.semantic).length > 0).length;
+      const pct = files.length > 0 ? Math.round((withSemantic / files.length) * 100) : 0;
+      const bar = pct >= 80 ? chalk.green(`${pct}%`) : pct >= 50 ? chalk.yellow(`${pct}%`) : chalk.red(`${pct}%`);
+      console.log(`  ${colors.dim(moduleName.padEnd(24))} ${bar} (${withSemantic}/${files.length})`);
+    } catch { /* skip unreadable modules */ }
+  }
 
   // UI Health (있을 때만)
   if (summary.uiHealth) {

@@ -17,6 +17,7 @@ import { queryDaemon } from '../daemon/meta-cache.js';
 import { writeContext } from '../daemon/context-writer.js';
 import type { ScopedContext } from '../daemon/meta-cache.js';
 import type { SequenceLogEntry, PhaseLogEntry } from '../types/task-log.js';
+import { parseAgentPrerequisites, checkStale, loadManifest } from '../lib/compiler.js';
 
 const LOG_SCHEMA_VERSION = '1.0.0';
 
@@ -388,13 +389,21 @@ async function taskStart(options: { agent: string; scope?: string }): Promise<vo
     return;
   }
 
-  // SCR (Single Change Rule) enforcement: detect compound tasks
-  const topLevelDirs = new Set(scopePaths.map(p => p.split('/')[0]));
-  if (topLevelDirs.size > 2) {
-    console.log(colors.warning(`\n  ⚠ SCR Warning: Scope spans ${topLevelDirs.size} top-level directories`));
-    console.log(colors.dim(`    Directories: ${[...topLevelDirs].join(', ')}`));
+  // SCR (Single Change Rule) enforcement: detect compound tasks (11-B)
+  const scrResult = analyzeScopeComplexity(scopePaths);
+  if (scrResult.compound) {
+    console.log(colors.warning(`\n  ⚠ SCR Warning: ${scrResult.reason}`));
+    if (scrResult.groups.length > 1) {
+      console.log(colors.dim('    Suggested splits:'));
+      scrResult.groups.forEach((g, i) => {
+        console.log(colors.dim(`      ${i + 1}. [${g.module}] ${g.paths.join(', ')}`));
+      });
+    }
     console.log(colors.dim('    Consider splitting into sequential single-scope tasks.\n'));
   }
+
+  // Prerequisite auto-validation (11-A): check agent prerequisites against compiled specs
+  await validateAgentPrerequisites(projectRoot, options.agent);
 
   // 데몬 IPC로 scope 쿼리
   let scopedData: ScopedContext | null = null;
@@ -783,6 +792,107 @@ async function appendWorkflowLog(projectRoot: string, message: string): Promise<
   await fs.ensureDir(logDir);
   const line = `${getTimestamp()} ${message}\n`;
   await fs.appendFile(logFile, line, 'utf-8');
+}
+
+/**
+ * SCR scope complexity analysis (11-B).
+ * Groups paths by module and detects compound tasks.
+ */
+interface ScopeGroup {
+  module: string;
+  paths: string[];
+}
+
+interface ScrAnalysis {
+  compound: boolean;
+  reason: string;
+  groups: ScopeGroup[];
+}
+
+function analyzeScopeComplexity(scopePaths: string[]): ScrAnalysis {
+  // Group by logical module (2nd-level dir or top-level for shallow paths)
+  const moduleMap = new Map<string, string[]>();
+  for (const p of scopePaths) {
+    const parts = p.split('/').filter(Boolean);
+    // Use first 2 segments as module key (e.g. "src/commands", "src/lib", "tests/unit")
+    const moduleKey = parts.length >= 2 ? `${parts[0]}/${parts[1]}` : parts[0] || p;
+    if (!moduleMap.has(moduleKey)) moduleMap.set(moduleKey, []);
+    moduleMap.get(moduleKey)!.push(p);
+  }
+
+  const groups: ScopeGroup[] = [...moduleMap.entries()].map(([module, paths]) => ({ module, paths }));
+
+  // Exclude test-related modules from independent module count
+  const nonTestModules = groups.filter(g => !g.module.startsWith('tests/') && !g.module.startsWith('__tests__/'));
+  const topLevelDirs = new Set(scopePaths.map(p => p.split('/')[0]));
+
+  if (nonTestModules.length > 2) {
+    return {
+      compound: true,
+      reason: `Scope spans ${nonTestModules.length} independent modules (${nonTestModules.map(g => g.module).join(', ')})`,
+      groups,
+    };
+  }
+
+  if (topLevelDirs.size > 2) {
+    return {
+      compound: true,
+      reason: `Scope spans ${topLevelDirs.size} top-level directories (${[...topLevelDirs].join(', ')})`,
+      groups,
+    };
+  }
+
+  return { compound: false, reason: '', groups };
+}
+
+/**
+ * Validate agent prerequisites against compiled specs (11-A).
+ * Checks: agent file exists, prerequisites resolved, specs not stale.
+ */
+async function validateAgentPrerequisites(projectRoot: string, agent: string): Promise<void> {
+  const agentPath = path.join(projectRoot, '.claude', 'agents', `${agent}.md`);
+  if (!await fs.pathExists(agentPath)) return; // No agent file — skip validation
+
+  const agentContent = await fs.readFile(agentPath, 'utf-8');
+  const prereqs = parseAgentPrerequisites(agentContent);
+  if (prereqs.length === 0) return; // No prerequisites declared
+
+  const controllerDir = path.join(projectRoot, '.claude', 'skills', 'controller');
+  const manifest = await loadManifest(controllerDir);
+
+  if (!manifest) {
+    console.log(colors.warning('\n  ⚠ Prerequisite Warning: No compile manifest found'));
+    console.log(colors.dim('    Run `tsq compile` before delegating tasks.\n'));
+    return;
+  }
+
+  // Check missing prerequisites
+  const compiledSources = new Set(
+    manifest.entries.map(e => e.source.replace('ssot/', '').replace('.md', ''))
+  );
+  const missing = prereqs.filter(p => !compiledSources.has(p));
+  if (missing.length > 0) {
+    console.log(colors.warning(`\n  ⚠ Missing prerequisites for agent "${agent}":`));
+    for (const m of missing) {
+      console.log(colors.dim(`    - ${m} (not compiled)`));
+    }
+    console.log(colors.dim('    Run `tsq compile` to resolve.\n'));
+  }
+
+  // Check stale specs
+  const staleItems = await checkStale(projectRoot, controllerDir);
+  const relevantStale = staleItems.filter(s => {
+    const source = s.source.replace('ssot/', '').replace('.md', '');
+    return prereqs.includes(source) || s.source === '*';
+  });
+
+  if (relevantStale.length > 0) {
+    console.log(colors.warning(`\n  ⚠ Stale specs detected for agent "${agent}":`));
+    for (const s of relevantStale) {
+      console.log(colors.dim(`    - ${s.source}: ${s.reason}`));
+    }
+    console.log(colors.dim('    Run `tsq compile` to refresh.\n'));
+  }
 }
 
 function formatAutomation(auto: AutomationConfig): string {

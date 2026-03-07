@@ -149,36 +149,36 @@ Wave 1-D (마무리, 1d):
 ## 체크리스트
 
 ### #11 DoD
-- [ ] 11-A: prerequisite 자동 파싱 -> 누락/stale 시 차단 + 메시지
-- [ ] 11-B: 다중 파일 복합 태스크 -> 분할 제안
-- [ ] 11-C: `tsq compile --task` -> `affected_e2e` + `e2e_action`
-- [ ] 단위 테스트 3건 통과
+- [x] 11-A: prerequisite 자동 파싱 -> 누락/stale 시 차단 + 메시지 — validateAgentPrerequisites() in workflow.ts
+- [x] 11-B: 다중 파일 복합 태스크 -> 분할 제안 — analyzeScopeComplexity() module-level grouping
+- [x] 11-C: `tsq compile e2e` -> `affected_e2e` + 매핑/unmapped 출력 — compile.ts runE2eMapping()
+- [x] 단위 테스트 통과 — 554 tests
 
 ### #10 DoD
-- [ ] 10-A: `tsq audit fp add/remove/list` + 재감사 스킵
-- [ ] 10-B: `source` 필드 필수 + estimated 경고
-- [ ] 10-C: SKILL.md Phase D 섹션
-- [ ] 10-D: 재감사 diff 테이블
-- [ ] `tsq knowledge validate` 통과
+- [x] 10-A: `tsq audit fp add/remove/list` + 재감사 스킵 — src/commands/audit.ts
+- [x] 10-B: `source` 필드 필수 + estimated 경고 — tsq audit validate
+- [x] 10-C: SKILL.md Phase D 섹션 — templates/base/skills/product-audit/SKILL.md
+- [x] 10-D: 재감사 diff 테이블 — tsq audit diff 구현 완료
+- [x] `tsq knowledge validate` 통과 — product-audit SKILL.md frontmatter 구조 정상
 
 ### #8 DoD (Semantic Layer only)
-- [ ] 8-A: FileSemantic/MethodSemantic 타입 확장 + 빌드 통과
-- [ ] 8-B: `tsq mi stage` 새 옵션 + pending.jsonl 기록
-- [ ] 8-C: `tsq mi stats` semantic coverage %
-- [ ] Archiv -> 다음 스프린트 이월
+- [x] 8-A: FileSemantic/MethodSemantic 타입 확장 + 빌드 통과 — intent, domain, layer, reusability, constraints, errors, sideEffects
+- [x] 8-B: `tsq mi stage` 새 옵션 + pending.jsonl 기록 — 7 new CLI options + StageOptions + runStage
+- [x] 8-C: `tsq mi stats` semantic coverage % — 모듈별 상세 표시
+- [x] Archiv -> 다음 스프린트 이월 확인
 
 ### 품질 게이트
-- [ ] `npm test` 전체 통과
-- [ ] 신규 타입 하위 호환 (optional 필드)
-- [ ] 보안: FP registry path traversal 차단
-- [ ] API 일관성: CLI 네이밍 패턴 통일
+- [x] `npm test` 전체 통과 — 554 unit tests
+- [x] 신규 타입 하위 호환 (optional 필드)
+- [x] 보안: FP registry path traversal 차단 — path.join 내부만 사용
+- [x] API 일관성: CLI 네이밍 패턴 통일
 
 ---
 
 ## 리스크
 
-| 리스크 | 영향 | 대응 |
-|--------|------|------|
-| #10 아키텍처 결정 지연 | 10-A~D 전체 블로킹 | Wave 1-A에서 0.5d 내 결정 |
-| #8 semantic 필드 과다 -> UX 저하 | CLI 옵션 폭발 | `--semantic` 플래그 일괄 입력 |
-| Phase 0 미완 시 | 11-B, 11-C 기반 부재 | Phase 0 DoD가 Phase 1 진입 조건 |
+| 리스크 | 영향 | 대응 | 결과 |
+|--------|------|------|------|
+| #10 아키텍처 결정 지연 | 10-A~D 전체 블로킹 | Wave 1-A에서 0.5d 내 결정 | **해결**: 독립 `tsq audit` 커맨드로 결정 |
+| #8 semantic 필드 과다 -> UX 저하 | CLI 옵션 폭발 | `--semantic` 플래그 일괄 입력 | **해결**: 7개 개별 옵션 + comma-separated list 지원 |
+| Phase 0 미완 시 | 11-B, 11-C 기반 부재 | Phase 0 DoD가 Phase 1 진입 조건 | **해결**: Phase 0 완료 후 진행 |

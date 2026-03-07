@@ -50,6 +50,19 @@ export function registerCompileCommand(program: Command): void {
     });
 
   compileCmd
+    .command('e2e')
+    .description('Show E2E test mappings from compiled specs')
+    .option('--task <source>', 'Filter by SSOT source name')
+    .action(async (options: { task?: string }) => {
+      try {
+        await runE2eMapping(options.task);
+      } catch (err) {
+        printError(err instanceof Error ? err.message : String(err));
+        process.exit(1);
+      }
+    });
+
+  compileCmd
     .command('status')
     .description('Check for stale specs (SSOT changed since last compile)')
     .alias('s')
@@ -161,6 +174,63 @@ async function runStatus(): Promise<void> {
   }
 }
 
+// ─── tsq compile e2e ─────────────────────────────────────────────
+
+async function runE2eMapping(taskFilter?: string): Promise<void> {
+  printHeader('E2E Test Mappings');
+
+  const { projectRoot, controllerDir } = await resolveProject();
+
+  const ssotDir = path.join(projectRoot, '.timsquad', 'ssot');
+  if (!await exists(ssotDir)) {
+    printError('.timsquad/ssot/ 디렉토리가 없습니다.');
+    return;
+  }
+
+  const result = await compileAll(projectRoot, controllerDir);
+
+  let mappings = result.affected_e2e;
+  if (taskFilter) {
+    mappings = mappings.filter(m => m.specFile.includes(taskFilter));
+  }
+
+  if (mappings.length === 0) {
+    printInfo('E2E 매핑 없음' + (taskFilter ? ` (filter: ${taskFilter})` : ''));
+    return;
+  }
+
+  // Also scan __tests__/e2e/ for unmapped test files
+  const e2eDir = path.join(projectRoot, '__tests__', 'e2e');
+  const existingE2eFiles = new Set<string>();
+  if (await exists(e2eDir)) {
+    const files = await import('fs-extra').then(f => f.default.readdir(e2eDir));
+    for (const f of files) {
+      if (f.endsWith('.test.ts') || f.endsWith('.test.js')) {
+        existingE2eFiles.add(path.join('__tests__/e2e', f));
+      }
+    }
+  }
+
+  console.log(colors.subheader('  Spec → E2E Mappings'));
+  for (const m of mappings) {
+    const icon = m.exists ? '✅' : '⚠️';
+    const action = m.exists ? 'run' : 'create';
+    console.log(`  ${icon} ${colors.path(m.specFile)} → ${m.e2eFile} [${action}]`);
+  }
+
+  // Show unmapped E2E test files
+  const mappedE2e = new Set(mappings.map(m => m.e2eFile));
+  const unmapped = [...existingE2eFiles].filter(f => !mappedE2e.has(f));
+  if (unmapped.length > 0) {
+    console.log(colors.subheader('\n  Unmapped E2E Tests (no spec reference)'));
+    for (const f of unmapped) {
+      console.log(`  ${colors.dim('○')} ${f}`);
+    }
+  }
+
+  printSuccess(`${mappings.length}개 E2E 매핑 (${mappings.filter(m => m.exists).length} exist, ${mappings.filter(m => !m.exists).length} missing)`);
+}
+
 // ─── Output Helpers ──────────────────────────────────────────────
 
 function printCompileResult(result: CompileResult): void {
@@ -188,6 +258,13 @@ function printCompileResult(result: CompileResult): void {
     console.log(
       `  ${colors.dim(`⏭ 건너뜀 (미작성): ${result.skipped.join(', ')}`)}`,
     );
+  }
+
+  // E2E mappings summary
+  if (result.affected_e2e.length > 0) {
+    const existing = result.affected_e2e.filter(m => m.exists).length;
+    const missing = result.affected_e2e.length - existing;
+    console.log(`  ${colors.dim(`🧪 E2E: ${result.affected_e2e.length}개 매핑 (${existing} exist, ${missing} missing) — tsq compile e2e 로 상세 확인`)}`);
   }
 
   // Errors

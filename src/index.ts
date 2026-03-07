@@ -24,6 +24,7 @@ import { registerDaemonCommand } from './commands/daemon.js';
 import { registerSkillsCommand } from './commands/skills.js';
 import { registerUpgradeCommand } from './commands/upgrade.js';
 import { registerCompileCommand } from './commands/compile.js';
+import { registerAuditCommand } from './commands/audit.js';
 import { checkForUpdates } from './lib/update-check.js';
 import { getInstalledVersion } from './lib/version.js';
 
@@ -58,6 +59,7 @@ registerDaemonCommand(program);
 registerSkillsCommand(program);
 registerCompileCommand(program);
 registerUpgradeCommand(program);
+registerAuditCommand(program);
 
 // Default action (show help)
 program.action(() => {

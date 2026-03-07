@@ -77,6 +77,9 @@
 | `src/types/meta-index.ts` | MetaIndex 타입 | #8 |
 | `src/commands/meta-index.ts` | mi CLI | #8 |
 | `src/lib/meta-index.ts` | mi 코어 로직 | #8 |
+| `src/commands/audit.ts` | 감사 CLI (FP, validate, diff) | #10 |
+| `src/commands/compile.ts` | 컴파일 CLI (e2e 서브커맨드 추가) | #11 |
+| `templates/base/skills/product-audit/SKILL.md` | 감사 스킬 (Phase D 포함) | #10 |
 | `templates/base/skills/controller/SKILL.md` | 컨트롤러 스킬 | #11 |
 
 ### 핵심 소스 코드 (Phase 2)
@@ -117,7 +120,7 @@
 
 | ID | 내용 | 결정 시점 | 담당 | 상태 |
 |----|------|-----------|------|------|
-| O-001 | #10 독립 커맨드 vs mi 확장 최종 확정 | Phase 1 Wave 1-A | Architect | 미결 |
+| O-001 | #10 독립 커맨드 vs mi 확장 최종 확정 | Phase 1 Wave 1-A | Architect | **해결** — 독립 `tsq audit` 커맨드로 구현 (src/commands/audit.ts) |
 | O-002 | #13 Database/Prisma 소유권 경계 Option A vs B | Phase 2 Wave 2-A | Developer-Skill | 미결 |
 | O-003 | #8 Archiv confidence 임계값 | 다음 스프린트 | PM | 미결 |
 | O-004 | #16 Designer 활성화 기준 구체화 | Phase 2 Wave 2-C | PM | 미결 |
