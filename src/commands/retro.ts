@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import path from 'path';
 import fs from 'fs-extra';
 import { execSync, execFileSync } from 'child_process';
-import { colors, printHeader, printError, printSuccess, printKeyValue } from '../utils/colors.js';
+import { colors, printHeader, printError, printSuccess, printWarning, printKeyValue } from '../utils/colors.js';
 import { findProjectRoot, getProjectInfo } from '../lib/project.js';
 import { exists, writeFile, listFiles } from '../utils/fs.js';
 import { getTimestamp, getDateString } from '../utils/date.js';
@@ -89,13 +89,18 @@ export function registerRetroCommand(program: Command): void {
       }
     });
 
-  // tsq retro apply
+  // tsq retro apply [pattern-id]
   retroCmd
-    .command('apply')
-    .description('Apply improvements')
-    .action(async () => {
+    .command('apply [patternId]')
+    .description('Apply improvements (optionally apply specific pattern to skill)')
+    .option('--skill <name>', 'Target skill to apply pattern to')
+    .action(async (patternId: string | undefined, options: { skill?: string }) => {
       try {
-        await applyImprovements();
+        if (patternId && options.skill) {
+          await applyPatternToSkill(patternId, options.skill);
+        } else {
+          await applyImprovements();
+        }
       } catch (error) {
         printError((error as Error).message);
         process.exit(1);
@@ -772,6 +777,63 @@ async function generateReport(localOnly?: boolean): Promise<void> {
   await saveRetroState(projectRoot, state);
 
   console.log(colors.dim('\nNext: Review report and run "tsq retro apply" to complete'));
+}
+
+async function applyPatternToSkill(patternId: string, skillName: string): Promise<void> {
+  const projectRoot = await findProjectRoot();
+  if (!projectRoot) throw new Error('Not a TimSquad project');
+
+  // Find skill directory
+  const skillDir = path.join(projectRoot, '.claude', 'skills', skillName);
+  if (!await exists(skillDir)) {
+    throw new Error(`Skill "${skillName}" not found at ${skillDir}`);
+  }
+
+  const rulesDir = path.join(skillDir, 'rules');
+  await fs.ensureDir(rulesDir);
+
+  // Create rule file from pattern
+  const ruleFile = path.join(rulesDir, `${patternId}.md`);
+  if (await exists(ruleFile)) {
+    printWarning(`Rule file already exists: ${ruleFile}`);
+    return;
+  }
+
+  // Generate rule template
+  const content = [
+    '---',
+    `title: ${patternId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}`,
+    'impact: MEDIUM',
+    `tags: ${skillName}, retrospective, ${patternId}`,
+    '---',
+    '',
+    `# ${patternId}`,
+    '',
+    `Pattern applied from retrospective.`,
+    '',
+    '## Context',
+    '',
+    '<!-- Describe the problem this pattern addresses -->',
+    '',
+    '## Rule',
+    '',
+    '<!-- Describe the correct approach -->',
+    '',
+    '## Examples',
+    '',
+    '<!-- Add Incorrect/Correct examples -->',
+    '',
+  ].join('\n');
+
+  await fs.writeFile(ruleFile, content);
+
+  // Update SKILL.md resources if possible
+  const skillMd = path.join(skillDir, 'SKILL.md');
+  if (await exists(skillMd)) {
+    printSuccess(`Pattern "${patternId}" applied to skill "${skillName}"`);
+    console.log(colors.dim(`  Rule file: ${ruleFile}`));
+    console.log(colors.dim(`  Edit the generated template and update ${skillMd} Resources table`));
+  }
 }
 
 async function applyImprovements(): Promise<void> {

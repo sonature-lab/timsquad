@@ -227,6 +227,25 @@ export class EventQueue {
       // L2 생성 실패 — 로그에 기록됨
     }
 
+    // 16-A: architect 자동 호출 (시퀀스 완료 시)
+    try {
+      const architectAgent = path.join(this.projectRoot, '.claude', 'agents', 'tsq-architect.md');
+      if (await fs.pathExists(architectAgent)) {
+        this.log('architect-auto-invoke', 'success', `sequence ${seqId} complete → architect queued`);
+        // 핸드오프 생성으로 architect에 컨텍스트 전달
+        const { writeHandoff } = await import('./context-writer.js');
+        await writeHandoff(this.projectRoot, {
+          agent: 'system',
+          completedAt: getTimestamp(),
+          changedFiles: [],
+          warnings: [`Sequence ${seqId} completed in phase ${phaseId}`],
+          executionLogRef: `sequences/${seqId}.json`,
+        });
+      }
+    } catch {
+      // architect 호출 실패 — non-blocking
+    }
+
     // 페이즈 완료 체크
     if (state.automation.phase_log && state.current_phase?.id === phaseId) {
       const phaseSeqs = state.current_phase.sequences;

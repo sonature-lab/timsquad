@@ -146,6 +146,12 @@ export interface TimsquadConfig {
     required: string[];
     optional: string[];
   };
+  command_timeout?: {
+    default: number;    // seconds (default: 120)
+    test: number;       // seconds (default: 120)
+    build: number;      // seconds (default: 180)
+    e2e: number;        // seconds (default: 300)
+  };
 }
 
 /**

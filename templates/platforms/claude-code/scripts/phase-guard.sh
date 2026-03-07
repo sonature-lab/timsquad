@@ -55,7 +55,7 @@ fi
 PHASE=$(jq -r '.current // .current_phase // .phase // "unknown"' "$PHASE_FILE" 2>/dev/null)
 
 # Normalize file path (make relative to project root)
-REL_PATH="${FILE_PATH#$PROJECT_ROOT/}"
+REL_PATH="${FILE_PATH#"$PROJECT_ROOT"/}"
 
 # Phase enforcement rules
 case "$PHASE" in

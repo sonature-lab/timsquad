@@ -5,6 +5,8 @@ description: |
   {에이전트가 이 description만 보고 스킬 필요 여부를 판단함.}
 version: "1.0.0"
 tags: [{tag1}, {tag2}]
+depends_on: []
+conflicts_with: []
 user-invocable: false
 ---
 

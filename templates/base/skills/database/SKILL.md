@@ -11,6 +11,12 @@ user-invocable: false
 
 # Database Methodology
 
+## Resources
+
+| Priority | Type | Resource | Description |
+|----------|------|----------|-------------|
+| HIGH | rule | [supabase-patterns](rules/supabase-patterns.md) | JSONB, RLS, Edge Runtime, USE_MOCK, 커넥션 풀링 |
+
 ## 정규화 기준
 
 | 정규형 | 적용 기준 | 예외 허용 조건 |

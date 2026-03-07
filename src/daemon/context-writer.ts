@@ -50,3 +50,57 @@ export async function clearContext(projectRoot: string): Promise<void> {
 export function getContextPath(projectRoot: string): string {
   return path.join(projectRoot, CONTEXT_DIR, CONTEXT_FILE);
 }
+
+// ── Handoff Struct (9-A) ──
+
+const HANDOFF_DIR = '.timsquad/state/handoffs';
+
+export interface HandoffPayload {
+  agent: string;
+  completedAt: string;
+  changedFiles: string[];
+  testResults?: {
+    passed: number;
+    failed: number;
+    skipped: number;
+  };
+  warnings: string[];
+  executionLogRef?: string;
+}
+
+export async function writeHandoff(
+  projectRoot: string,
+  payload: HandoffPayload,
+): Promise<string> {
+  const dir = path.join(projectRoot, HANDOFF_DIR);
+  await fs.ensureDir(dir);
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const fileName = `${payload.agent}-${timestamp}.json`;
+  const filePath = path.join(dir, fileName);
+
+  await fs.writeJson(filePath, payload, { spaces: 2 });
+  return filePath;
+}
+
+export async function loadLatestHandoff(
+  projectRoot: string,
+  agent?: string,
+): Promise<HandoffPayload | null> {
+  const dir = path.join(projectRoot, HANDOFF_DIR);
+  if (!await fs.pathExists(dir)) return null;
+
+  const files = (await fs.readdir(dir))
+    .filter(f => f.endsWith('.json'))
+    .filter(f => !agent || f.startsWith(`${agent}-`))
+    .sort()
+    .reverse();
+
+  if (files.length === 0) return null;
+
+  try {
+    return await fs.readJson(path.join(dir, files[0]));
+  } catch {
+    return null;
+  }
+}

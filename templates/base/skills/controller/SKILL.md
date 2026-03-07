@@ -88,17 +88,7 @@ description: {description}
 
 ## Rationalization Prevention
 
-<rationalization-prevention>
-
-| 에이전트의 변명 | 현실 |
-|----------------|------|
-| "이 태스크는 간단해서 spec 없이 가능" | 간단함은 주관적. spec이 있으면 반드시 참조 |
-| "spec이 오래된 것 같아서 직접 판단" | spec 신선도는 controller가 판단. 주입받은 spec을 따를 것 |
-| "이미 비슷한 코드가 있으니 참고만 하면 됨" | 기존 코드가 spec과 일치하는지 알 수 없음. spec 기준 |
-| "테스트는 나중에 한번에 돌리는 게 효율적" | 각 태스크 완료 시 테스트 통과가 완료 조건 |
-| "사용자가 빨리 해달라고 했으니 절차 생략" | 절차는 품질 보장. 절차를 따르는 것이 결과적으로 빠름 |
-
-</rationalization-prevention>
+spec이 있으면 반드시 참조. spec 신선도는 controller가 판단. 각 태스크 완료 시 테스트 통과 필수. 절차 생략 불가.
 
 ## Delegation Method
 
@@ -107,6 +97,15 @@ description: {description}
   <unsupported>TeamCreate — SDK 레벨 제한으로 도구 실행 불가 (2026-03 확인). 사용 금지.</unsupported>
 </delegation-method>
 
+## P3 Workflow with QA
+
+P3 시퀀스: Developer(구현+테스트) → vitest 통과 → QA(L1 피드백) → L2 자동 생성.
+QA 진입 조건: developer completed + tests pass + build success.
+
+## Designer Activation
+
+활성: web-app, mobile-app (항상), web-service/fintech/platform (UI 존재 시). 비활성: api-backend, infra.
+
 ## Checklist
 
 | Priority | Item |
@@ -114,6 +113,7 @@ description: {description}
 | CRITICAL | 서브에이전트 위임 전 spec resolve 완료 |
 | CRITICAL | compiled spec의 stale 여부 확인 |
 | CRITICAL | Task() 사용 (TeamCreate 사용 금지) |
+| HIGH | P3 시퀀스 시 QA 스텝 포함 확인 |
 | HIGH | phase 제약이 프롬프트에 포함됨 |
 | HIGH | tsq-protocol이 프롬프트에 포함됨 |
 | MEDIUM | 태스크에 관련된 섹션만 선별 주입 (전체 주입 지양) |

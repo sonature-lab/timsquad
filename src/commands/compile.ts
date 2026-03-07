@@ -15,7 +15,9 @@ import {
   compileAll,
   checkStale,
   validateDependencyGraph,
+  validateSkillDependencies,
   type CompileResult,
+  type SkillDependencyIssue,
 } from '../lib/compiler.js';
 
 export function registerCompileCommand(program: Command): void {
@@ -120,10 +122,17 @@ async function runCompile(): Promise<void> {
   const unresolved = await validateDependencyGraph(projectRoot, controllerDir);
   printDependencyResult(unresolved);
 
-  if (result.success && unresolved.length === 0) {
+  // Skill dependency validation (7-A)
+  const skillIssues = await validateSkillDependencies(projectRoot);
+  if (skillIssues.length > 0) {
+    printSkillDependencyResult(skillIssues);
+  }
+
+  const totalIssues = unresolved.length + skillIssues.length;
+  if (result.success && totalIssues === 0) {
     printSuccess(`컴파일 완료 — ${result.compiled.length}개 문서, ${countOutputFiles(result)}개 spec 생성`);
   } else if (result.success) {
-    printWarning(`컴파일 완료 (의존성 미해결 ${unresolved.length}건)`);
+    printWarning(`컴파일 완료 (이슈 ${totalIssues}건)`);
   } else {
     printError(`컴파일 실패 — ${result.errors.length}건 오류`);
   }
@@ -287,6 +296,19 @@ function printDependencyResult(
         `  ${colors.agent(u.agent)} → 누락: ${u.missing.map((m) => colors.path(m)).join(', ')}`,
       );
     }
+  }
+  console.log();
+}
+
+function printSkillDependencyResult(issues: SkillDependencyIssue[]): void {
+  printWarning('스킬 의존성 이슈:');
+  for (const issue of issues) {
+    const typeLabel = issue.type === 'missing_dependency' ? '누락'
+      : issue.type === 'circular' ? '순환'
+      : '충돌';
+    console.log(
+      `  ${colors.warning('⚠')} ${colors.path(issue.skill)} → ${typeLabel}: ${issue.target}`,
+    );
   }
   console.log();
 }

@@ -555,3 +555,79 @@ export async function validateDependencyGraph(
 
   return unresolved;
 }
+
+/**
+ * Validate skill dependency graph (7-A).
+ * Checks depends_on/conflicts_with in SKILL.md frontmatter.
+ */
+export interface SkillDependencyIssue {
+  skill: string;
+  type: 'missing_dependency' | 'circular' | 'conflict_active';
+  target: string;
+}
+
+export async function validateSkillDependencies(
+  projectRoot: string,
+): Promise<SkillDependencyIssue[]> {
+  const skillsDir = path.join(projectRoot, '.claude', 'skills');
+  const issues: SkillDependencyIssue[] = [];
+
+  if (!await exists(skillsDir)) return issues;
+
+  const entries = await fs.readdir(skillsDir, { withFileTypes: true });
+  const skillDirs = entries.filter(e => e.isDirectory()).map(e => e.name);
+  const availableSkills = new Set(skillDirs);
+
+  const depsMap = new Map<string, string[]>();
+
+  for (const skillName of skillDirs) {
+    const skillFile = path.join(skillsDir, skillName, 'SKILL.md');
+    if (!await exists(skillFile)) continue;
+
+    const content = await readFile(skillFile);
+    const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+    if (!fmMatch) continue;
+
+    const fm = fmMatch[1];
+
+    // Parse depends_on
+    const depsMatch = fm.match(/^depends_on:\s*\[([^\]]*)\]/m);
+    const deps = depsMatch
+      ? depsMatch[1].split(',').map(s => s.trim().replace(/['"]/g, '')).filter(Boolean)
+      : [];
+    depsMap.set(skillName, deps);
+
+    for (const dep of deps) {
+      if (!availableSkills.has(dep)) {
+        issues.push({ skill: skillName, type: 'missing_dependency', target: dep });
+      }
+    }
+
+    // Parse conflicts_with
+    const conflictsMatch = fm.match(/^conflicts_with:\s*\[([^\]]*)\]/m);
+    const conflicts = conflictsMatch
+      ? conflictsMatch[1].split(',').map(s => s.trim().replace(/['"]/g, '')).filter(Boolean)
+      : [];
+
+    for (const conflict of conflicts) {
+      if (availableSkills.has(conflict)) {
+        issues.push({ skill: skillName, type: 'conflict_active', target: conflict });
+      }
+    }
+  }
+
+  // Check circular dependencies
+  for (const [skill, deps] of depsMap) {
+    for (const dep of deps) {
+      const depDeps = depsMap.get(dep) || [];
+      if (depDeps.includes(skill)) {
+        // Only report once (alphabetical order)
+        if (skill < dep) {
+          issues.push({ skill, type: 'circular', target: dep });
+        }
+      }
+    }
+  }
+
+  return issues;
+}
