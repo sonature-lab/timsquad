@@ -1,6 +1,11 @@
 {
-  "threshold": 4,
+  "threshold": 2,
   "rules": [
+    {
+      "skill": "main-session-constraints",
+      "keywords": ["요구사항", "분석", "계획", "위임", "스프린트", "pm", "관리"],
+      "patterns": ["(plan|analyze|delegate|manage).*?(task|project|sprint)"]
+    },
     {
       "skill": "mobile/flutter",
       "keywords": ["flutter", "widget", "riverpod", "stateless", "stateful", "플러터"],
@@ -80,6 +85,11 @@
       "skill": "planning",
       "keywords": ["prd", "requirements", "specification", "기획", "요구사항"],
       "patterns": ["(write|create|draft).*?(prd|spec|requirement)"]
+    },
+    {
+      "skill": "tsq-cli",
+      "keywords": ["tsq", "cli", "커맨드", "init", "status"],
+      "patterns": ["tsq\\s+(init|status|log|wf|mi|audit|knowledge)"]
     }
   ]
 }

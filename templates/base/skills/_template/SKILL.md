@@ -20,14 +20,32 @@ user-invocable: false
 - {핵심 원칙 2}
 - {핵심 원칙 3}
 
+## Contract
+
+- **Trigger**: {스킬 활성화 조건}
+- **Input**: {필요한 입력/컨텍스트}
+- **Output**: {보장하는 출력/결과}
+- **Error**: {실패 시 행동}
+- **Dependencies**: {depends_on 스킬 목록 또는 "없음"}
+
+## Protocol
+
+1. {첫 번째 단계}
+2. {두 번째 단계}
+3. {세 번째 단계}
+
+## Verification
+
+| Check | Command | Pass Criteria |
+|-------|---------|---------------|
+| {항목} | `{실행 명령}` | exit code 0 |
+
 ## Resources
 
 | Priority | Type | Resource | Description |
 |----------|------|----------|-------------|
 | CRITICAL | rule | [{rule-name}](rules/{rule-name}.md) | {1줄 설명} |
-| HIGH | rule | [{rule-name}](rules/{rule-name}.md) | {1줄 설명} |
 | HIGH | ref | [{topic}](references/{topic}.md) | {1줄 설명} |
-| MEDIUM | script | [{script}](scripts/{script}.sh) | {1줄 설명} |
 
 ## Quick Rules
 
@@ -35,21 +53,12 @@ user-invocable: false
 - {규칙}
 - {규칙}
 
-### {카테고리 2}
-- {규칙}
-- {규칙}
-
-## Checklist
-
-| Priority | Item |
-|----------|------|
-| CRITICAL | {필수 확인 항목} |
-| HIGH | {중요 확인 항목} |
-| MEDIUM | {권장 확인 항목} |
-
 <!--
 스킬 작성 가이드:
 - SKILL.md는 120줄 이하 인덱스 (항상 로드됨 → 컨텍스트 절약)
+- 필수 섹션: Philosophy, Contract, Protocol, Verification, Quick Rules
+- 선택 섹션: Resources (rules/references/scripts 있을 때)
+- Checklist는 Verification으로 통합 (중복 제거)
 - 하위 디렉토리 3종:
   - rules/   → "이렇게 해라/하지 마라" (Incorrect/Correct 패턴, impact 레벨)
   - references/ → "이것을 알아라" (심층 가이드, 외부 문서)

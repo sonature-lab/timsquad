@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/scripts/skill-suggest.sh",
+            "command": "bash .claude/scripts/skill-inject.sh",
             "timeout": 5
           }
         ]
@@ -50,6 +50,11 @@
             "type": "command",
             "command": "tsq daemon notify subagent-start 2>/dev/null || true",
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/subagent-inject.sh",
+            "timeout": 5
           }
         ]
       }
@@ -71,6 +76,16 @@
           {
             "type": "command",
             "command": "tsq daemon start 2>/dev/null || true",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/context-restore.sh",
             "timeout": 5
           }
         ]
@@ -115,6 +130,17 @@
             "type": "command",
             "command": "bash .claude/scripts/build-gate.sh",
             "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/pre-compact.sh",
+            "timeout": 5
           }
         ]
       }

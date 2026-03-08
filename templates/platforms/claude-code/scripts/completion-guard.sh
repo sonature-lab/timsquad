@@ -79,15 +79,47 @@ if [ -f "$NOTES_FILE" ]; then
   fi
 fi
 
-# ── 4. Combine and output ──
+# ── 4. Skill Verification reminder (max 3 skills) ──
+VERIFICATION=""
+SKILLS_DIR="$PROJECT_ROOT/.claude/skills"
+if [ -d "$SKILLS_DIR" ]; then
+  SKILL_COUNT=0
+  for SKILL_DIR in "$SKILLS_DIR"/*/; do
+    [ "$SKILL_COUNT" -ge 3 ] && break
+    SKILL_FILE="$SKILL_DIR/SKILL.md"
+    [ ! -f "$SKILL_FILE" ] && continue
+
+    SKILL_NAME=$(basename "$SKILL_DIR")
+    # Skip non-active/template skills
+    case "$SKILL_NAME" in _template|tsq-cli|main-session-constraints) continue ;; esac
+
+    # Extract Verification section (2 lines max)
+    CHECKS=$(awk '/^## Verification/{capture=1; next} /^## /{capture=0} capture && /\|.*\|.*\|/ && !/Check.*Command/' "$SKILL_FILE" 2>/dev/null | head -2)
+    if [ -n "$CHECKS" ]; then
+      VERIFICATION="$VERIFICATION
+[Skill Verification] $SKILL_NAME: $CHECKS"
+      SKILL_COUNT=$((SKILL_COUNT + 1))
+    fi
+  done
+fi
+
+# ── 5. Combine and output ──
 # BLOCK_REASON이 있으면 decision:block으로 강제 속행 (세션 컨텍스트 포함)
 if [ -n "$BLOCK_REASON" ]; then
   FULL_REASON="$BLOCK_REASON"
-  [ -n "$SESSION_CTX" ] && FULL_REASON="$BLOCK_REASON
+  [ -n "$SESSION_CTX" ] && FULL_REASON="$FULL_REASON
 $SESSION_CTX"
+  [ -n "$VERIFICATION" ] && FULL_REASON="$FULL_REASON
+$VERIFICATION"
   jq -n --arg reason "$FULL_REASON" '{"decision": "block", "reason": $reason}'
-elif [ -n "$SESSION_CTX" ]; then
-  jq -n --arg msg "$SESSION_CTX" '{"systemMessage": $msg}'
+elif [ -n "$SESSION_CTX" ] || [ -n "$VERIFICATION" ]; then
+  FULL_MSG=""
+  [ -n "$SESSION_CTX" ] && FULL_MSG="$SESSION_CTX"
+  if [ -n "$VERIFICATION" ]; then
+    [ -n "$FULL_MSG" ] && FULL_MSG="$FULL_MSG
+$VERIFICATION" || FULL_MSG="$VERIFICATION"
+  fi
+  jq -n --arg msg "$FULL_MSG" '{"systemMessage": $msg}'
 else
   echo '{}'
 fi

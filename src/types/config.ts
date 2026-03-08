@@ -212,6 +212,8 @@ export const BASE_SKILLS: string[] = [
   'coding', 'testing', 'typescript',
   'planning', 'architecture',
   'retrospective', 'prompt-engineering',
+  'tsq-cli', 'spec', 'audit', 'review',
+  'main-session-constraints',
 ];
 
 /**
