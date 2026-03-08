@@ -1,6 +1,8 @@
 ---
 name: typescript
-description: TypeScript 개발 가이드라인
+description: |
+  TypeScript 개발 가이드라인. strict 모드, 타입 패턴, Zod 검증, Branded Types.
+  Use when: .ts/.tsx 파일 작성·수정, tsconfig 설정, 타입 안전성 이슈, any 제거, 외부 입력 검증 시.
 version: "1.0.0"
 tags: [typescript, types, strict]
 user-invocable: false
@@ -53,14 +55,6 @@ user-invocable: false
 - 타입 단언 남용 (`as Type`)
 - `@ts-ignore`, `@ts-expect-error` 남용
 - `!` non-null assertion 남용
-
-## Checklist
-- [ ] strict 모드 활성화
-- [ ] any 타입 없음
-- [ ] 함수 반환 타입 명시
-- [ ] 외부 입력 Zod 검증
-- [ ] Discriminated Union으로 상태 표현
-- [ ] Branded Types로 ID 구분
 
 ## 참조
 - `rules/type-patterns.md` — 각 패턴의 코드 예시

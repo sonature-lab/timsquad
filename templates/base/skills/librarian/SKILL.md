@@ -3,6 +3,7 @@ name: librarian
 description: |
   Phase 종합 기록, SSOT 상태 갱신, 문서 작성 전담 스킬.
   Phase 완료 시 controller가 호출하여 종합 리포트를 생성한다.
+  Use when: Phase 완료 후 기록, 리포트 작성, SSOT 상태 점검, 문서 갱신, 로그 정리 시.
 version: "1.0.0"
 tags: [librarian, recording, documentation, phase-report]
 depends_on: [tsq-protocol]

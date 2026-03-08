@@ -54,11 +54,6 @@ user-invocable: false
 
 ## Quick Rules
 
-### TDD Cycle
-1. **Red** — 실패하는 테스트 작성
-2. **Green** — 통과하는 최소 코드
-3. **Refactor** — 정리 (테스트 유지)
-
 ### Test Naming
 - 형식: `should {expected behavior} when {condition}`
 - Bad: `test getUser`, `works correctly`

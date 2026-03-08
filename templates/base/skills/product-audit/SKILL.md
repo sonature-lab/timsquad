@@ -4,6 +4,7 @@ description: |
   제품 감사(Product Audit) 스킬. 프로젝트의 품질, 보안, 성능, 접근성을 체계적으로 평가한다.
   tsq audit CLI와 연동하여 FP Registry, source 추적, 재감사 diff를 지원한다.
   Phase A(계획) -> B(실행) -> C(리포트) -> D(Remediation) 4단계 프로세스.
+  Use when: Phase gate 전 품질 확인, 보안 감사, 성능 리뷰, 접근성 점검, 릴리스 전 최종 검증 시.
 version: "1.0.0"
 tags: [audit, quality, security, performance]
 depends_on: [coding, testing, security]
