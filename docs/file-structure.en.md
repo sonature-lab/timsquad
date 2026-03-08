@@ -2,44 +2,84 @@
 
 # File Structure
 
-> Document separated from PRD Section 8
+> Document separated from PRD Section 8. As of v3.5.
 
 ## Template Structure
 
 ```
 /timsquad
 ├── /templates
-│   ├── /common
-│   │   ├── CLAUDE.md.template           # Project CLAUDE.md template
-│   │   ├── config.template.yaml         # TimSquad configuration template
+│   ├── /base                              # Platform-agnostic common templates
+│   │   ├── CLAUDE.md.template             # PM role definition template
+│   │   ├── config.template.yaml           # TimSquad config template
 │   │   │
-│   │   ├── /claude                      # → Copied to .claude/
-│   │   │   ├── /agents                  # Agent definitions (Markdown)
-│   │   │   │   ├── tsq-planner.md
-│   │   │   │   ├── tsq-developer.md
-│   │   │   │   ├── tsq-qa.md
-│   │   │   │   ├── tsq-security.md
-│   │   │   │   ├── tsq-dba.md
-│   │   │   │   ├── tsq-designer.md
-│   │   │   │   ├── tsq-prompter.md
-│   │   │   │   └── tsq-retro.md
-│   │   │   │
-│   │   │   └── /skills                  # Skill definitions (SKILL.md)
-│   │   │       ├── coding/
-│   │   │       ├── testing/
-│   │   │       ├── architecture/
-│   │   │       ├── planning/
-│   │   │       ├── database/
-│   │   │       ├── security/
-│   │   │       ├── ui-ux/
-│   │   │       ├── retrospective/
-│   │   │       └── methodology/
-│   │   │           ├── tdd/
-│   │   │           ├── bdd/
-│   │   │           └── ddd/
+│   │   ├── /agents                        # Agent definitions
+│   │   │   ├── /base                      # Base agents (7)
+│   │   │   │   ├── tsq-architect.md       # Architecture design
+│   │   │   │   ├── tsq-developer.md       # Code implementation
+│   │   │   │   ├── tsq-qa.md              # Verification/review
+│   │   │   │   ├── tsq-security.md        # Security audit
+│   │   │   │   ├── tsq-dba.md             # DB design
+│   │   │   │   ├── tsq-designer.md        # UI/UX design
+│   │   │   │   └── tsq-librarian.md       # Phase recording specialist
+│   │   │   └── /overlays                  # Agent overlays
+│   │   │       ├── /platform              # Platform-specific overlays
+│   │   │       └── /domain                # Domain-specific overlays
 │   │   │
-│   │   └── /timsquad                    # → Copied to .timsquad/
-│   │       ├── /ssot                    # SSOT document templates
+│   │   ├── /skills                        # Domain-specific skillsets
+│   │   │   ├── _template/                 # Skill creation template
+│   │   │   ├── _shared/                   # Shared references
+│   │   │   ├── tsq-protocol/              # Agent common protocol
+│   │   │   ├── tsq-cli/                   # TSQ CLI usage
+│   │   │   ├── main-session-constraints/  # Main session constraints
+│   │   │   ├── controller/                # Context DI controller
+│   │   │   │   ├── rules/
+│   │   │   │   ├── triggers/
+│   │   │   │   ├── delegation/
+│   │   │   │   ├── memory/
+│   │   │   │   └── references/
+│   │   │   ├── coding/                    # Coding rules + rules/
+│   │   │   ├── testing/                   # Test strategies + references/
+│   │   │   ├── typescript/                # TypeScript patterns + rules/
+│   │   │   ├── architecture/              # Architecture design + references/
+│   │   │   ├── planning/                  # Planning + references/
+│   │   │   ├── security/                  # Security + rules/ + scripts/
+│   │   │   ├── database/                  # DB design + rules/
+│   │   │   │   └── prisma/               # Prisma ORM
+│   │   │   ├── frontend/                  # Frontend
+│   │   │   │   ├── react/                # React
+│   │   │   │   └── nextjs/              # Next.js + 22 Vercel rules
+│   │   │   ├── backend/node/              # Node.js backend
+│   │   │   ├── mobile/                    # Mobile
+│   │   │   │   ├── dart/                 # Dart language + rules/
+│   │   │   │   └── flutter/              # Flutter dev + rules/ + refs/
+│   │   │   │       └── push-notifications/ # FCM + local + background
+│   │   │   ├── product-audit/             # Product audit (7 areas, 156 items)
+│   │   │   │   ├── rules/                # audit-protocol, scoring, FP guard
+│   │   │   │   ├── checklists/           # 01-security ~ 07-functional
+│   │   │   │   └── templates/            # Report + improvement plan
+│   │   │   ├── audit/                     # Audit execution skill
+│   │   │   ├── review/                    # Code review skill
+│   │   │   ├── spec/                      # Spec writing skill
+│   │   │   ├── librarian/                 # Librarian skill
+│   │   │   ├── prompt-engineering/        # Prompt optimization
+│   │   │   ├── retrospective/             # Retrospective + references/
+│   │   │   ├── ui-design/                 # UI design
+│   │   │   ├── stability-verification/    # Stability verification + scripts/
+│   │   │   └── methodology/               # Development methodology
+│   │   │       ├── tdd/
+│   │   │       ├── bdd/
+│   │   │       ├── ddd/
+│   │   │       └── debugging/
+│   │   │
+│   │   ├── /knowledge                     # Agent reference knowledge
+│   │   │   ├── /checklists                # Security, accessibility, SSOT validation
+│   │   │   ├── /templates                 # Output formats (task-result, etc.)
+│   │   │   ├── /platforms                 # Platform-specific knowledge
+│   │   │   └── /domains                   # Domain-specific knowledge
+│   │   │
+│   │   └── /timsquad                      # → Copied to .timsquad/
+│   │       ├── /ssot                      # SSOT document templates
 │   │       │   ├── prd.template.md
 │   │       │   ├── planning.template.md
 │   │       │   ├── requirements.template.md
@@ -47,96 +87,101 @@
 │   │       │   ├── data-design.template.md
 │   │       │   ├── test-spec.template.md
 │   │       │   └── adr/
-│   │       │
-│   │       ├── /generators              # Document generators (XML)
-│   │       │   ├── prd.xml              # PRD generator
-│   │       │   ├── requirements.xml     # Requirements generator
-│   │       │   ├── service-spec.xml     # API spec generator
-│   │       │   └── data-design.xml      # Data design generator
-│   │       │
-│   │       ├── /process                 # Process definitions
-│   │       │   ├── workflow-base.xml
-│   │       │   ├── validation-rules.xml
-│   │       │   └── state-machine.xml
-│   │       │
-│   │       ├── /constraints             # Constraints
-│   │       │   ├── ssot-schema.xml
-│   │       │   └── competency-framework.xml
-│   │       │
-│   │       ├── /feedback                # Feedback routing
-│   │       │   └── routing-rules.yaml
-│   │       │
-│   │       ├── /retrospective           # Retrospective system
-│   │       │   ├── cycle-report.template.md
-│   │       │   ├── metrics-schema.json
-│   │       │   └── patterns/
-│   │       │
-│   │       ├── /logs                    # Log templates
-│   │       │   ├── _template.md
-│   │       │   └── _example.md
-│   │       │
-│   │       └── /state                   # State management
-│   │           └── workspace.xml
+│   │       ├── /architectures             # Architecture pattern templates
+│   │       │   ├── clean/
+│   │       │   ├── hexagonal/
+│   │       │   └── fsd/
+│   │       ├── /generators                # Document generators (XML)
+│   │       ├── /process                   # Workflow definitions
+│   │       ├── /constraints               # Constraints
+│   │       ├── /feedback                  # Feedback routing
+│   │       ├── /retrospective             # Retrospective system
+│   │       ├── /patterns                  # Success/failure patterns
+│   │       ├── /logs                      # Log templates
+│   │       └── /state                     # State management
 │   │
-│   ├── /web-service
-│   │   ├── /process
-│   │   └── config.yaml
+│   ├── /platforms                         # Platform-specific extensions
+│   │   └── /claude-code
+│   │       ├── /rules                     # Path-specific rules (.claude/rules/)
+│   │       └── /scripts                   # Hook scripts
+│   │           ├── skill-inject.sh        # Auto skill injection
+│   │           ├── completion-guard.sh    # Completion verification
+│   │           ├── build-gate.sh          # Build gate
+│   │           ├── phase-guard.sh         # Phase file constraints
+│   │           ├── safe-guard.sh          # Destructive command blocking
+│   │           └── e2e-marker.sh          # E2E result marker
 │   │
-│   ├── /fintech
-│   │   ├── /process
-│   │   └── config.yaml                  # consensus: always
+│   ├── /project-types                     # Project type-specific config
+│   │   ├── web-service/                   # SaaS, full-stack
+│   │   ├── web-app/                       # BaaS-based
+│   │   ├── api-backend/                   # API servers + agents/
+│   │   ├── platform/                      # Frameworks/SDKs + agents/
+│   │   ├── fintech/                       # Exchange/payment (Level 3 enforced)
+│   │   ├── mobile-app/                    # Mobile apps
+│   │   └── infra/                         # DevOps + agents/
 │   │
-│   └── /...
+│   └── /domains                           # Domain overlays (excluded from npm)
 │
-├── /scripts
-│   ├── init.sh                          # tsq init
-│   ├── log.sh                           # tsq log
-│   ├── status.sh                        # tsq status
-│   ├── retro.sh                         # tsq retro
-│   └── feedback.sh                      # tsq feedback
+├── /src                                   # CLI source code
+│   ├── index.ts                           # Entry point
+│   ├── /commands                          # CLI commands
+│   ├── /daemon                            # Background daemon
+│   ├── /lib                               # Core library
+│   ├── /types                             # TypeScript types
+│   └── /utils                             # Utilities
 │
-├── /install
-│   └── install.sh                       # Installation script
+├── /tests                                 # Tests (vitest)
+│   ├── /unit
+│   ├── /integration
+│   └── /e2e
 │
-└── /cli
-    └── index.js
+└── /docs                                  # Design documents
 ```
 
 ## Post-Initialization Project Structure
 
+After running `tsq init -t web-service -l 2`:
+
 ```
 /my-project
-├── CLAUDE.md                            # Project context (PM role definition)
+├── CLAUDE.md                              # PM role definition (agent instructions)
 │
-├── /.claude                             # Claude Code native structure
-│   ├── /agents                          # Agent definitions
-│   │   ├── tsq-planner.md               # Planning/design
-│   │   ├── tsq-developer.md             # Implementation
-│   │   ├── tsq-qa.md                    # Verification/review
-│   │   ├── tsq-security.md              # Security
-│   │   ├── tsq-dba.md                   # DB design
-│   │   ├── tsq-designer.md              # UI/UX design
-│   │   ├── tsq-prompter.md              # Prompt optimization
-│   │   └── tsq-retro.md                 # Retrospective analysis
+├── /.claude                               # Claude Code native structure
+│   ├── settings.json                      # Claude Code settings (hooks included)
+│   ├── /rules                             # Path-specific rules (platforms/claude-code/)
+│   ├── /agents                            # 7 specialized agents
+│   │   ├── tsq-architect.md               # Architecture design (Sonnet)
+│   │   ├── tsq-developer.md               # Code implementation (Sonnet)
+│   │   ├── tsq-qa.md                      # Verification/review (Sonnet)
+│   │   ├── tsq-security.md                # Security audit (Sonnet)
+│   │   ├── tsq-dba.md                     # DB design (Sonnet)
+│   │   ├── tsq-designer.md                # UI/UX design (Sonnet)
+│   │   └── tsq-librarian.md               # Phase recording specialist (Sonnet)
 │   │
-│   └── /skills                          # Skill files
-│       ├── coding/SKILL.md
-│       ├── testing/SKILL.md
-│       ├── architecture/SKILL.md
-│       ├── planning/SKILL.md
-│       ├── database/SKILL.md
-│       ├── security/SKILL.md
-│       ├── ui-ux/SKILL.md
-│       ├── retrospective/SKILL.md
-│       └── methodology/
-│           ├── tdd/SKILL.md
-│           ├── bdd/SKILL.md
-│           └── ddd/SKILL.md
+│   ├── /skills                            # Domain skillsets (selected by project type)
+│   │   ├── tsq-protocol/                  # Agent common protocol
+│   │   ├── controller/                    # Context DI + SSOT injection
+│   │   ├── coding/                        # Coding rules + rules/
+│   │   ├── testing/                       # Test strategies + references/
+│   │   ├── typescript/                    # TypeScript patterns + rules/
+│   │   ├── frontend/(react|nextjs)/       # Frontend + Vercel rules
+│   │   ├── backend/node/                  # Node.js backend
+│   │   ├── database/                      # DB design + rules/
+│   │   ├── product-audit/                 # Product audit (7 areas, 156 items)
+│   │   │   ├── rules/                     # Audit protocol, scoring, FP guard
+│   │   │   ├── checklists/               # 01-security ~ 07-functional
+│   │   │   └── templates/                # Report + improvement plan
+│   │   ├── methodology/(tdd|bdd)/         # Selected methodology
+│   │   └── ...                            # Others (per config)
+│   │
+│   └── /knowledge                         # Agent reference knowledge
+│       ├── /checklists                    # Security, accessibility, SSOT validation
+│       └── /templates                     # Output formats (task-result, etc.)
 │
-└── /.timsquad                           # TimSquad dedicated structure
-    ├── config.yaml                      # Project settings (name, type, level + v4.0: domain, platform, stack)
+└── /.timsquad                             # TimSquad dedicated structure
+    ├── config.yaml                        # Project settings (name, type, level, domain, stack)
     │
-    ├── /ssot                            # SSOT documents
+    ├── /ssot                              # SSOT documents (5-14 per level)
     │   ├── prd.md
     │   ├── planning.md
     │   ├── requirements.md
@@ -149,41 +194,26 @@
     │   └── /adr
     │       └── ADR-000-template.md
     │
-    ├── /generators                      # Document generators (XML)
-    │   ├── prd.xml
-    │   ├── requirements.xml
-    │   ├── service-spec.xml
-    │   └── data-design.xml
+    ├── /process                           # Workflow definitions
+    │   ├── workflow.xml
+    │   └── phase-checklist.yaml
     │
-    ├── /process                         # Process definitions
-    │   ├── workflow-base.xml
-    │   ├── validation-rules.xml
-    │   └── state-machine.xml
-    │
-    ├── /constraints                     # Constraints
+    ├── /constraints                       # Constraints
     │   ├── ssot-schema.xml
     │   └── competency-framework.xml
     │
-    ├── /state                           # Current state
+    ├── /state                             # State management
     │   ├── current-phase.json
-    │   └── workspace.xml
+    │   └── /meta-index                    # Code/UI structure index
     │
-    ├── /knowledge                       # Project knowledge
-    │   ├── tribal.md
-    │   ├── lessons.md
-    │   └── constraints.md
-    │
-    ├── /feedback                        # Feedback system
+    ├── /feedback                          # Feedback store
     │   └── routing-rules.yaml
     │
-    ├── /retrospective                   # Retrospective system
-    │   ├── /cycles                      # Per-cycle reports
-    │   ├── /metrics                     # Metrics data
-    │   ├── /patterns                    # Success/failure patterns
-    │   └── /improvements                # Improvement history
-    │       ├── /prompts
-    │       └── /templates
+    ├── /retrospective                     # Retrospective data
+    │   ├── /cycles
+    │   ├── /metrics
+    │   ├── /patterns
+    │   └── /improvements
     │
-    └── /logs                            # Work logs
-        └── _template.md
+    └── /logs                              # 3-tier logs (L1→L2→L3)
 ```

@@ -88,6 +88,10 @@ my-app/
 │   │   ├── mobile/dart/             # Dart language + rules/
 │   │   ├── mobile/flutter/          # Flutter dev + rules/ + refs/
 │   │   │   └── push-notifications/  # FCM + local + background
+│   │   ├── product-audit/            # Product audit (7 areas, 156 items)
+│   │   │   ├── rules/               # Protocol, scoring, FP guard
+│   │   │   ├── checklists/           # Security ~ Functional (7)
+│   │   │   └── templates/            # Report + improvement plan
 │   │   ├── methodology/(tdd|bdd|ddd|debugging)/
 │   │   └── ...
 │   └── knowledge/                 # Agent reference knowledge

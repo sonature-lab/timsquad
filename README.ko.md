@@ -88,6 +88,10 @@ my-app/
 │   │   ├── mobile/dart/             # Dart 언어 + rules/
 │   │   ├── mobile/flutter/          # Flutter 개발 + rules/ + refs/
 │   │   │   └── push-notifications/  # FCM + 로컬 알림 + 백그라운드
+│   │   ├── product-audit/            # 제품 감사 (7개 영역, 156개 항목)
+│   │   │   ├── rules/               # 감사 프로토콜, 스코어링, FP 가드
+│   │   │   ├── checklists/           # Security ~ Functional (7개)
+│   │   │   └── templates/            # 보고서 + 개선 계획 양식
 │   │   ├── methodology/(tdd|bdd|ddd|debugging)/
 │   │   └── ...
 │   └── knowledge/                 # 에이전트 참조 지식

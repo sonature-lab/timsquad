@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **product-audit 스킬 v2.0 전면 재설계**: 최신 표준 기반 통합 제품 감사 스킬
+  - 6단계 사이클: Plan → Audit → Report → Remediation Plan → Fix → Re-audit
+  - 7개 감사 영역: Security, Performance, SEO, Accessibility, UI/UX, Architecture & DB, Functional & Requirements
+  - 정량 스코어링: 영역별 가중 평균 + 등급(A-F) + gate 기준
+  - 프로젝트 타입별 가중치 프리셋: Web Service, Fintech, E-commerce, Internal Tool
+  - 156개 체크리스트 항목 (최신 표준 반영)
+  - 12개 리소스 파일: rules/ 3개 + checklists/ 7개 + templates/ 2개
+  - 반영 표준: OWASP Top 10:2025, ASVS v5.0, CWE Top 25 2025, CVSS 4.0, Core Web Vitals 2026, Lighthouse v12, WCAG 2.2 AA, EAA 2025, ISO 25010:2023, SLSA v1.2
+
+### Changed
+- **스킬 품질 개선** (Anthropic skill-creator 가이드라인 기반)
+  - prompt-engineering: XML → Markdown, 104줄 → 84줄
+  - retrospective: improvement-format → references/ 분리, 102줄 → 77줄
+  - typescript: "Use when:" 트리거 추가, 중복 Checklist 제거
+  - testing: 중복 TDD Cycle 제거
+  - database: query optimization → rules/ 분리
+  - product-audit, librarian: "Use when:" 트리거 추가
+
+---
+
 ## [3.5.0] - 2026-02-23
 
 ### Fixed
