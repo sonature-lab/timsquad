@@ -59,11 +59,16 @@ user-invocable: false
 - 필수 섹션: Philosophy, Contract, Protocol, Verification, Quick Rules
 - 선택 섹션: Resources (rules/references/scripts 있을 때)
 - Checklist는 Verification으로 통합 (중복 제거)
-- 하위 디렉토리 3종:
-  - rules/   → "이렇게 해라/하지 마라" (Incorrect/Correct 패턴, impact 레벨)
+- 하위 디렉토리 4종:
+  - rules/      → "이렇게 해라/하지 마라" (Incorrect/Correct 패턴, impact 레벨)
   - references/ → "이것을 알아라" (심층 가이드, 외부 문서)
-  - scripts/   → "이것을 실행해라" (자동화, 검증, 생성)
+  - scripts/    → "이것을 실행해라" (자동화, 검증, 생성)
+  - memory/     → "프로젝트에서 결정된 것" (동적, 프로젝트 진행 중 축적)
 - rules/는 Read로 온디맨드 로드, scripts/는 Bash로 실행 (토큰 0)
+- memory/는 스킬 활성 시 Protocol 첫 단계에서 반드시 Read
+  - 프로젝트별 결정사항, 사용자 지시, 컨벤션 축적
+  - git 추적 가능 → 팀 공유
+  - 예: memory/conventions.md, memory/decisions.md
 - "Claude가 이미 아는 것"은 넣지 말 것 → 프로젝트 컨벤션만
 - description은 PRIMARY trigger — 1024자 이하
 - 참조 모델: vercel-react-best-practices (SKILL.md 인덱스 + 45 rules 파일)

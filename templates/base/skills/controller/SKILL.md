@@ -31,12 +31,13 @@ user-invocable: false
 
 ## Protocol
 
-1. **에이전트 파일 확인**: `.claude/agents/{agent}.md` 읽기
-2. **Prerequisites 파싱**: `<prerequisites>` 태그에서 SSOT 목록 추출
-3. **Spec Resolve**: `references/`에서 해당 compiled spec 로드
-4. **Stale 체크**: `.compile-manifest.json` hash 비교
-5. **프롬프트 조합**: tsq-protocol + specs + phase 제약 + 지시
-6. **Task() 호출**: 조합된 프롬프트로 서브에이전트 실행
+1. **Memory 참조**: `memory/` 디렉토리의 모든 .md 파일을 Read (프로젝트 결정사항)
+2. **에이전트 파일 확인**: `.claude/agents/{agent}.md` 읽기
+3. **Prerequisites 파싱**: `<prerequisites>` 태그에서 SSOT 목록 추출
+4. **Spec Resolve**: `references/`에서 해당 compiled spec 로드
+5. **Stale 체크**: `.compile-manifest.json` hash 비교
+6. **프롬프트 조합**: tsq-protocol + memory + specs + phase 제약 + 지시
+7. **Task() 호출**: 조합된 프롬프트로 서브에이전트 실행
 
 ## Verification
 

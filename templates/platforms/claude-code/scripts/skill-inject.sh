@@ -129,7 +129,25 @@ for idx in $SORTED_INDICES; do
     continue
   fi
 
+  # Append memory/ contents if exists (project-specific decisions)
+  MEMORY_DIR="$PROJECT_ROOT/.claude/skills/$SKILL/memory"
+  MEMORY_CONTENT=""
+  if [ -d "$MEMORY_DIR" ]; then
+    for MEM_FILE in "$MEMORY_DIR"/*.md; do
+      [ ! -f "$MEM_FILE" ] && continue
+      MEM_TEXT=$(head -10 "$MEM_FILE" 2>/dev/null || echo "")
+      if [ -n "$MEM_TEXT" ]; then
+        MEMORY_CONTENT="$MEMORY_CONTENT
+$MEM_TEXT"
+      fi
+    done
+  fi
+
   ENTRY="[Skill: $SKILL] $SECTIONS"
+  if [ -n "$MEMORY_CONTENT" ]; then
+    ENTRY="$ENTRY
+[Memory] $MEMORY_CONTENT"
+  fi
   ENTRY_LEN=${#ENTRY}
 
   if [ $((CHAR_COUNT + ENTRY_LEN)) -gt "$MAX_CHARS" ]; then
