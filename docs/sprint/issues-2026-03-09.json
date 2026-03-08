@@ -1,0 +1,107 @@
+[
+  {
+    "number": 23,
+    "title": "[v4] SSOT Map 티어링 — ssot-map.yaml + 컴파일 통합",
+    "labels": [
+      {"name": "enhancement", "color": "a2eeef"},
+      {"name": "v4-architecture", "color": "0075ca"},
+      {"name": "priority:high", "color": "D93F0B"}
+    ],
+    "body": "## 출처\n**설계 문서**: `docs/proposal-v4-architecture.md` Section 3\n**스프린트**: 2026-03-09 Phase 0\n\n---\n\n## 현재 상태\n\n- SSOT Map 개념 없음\n- compiled spec은 `tsq compile build`로 생성되지만 티어링/주입 경로 미정의\n- 에이전트가 어떤 문서를 언제 참조해야 하는지 기준 없음\n\n---\n\n## 목표\n\nSSOT 문서를 참조 빈도에 따라 4개 티어로 분류하고, 각 작업 단위에서 필요한 문서만 선택적으로 주입하는 체계 구축.\n\n```\nTier 0 (상시)     — Hook이 systemMessage로 자동 주입\nTier 1 (Phase)    — Controller가 Phase 시작 시 주입\nTier 2 (Sequence) — Controller가 Sequence 범위 문서 주입\nTier 3 (Task)     — Controller가 Task 내용 보고 선택 주입\n```\n\n---\n\n## DoD\n\n1. `ssot-map.yaml` 스키마 설계 + TypeScript 타입 (`src/types/ssot-map.ts`)\n2. 로드/파싱 유틸리티 (`src/lib/ssot-map.ts`) + 단위 테스트\n3. `templates/base/ssot-map.yaml` 기본 템플릿 (프로젝트 타입별 변형)\n4. `tsq compile build`가 ssot-map.yaml 읽고 티어별 compiled spec 생성\n5. `tsq init` 시 `.timsquad/ssot-map.yaml` 자동 배치\n6. 단위 테스트 통과\n\n---\n\n## 관련\n\n- 의존: 없음 (root)\n- 후행: #24 (Controller Protocol), #25 (skill-inject Tier 0)\n- 참조: proposal Section 3.2 (티어별 문서 배치)"
+  },
+  {
+    "number": 24,
+    "title": "[v4] Controller Protocol 개선 — SSOT Map 참조 + triggers/delegation 구조",
+    "labels": [
+      {"name": "enhancement", "color": "a2eeef"},
+      {"name": "v4-architecture", "color": "0075ca"},
+      {"name": "priority:high", "color": "D93F0B"}
+    ],
+    "body": "## 출처\n**설계 문서**: `docs/proposal-v4-architecture.md` Section 3, 9\n**스프린트**: 2026-03-09 Phase 0\n\n---\n\n## 현재 상태\n\n- controller SKILL.md에 SSOT Map 참조 없음\n- 위임 시 compiled spec 미포함\n- 상황별 트리거/위임 규칙 없음 (모든 로직이 SKILL.md 본문에 인라인)\n\n---\n\n## 목표\n\nController에 SSOT Map 기반 티어별 주입 + triggers/delegation 디렉토리 구조를 도입하여 상황별 명확한 행동 규칙 제공.\n\n---\n\n## DoD\n\n1. controller Protocol에 SSOT Map 참조 단계 추가 (읽기 → 티어 판단 → spec 로드)\n2. 위임 프롬프트에 해당 티어 compiled spec 포함 지시\n3. `triggers/` 디렉토리 신규:\n   - `ssot-changed.md` — SSOT 변경 시 행동\n   - `task-complete.md` — 태스크 완료 시 게이트 + L1\n   - `sequence-complete.md` — 시퀀스 완료 시 통합테스트 + L2\n   - `phase-complete.md` — 페이즈 완료 시 e2e + L3 + Librarian\n4. `delegation/` 디렉토리 신규:\n   - `librarian.md` — 라이브러리안 호출 규칙\n   - `developer.md` — 개발자 위임 규칙\n   - `reviewer.md` — 리뷰어 위임 규칙\n5. 기존 controller 동작 회귀 없음\n\n---\n\n## 관련\n\n- 의존: #23 (SSOT Map)\n- 후행: #28 (방법론 강제)"
+  },
+  {
+    "number": 25,
+    "title": "[v4] skill-inject.sh Tier 0 확장 — 상시 SSOT 문서 자동 주입",
+    "labels": [
+      {"name": "enhancement", "color": "a2eeef"},
+      {"name": "v4-architecture", "color": "0075ca"}
+    ],
+    "body": "## 출처\n**설계 문서**: `docs/proposal-v4-architecture.md` Section 3.3\n**스프린트**: 2026-03-09 Phase 0\n\n---\n\n## 현재 상태\n\n- skill-inject.sh가 매칭 스킬의 Contract/Protocol만 주입\n- SSOT compiled spec은 주입 경로 없음\n- Tier 0 상시 문서 (security, completion-criteria) 미주입\n\n---\n\n## DoD\n\n1. skill-inject.sh에 Tier 0 주입 로직 추가\n2. `.timsquad/ssot-map.yaml`의 `tier-0-always.documents` 읽기\n3. compiled 경로의 파일 내용을 systemMessage에 추가\n4. 토큰 예산: Tier 0 합계 500자 이하 (초과 시 경고)\n5. ssot-map.yaml 미존재 시 graceful skip\n6. ShellCheck 통과\n\n---\n\n## 관련\n\n- 의존: #23 (SSOT Map)\n- 참조: 기존 skill-inject.sh 로직"
+  },
+  {
+    "number": 26,
+    "title": "[v4] Claude Code 공식 기능 정렬 — context:fork, allowed-tools, argument-hint",
+    "labels": [
+      {"name": "enhancement", "color": "a2eeef"},
+      {"name": "v4-architecture", "color": "0075ca"}
+    ],
+    "body": "## 출처\n**설계 문서**: `docs/proposal-v4-architecture.md` Section 10\n**스프린트**: 2026-03-09 Phase 0\n\n---\n\n## 현재 상태\n\n- 36개 스킬 중 `context: fork` 사용 0개\n- `allowed-tools` 사용 0개\n- `argument-hint` 사용 0개\n- review 스킬이 본문에서 수동 Task() 호출 지시\n\n---\n\n## DoD\n\n1. `review/SKILL.md`: `context: fork`, `agent: Explore`, `allowed-tools: Read,Grep,Glob,Bash`\n2. `audit/SKILL.md`: `context: fork`, `allowed-tools: Read,Grep,Glob,Bash`\n3. `spec/SKILL.md`: `argument-hint: \"[기능명] — SSOT 문서 존재 여부 확인\"`\n4. `review/SKILL.md`: `argument-hint: \"[파일패턴] — 변경 사항 교차 리뷰\"`\n5. `audit/SKILL.md`: `argument-hint: \"[대상] — 변경 파일 자기감사\"`\n6. review 본문에서 수동 Task() 호출 제거\n7. `prompt-quality.test.ts` 통과\n\n---\n\n## 관련\n\n- 의존: 없음 (root)\n- 후행: #29 (Librarian — context:fork 패턴 재사용)"
+  },
+  {
+    "number": 27,
+    "title": "[v4] Init 개선 — 방법론/아키텍처/Stack 선택 + 동적 스킬 배포",
+    "labels": [
+      {"name": "enhancement", "color": "a2eeef"},
+      {"name": "v4-architecture", "color": "0075ca"},
+      {"name": "priority:high", "color": "D93F0B"}
+    ],
+    "body": "## 출처\n**설계 문서**: `docs/proposal-v4-architecture.md` Section 7\n**스프린트**: 2026-03-09 Phase 1\n\n---\n\n## 현재 상태\n\n- `config.methodology.development` 항상 `'tdd'` 하드코딩\n- init에 방법론 선택 프롬프트 없음\n- 아키텍처 패턴 선택 없음\n- Stack은 CLI 옵션(`--stack`)만, 대화형 프롬프트 없음\n- `getActiveSkills()`가 `config.methodology` 미참조\n\n---\n\n## DoD\n\n1. 방법론 선택 프롬프트 (tdd/bdd/none) → `config.yaml` 저장\n2. 아키텍처 패턴 프롬프트 (layered/clean/hexagonal/none) → `config.yaml` 저장\n3. Stack 인터랙티브 프롬프트 (쉼표 구분 입력)\n4. `getMethodologySkills()` 구현 — config 기반 동적 스킬 배포\n5. `SKILL_PRESETS` 하드코딩 methodology 제거\n6. controller triggers/delegation 디렉토리 자동 생성\n7. 기존 init 테스트 회귀 없음\n\n---\n\n## 관련\n\n- 의존: 없음 (root)\n- 후행: #28 (방법론 강제)\n- 수정 대상: `src/commands/init.ts`, `src/lib/skill-generator.ts`, `src/types/config.ts`"
+  },
+  {
+    "number": 28,
+    "title": "[v4] Controller 방법론 강제 — methodology 스킬 참조 + 위임 주입",
+    "labels": [
+      {"name": "enhancement", "color": "a2eeef"},
+      {"name": "v4-architecture", "color": "0075ca"},
+      {"name": "priority:high", "color": "D93F0B"}
+    ],
+    "body": "## 출처\n**설계 문서**: `docs/proposal-v4-architecture.md` Section 4\n**스프린트**: 2026-03-09 Phase 1\n\n---\n\n## 현재 상태\n\n- config.methodology.development 값 존재하지만 controller가 참조하지 않음\n- 방법론 스킬(methodology/tdd 등) 존재하지만 controller-서브에이전트 연결 없음\n- 서브에이전트가 TDD/BDD 프로세스 모름\n\n---\n\n## DoD\n\n1. controller Protocol에 `config.methodology.development` 읽기 단계 추가\n2. `methodology/{value}/SKILL.md`의 Protocol을 서브에이전트 위임에 포함\n3. TDD: '테스트 먼저 → 실패 확인 → 구현' 강제\n4. BDD: 'Gherkin 시나리오 정의 → 구현' 강제\n5. None: 방법론 제약 없음\n6. methodology/tdd SKILL.md에 스킬 레벨 hooks 추가 (선택적)\n7. 단위 테스트 통과\n\n---\n\n## 관련\n\n- 의존: #24 (Controller Protocol), #27 (Init 방법론)\n- 후행: #30 (테스트 게이트)"
+  },
+  {
+    "number": 29,
+    "title": "[v4] Librarian 에이전트 — Phase 종합 기록 전담",
+    "labels": [
+      {"name": "enhancement", "color": "a2eeef"},
+      {"name": "v4-architecture", "color": "0075ca"}
+    ],
+    "body": "## 출처\n**설계 문서**: `docs/proposal-v4-architecture.md` Section 6\n**스프린트**: 2026-03-09 Phase 2\n\n---\n\n## 현재 상태\n\n- Librarian 에이전트/스킬 없음\n- Phase 종합 리포트 수동 작성\n- SSOT 상태 갱신 (stale 감지) 수동\n\n---\n\n## DoD\n\n1. `templates/base/agents/tsq-librarian.md` — 에이전트 프롬프트\n2. `templates/base/skills/librarian/SKILL.md` — `context: fork`, `allowed-tools: Read,Write,Edit,Grep,Glob,Bash`\n3. Contract/Protocol/Verification 표준 준수\n4. controller delegation/triggers 연동 (Phase 완료 시 호출)\n5. `.claude/rules/librarian-constraints.md` — 소스 코드 수정 금지\n6. `tsq init` 시 배포\n7. `prompt-quality.test.ts` 통과\n\n---\n\n## 제약\n\n- 소스 코드(src/, lib/, app/) 수정 금지\n- .timsquad/ 및 docs/ 내 문서 작성·갱신은 허용\n- 기록, 분석, 리포트 작성만 수행\n\n---\n\n## 관련\n\n- 의존: #26 (context:fork 패턴)\n- 후행: #31 (SSOT 자동 컴파일)"
+  },
+  {
+    "number": 30,
+    "title": "[v4] 테스트 게이트 — Task/Sequence/Phase 3단계 강제",
+    "labels": [
+      {"name": "enhancement", "color": "a2eeef"},
+      {"name": "v4-architecture", "color": "0075ca"},
+      {"name": "priority:high", "color": "D93F0B"}
+    ],
+    "body": "## 출처\n**설계 문서**: `docs/proposal-v4-architecture.md` Section 5\n**스프린트**: 2026-03-09 Phase 1\n\n---\n\n## 현재 상태\n\n- completion-guard.sh는 bash 실행 여부만 확인 (테스트 실행 강제 없음)\n- Sequence 완료 시 통합 테스트 게이트 없음\n- Phase 게이트에 E2E 결과 미포함\n- Test Strategy SSOT 문서 없음\n\n---\n\n## DoD\n\n1. **Task 게이트**: completion-guard.sh — 변경 파일 관련 unit test 실행 확인, 미실행 시 경고\n2. **Sequence 게이트**: event-queue.ts — `npm run test:integration` + `tsc --noEmit`, 실패 시 차단\n3. **Phase 게이트**: buildPhaseGateData — E2E 결과 반영, 미통과 시 전환 차단\n4. `templates/base/ssot/test-strategy.md` — 테스트 전략 SSOT 문서\n5. 게이트 실행 명령을 test-strategy.md에서 참조\n6. 기존 completion-guard/build-gate 동작 유지\n\n---\n\n## 테스트 게이트 구조\n\n```\nTask 완료   → Unit Test Gate    (completion-guard.sh)\nSequence 완료 → Integration Gate (event-queue.ts)\nPhase 완료  → E2E Gate          (buildPhaseGateData)\n```\n\n---\n\n## 관련\n\n- 의존: #28 (방법론 강제)\n- 후행: #33 (통합 검증)\n- 수정 대상: completion-guard.sh, event-queue.ts, log.ts"
+  },
+  {
+    "number": 31,
+    "title": "[v4] SSOT 자동 컴파일 — 데몬 변경 감지 + tsq compile build",
+    "labels": [
+      {"name": "enhancement", "color": "a2eeef"},
+      {"name": "v4-architecture", "color": "0075ca"}
+    ],
+    "body": "## 출처\n**설계 문서**: `docs/proposal-v4-architecture.md` + Sprint Discussion\n**스프린트**: 2026-03-09 Phase 2\n\n---\n\n## 현재 상태\n\n- 데몬 FileWatcher가 소스 코드만 감시 (meta-index용)\n- SSOT 파일 변경 시 수동 `tsq compile build` 필요\n- 데몬은 기계적 작업(로그, 컴파일) 담당, AI 판단 필요 작업은 Controller→Librarian\n\n---\n\n## DoD\n\n1. FileWatcher에 `.timsquad/ssot/` 경로 감시 추가\n2. DaemonEvent에 `ssot-changed` 이벤트 타입 추가\n3. `handleSSOTChanged()` — `tsq compile build` execFile 호출\n4. 디바운스 2초 (연속 저장 시 마지막 1회만)\n5. 컴파일 결과 eventLog 기록\n6. 기존 소스 코드 감시 (meta-index) 무관\n\n---\n\n## 설계 결정\n\n- SSOT 컴파일은 기계적 작업 → 데몬이 직접 실행\n- AI 판단 필요한 문서 작업 → Controller→Librarian 경로\n- 데몬 = 센서(감지) + 기계 작업, Controller = 판단 + AI 위임\n\n---\n\n## 관련\n\n- 의존: #29 (Librarian)\n- 수정 대상: event-queue.ts, index.ts (또는 file-watcher.ts)"
+  },
+  {
+    "number": 32,
+    "title": "[v4] .claude/rules/ + Hook 정비 — 경로별 규칙 + 실행 순서 문서",
+    "labels": [
+      {"name": "enhancement", "color": "a2eeef"},
+      {"name": "v4-architecture", "color": "0075ca"}
+    ],
+    "body": "## 출처\n**설계 문서**: `docs/proposal-v4-architecture.md` Section 10.3-D\n**스프린트**: 2026-03-09 Phase 1\n\n---\n\n## 현재 상태\n\n- `.claude/rules/` 디렉토리 미사용 (Claude Code 공식 기능)\n- Hook 실행 순서 문서 없음 (settings.json에만 정의)\n- Skill Injection Matrix 가시성 없음\n\n---\n\n## DoD\n\n1. `templates/platforms/claude-code/rules/` 디렉토리 신규\n2. `api-conventions.md` (paths: src/api/, src/routes/)\n3. `test-conventions.md` (paths: tests/, *.spec.ts)\n4. `tsq init` 시 `.claude/rules/` 자동 배치\n5. `docs/hook-execution-order.md` — Hook 실행 순서 정책 문서\n6. `scripts/generate-injection-matrix.sh` — Skill Injection Matrix 자동 생성\n\n---\n\n## 관련\n\n- 의존: 없음 (독립)\n- 참조: Claude Code 공식 `.claude/rules/` 기능"
+  },
+  {
+    "number": 33,
+    "title": "[v4] 통합 검증 — E2E 시나리오 + 전체 회귀 테스트",
+    "labels": [
+      {"name": "enhancement", "color": "a2eeef"},
+      {"name": "v4-architecture", "color": "0075ca"},
+      {"name": "priority:high", "color": "D93F0B"}
+    ],
+    "body": "## 출처\n**스프린트**: 2026-03-09 Phase 2 (최종)\n\n---\n\n## 현재 상태\n\nPhase 0 + Phase 1 + Phase 2 구현 완료 후 전체 파이프라인 통합 검증 필요.\n\n---\n\n## DoD\n\n1. **시나리오 A**: `tsq init` → 방법론 선택 → SSOT 작성 → compile → controller 위임 → 방법론 강제 확인\n2. **시나리오 B**: 데몬 SSOT 감지 → 자동 compile → Tier 0 주입 → 서브에이전트 확인\n3. **시나리오 C**: Task 완료 → Unit 게이트 → Sequence 완료 → Integration 게이트 → Phase 완료 → Librarian 호출\n4. `npm test` 전체 통과\n5. `npm run test:integration` 통과\n6. `shellcheck` 전체 통과\n7. `tsc --noEmit` 클린\n8. 이전 스프린트(03-07, 03-08) 기능 회귀 없음\n\n---\n\n## 관련\n\n- 의존: #30 (테스트 게이트), #29 (Librarian)\n- 이전 스프린트 기능: Hook 시스템, 스킬 표준화, 데몬 L1/L2/L3"
+  }
+]

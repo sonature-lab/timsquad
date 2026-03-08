@@ -1,0 +1,41 @@
+# SSOT Map — 티어별 문서 주입 기준
+# Tier 0: 모든 작업에 항상 주입 (Hook → systemMessage)
+# Tier 1: Phase 시작 시 Controller가 주입
+# Tier 2: Sequence 범위 문서 (Controller가 선택 주입)
+# Tier 3: 개별 Task에 필요한 구체 spec (Controller가 선택 주입)
+
+tier-0-always:
+  description: "모든 작업에 항상 주입되는 제약 문서"
+  inject_via: hook
+  documents:
+    - compiled: rules/security-constraints.md
+      source: security-spec.md
+    - compiled: rules/completion-criteria.md
+      source: requirements.md
+
+tier-1-phase:
+  description: "Phase 시작 시 controller가 주입하는 방향성 문서"
+  inject_via: controller
+  documents:
+    - compiled: references/prd-summary.spec.md
+      source: prd.md
+    - compiled: references/architecture.spec.md
+      source: planning.md
+
+tier-2-sequence:
+  description: "Sequence 범위의 기능별 문서"
+  inject_via: controller
+  documents:
+    - compiled: references/service.spec.md
+      source: service-spec.md
+    - compiled: references/data-design.spec.md
+      source: data-design.md
+
+tier-3-task:
+  description: "개별 Task에 필요한 구체 spec"
+  inject_via: controller
+  documents:
+    - compiled: references/error-codes.spec.md
+      source: error-codes.md
+    - compiled: references/functional.spec.md
+      source: functional-spec.md
