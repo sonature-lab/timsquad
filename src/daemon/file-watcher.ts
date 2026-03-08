@@ -1,7 +1,8 @@
 /**
- * Source File Watcher
- * 소스 코드 변경을 감지하여 메타인덱스 incremental update를 트리거.
- * chokidar 기반, debounce 5초.
+ * File Watcher
+ * 소스 코드 변경 → meta-index update (source-changed)
+ * SSOT 문서 변경 → 자동 compile (ssot-changed)
+ * chokidar 기반, 경로별 debounce 분리.
  */
 
 import path from 'path';
@@ -16,7 +17,11 @@ const SOURCE_PATTERNS = [
   'components/**/*.{ts,tsx,js,jsx}',
 ];
 
-const IGNORE_PATTERNS = [
+const SSOT_PATTERNS = [
+  '.timsquad/ssot/**/*.md',
+];
+
+const SOURCE_IGNORE = [
   '**/node_modules/**',
   '**/dist/**',
   '**/build/**',
@@ -26,16 +31,18 @@ const IGNORE_PATTERNS = [
   '**/*.spec.*',
   '**/__tests__/**',
   '**/*.d.ts',
-  '**/.timsquad/**',
-  '**/.claude/**',
 ];
 
-const DEBOUNCE_MS = 5000;
+const SOURCE_DEBOUNCE_MS = 5000;
+const SSOT_DEBOUNCE_MS = 2000;
 
 export class FileWatcher {
-  private watcher: chokidar.FSWatcher | null = null;
-  private debounceTimer: NodeJS.Timeout | null = null;
-  private pendingPaths: Set<string> = new Set();
+  private sourceWatcher: chokidar.FSWatcher | null = null;
+  private ssotWatcher: chokidar.FSWatcher | null = null;
+  private sourceTimer: NodeJS.Timeout | null = null;
+  private ssotTimer: NodeJS.Timeout | null = null;
+  private pendingSourcePaths: Set<string> = new Set();
+  private pendingSSOTPaths: Set<string> = new Set();
   private projectRoot: string;
   private eventQueue: EventQueue;
 
@@ -45,55 +52,75 @@ export class FileWatcher {
   }
 
   start(): void {
-    const watchPaths = SOURCE_PATTERNS.map(p => path.join(this.projectRoot, p));
-
-    this.watcher = chokidar.watch(watchPaths, {
+    // Source code watcher
+    const sourcePaths = SOURCE_PATTERNS.map(p => path.join(this.projectRoot, p));
+    this.sourceWatcher = chokidar.watch(sourcePaths, {
       persistent: true,
       ignoreInitial: true,
-      ignored: IGNORE_PATTERNS,
-      awaitWriteFinish: {
-        stabilityThreshold: 500,
-        pollInterval: 100,
-      },
+      ignored: SOURCE_IGNORE,
+      awaitWriteFinish: { stabilityThreshold: 500, pollInterval: 100 },
     });
 
-    const onChange = (filePath: string) => {
+    const onSourceChange = (filePath: string) => {
       const rel = path.relative(this.projectRoot, filePath);
-      this.pendingPaths.add(rel);
-      this.scheduleBatch();
+      this.pendingSourcePaths.add(rel);
+      this.scheduleSourceBatch();
     };
 
-    this.watcher.on('change', onChange);
-    this.watcher.on('add', onChange);
-    this.watcher.on('unlink', onChange);
+    this.sourceWatcher.on('change', onSourceChange);
+    this.sourceWatcher.on('add', onSourceChange);
+    this.sourceWatcher.on('unlink', onSourceChange);
+
+    // SSOT watcher
+    const ssotPaths = SSOT_PATTERNS.map(p => path.join(this.projectRoot, p));
+    this.ssotWatcher = chokidar.watch(ssotPaths, {
+      persistent: true,
+      ignoreInitial: true,
+      awaitWriteFinish: { stabilityThreshold: 500, pollInterval: 100 },
+    });
+
+    const onSSOTChange = (filePath: string) => {
+      const rel = path.relative(this.projectRoot, filePath);
+      this.pendingSSOTPaths.add(rel);
+      this.scheduleSSOTBatch();
+    };
+
+    this.ssotWatcher.on('change', onSSOTChange);
+    this.ssotWatcher.on('add', onSSOTChange);
   }
 
   async stop(): Promise<void> {
-    // 남은 pending 처리
-    if (this.pendingPaths.size > 0) {
-      this.flushBatch();
-    }
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-      this.debounceTimer = null;
-    }
-    if (this.watcher) {
-      await this.watcher.close();
-      this.watcher = null;
-    }
+    if (this.pendingSourcePaths.size > 0) this.flushSourceBatch();
+    if (this.pendingSSOTPaths.size > 0) this.flushSSOTBatch();
+
+    if (this.sourceTimer) { clearTimeout(this.sourceTimer); this.sourceTimer = null; }
+    if (this.ssotTimer) { clearTimeout(this.ssotTimer); this.ssotTimer = null; }
+
+    if (this.sourceWatcher) { await this.sourceWatcher.close(); this.sourceWatcher = null; }
+    if (this.ssotWatcher) { await this.ssotWatcher.close(); this.ssotWatcher = null; }
   }
 
-  private scheduleBatch(): void {
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-    }
-    this.debounceTimer = setTimeout(() => this.flushBatch(), DEBOUNCE_MS);
+  private scheduleSourceBatch(): void {
+    if (this.sourceTimer) clearTimeout(this.sourceTimer);
+    this.sourceTimer = setTimeout(() => this.flushSourceBatch(), SOURCE_DEBOUNCE_MS);
   }
 
-  private flushBatch(): void {
-    if (this.pendingPaths.size === 0) return;
-    const paths = Array.from(this.pendingPaths);
-    this.pendingPaths.clear();
+  private scheduleSSOTBatch(): void {
+    if (this.ssotTimer) clearTimeout(this.ssotTimer);
+    this.ssotTimer = setTimeout(() => this.flushSSOTBatch(), SSOT_DEBOUNCE_MS);
+  }
+
+  private flushSourceBatch(): void {
+    if (this.pendingSourcePaths.size === 0) return;
+    const paths = Array.from(this.pendingSourcePaths);
+    this.pendingSourcePaths.clear();
     this.eventQueue.enqueue({ type: 'source-changed', paths });
+  }
+
+  private flushSSOTBatch(): void {
+    if (this.pendingSSOTPaths.size === 0) return;
+    const paths = Array.from(this.pendingSSOTPaths);
+    this.pendingSSOTPaths.clear();
+    this.eventQueue.enqueue({ type: 'ssot-changed', paths });
   }
 }

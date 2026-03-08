@@ -32,12 +32,15 @@ user-invocable: false
 ## Protocol
 
 1. **Memory 참조**: `memory/` 디렉토리의 모든 .md 파일을 Read (프로젝트 결정사항)
-2. **에이전트 파일 확인**: `.claude/agents/{agent}.md` 읽기
-3. **Prerequisites 파싱**: `<prerequisites>` 태그에서 SSOT 목록 추출
-4. **Spec Resolve**: `references/`에서 해당 compiled spec 로드
-5. **Stale 체크**: `.compile-manifest.json` hash 비교
-6. **프롬프트 조합**: tsq-protocol + memory + specs + phase 제약 + 지시
-7. **Task() 호출**: 조합된 프롬프트로 서브에이전트 실행
+2. **SSOT Map 참조**: `.timsquad/ssot-map.yaml` 읽기 → 현재 작업 단위(phase/sequence/task) 판단 → 해당 티어 compiled spec 목록 확인
+3. **에이전트 파일 확인**: `.claude/agents/{agent}.md` 읽기
+4. **Prerequisites 파싱**: `<prerequisites>` 태그에서 SSOT 목록 추출
+5. **Spec Resolve**: `references/`에서 해당 compiled spec + SSOT Map 티어 문서 로드
+6. **Stale 체크**: `.compile-manifest.json` hash 비교
+7. **방법론 참조**: `config.yaml`의 `methodology.development` 확인 → 해당 methodology 스킬 Protocol 로드
+8. **프롬프트 조합**: tsq-protocol + memory + specs + methodology + phase 제약 + 지시
+9. **Task() 호출**: 조합된 프롬프트로 서브에이전트 실행
+10. **트리거 확인**: 완료 시 `triggers/` 해당 상황 규칙 참조 (task-complete, sequence-complete 등)
 
 ## Verification
 
@@ -57,6 +60,14 @@ user-invocable: false
 ### Delegation
 - **지원**: Task() — 순차 호출, 도구 실행 가능
 - **금지**: TeamCreate — SDK 제한으로 도구 실행 불가
+- **역할별 규칙**: `delegation/` 디렉토리 참조 (developer, reviewer, librarian)
+
+### Triggers
+상황별 행동 규칙은 `triggers/` 디렉토리 참조:
+- `task-complete.md` — 태스크 완료 시 테스트 게이트 + L1
+- `sequence-complete.md` — 시퀀스 완료 시 통합테스트 + L2
+- `phase-complete.md` — 페이즈 완료 시 e2e + L3 + Librarian
+- `ssot-changed.md` — SSOT 변경 시 재컴파일 확인
 
 ### Mode Declaration
 서브에이전트 매 응답 첫 줄: `[MODE: {phase}] [TASK: {id}] [SPEC: {file}]`

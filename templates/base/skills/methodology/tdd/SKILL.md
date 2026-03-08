@@ -4,6 +4,12 @@ description: Test-Driven Development 방법론 가이드라인
 version: "1.0.0"
 tags: [tdd, methodology, testing]
 user-invocable: false
+hooks:
+  PreToolUse:
+    - matcher: "Write|Edit"
+      hooks:
+        - type: prompt
+          prompt: "TDD: 이 파일에 대한 테스트가 먼저 작성되었는지 확인하라. 테스트 없이 구현 코드를 작성하면 Red-Green-Refactor 사이클을 위반한다."
 ---
 
 # TDD (Test-Driven Development)

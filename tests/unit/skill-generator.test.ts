@@ -45,11 +45,20 @@ describe('getActiveSkills', () => {
     expect(skills).not.toContain('backend/node');
   });
 
-  it('should include DDD for platform', () => {
-    const config = createDefaultConfig('test', 'platform', 2);
+  it('should include methodology skill based on config', () => {
+    const config = createDefaultConfig('test', 'platform', 2, { methodology: 'tdd' });
     const skills = getActiveSkills(config);
 
-    expect(skills).toContain('methodology/ddd');
+    expect(skills).toContain('methodology/tdd');
+    expect(skills).not.toContain('methodology/bdd');
+  });
+
+  it('should exclude methodology skills when none', () => {
+    const config = createDefaultConfig('test', 'platform', 2, { methodology: 'none' });
+    const skills = getActiveSkills(config);
+
+    expect(skills).not.toContain('methodology/tdd');
+    expect(skills).not.toContain('methodology/bdd');
   });
 
   it('should have no duplicates', () => {

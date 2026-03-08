@@ -24,6 +24,7 @@ export type DaemonEvent =
   | { type: 'sequence-complete'; seqId: string; phaseId: string }
   | { type: 'phase-complete'; phaseId: string }
   | { type: 'source-changed'; paths: string[] }
+  | { type: 'ssot-changed'; paths: string[] }
   | { type: 'session-end' };
 
 interface EventLog {
@@ -80,6 +81,9 @@ export class EventQueue {
           break;
         case 'source-changed':
           this.handleSourceChanged(event.paths);
+          break;
+        case 'ssot-changed':
+          await this.handleSSOTChanged(event.paths);
           break;
         case 'session-end':
           await this.handleSessionEnd();
@@ -206,6 +210,56 @@ export class EventQueue {
     const state = await loadWorkflowState(this.projectRoot);
     if (!state.automation.sequence_log) return;
 
+    // Sequence gate: integration test + build check
+    let gateResult: { passed: boolean; errors: string[] } = { passed: true, errors: [] };
+    try {
+      const { execFile } = await import('child_process');
+      const { promisify } = await import('util');
+      const execFileAsync = promisify(execFile);
+
+      // Build check (tsc --noEmit)
+      try {
+        await execFileAsync('npx', ['tsc', '--noEmit'], {
+          cwd: this.projectRoot,
+          timeout: 180_000,
+        });
+      } catch {
+        gateResult.passed = false;
+        gateResult.errors.push('tsc --noEmit failed');
+      }
+
+      // Integration test (npm run test:integration if script exists)
+      try {
+        const pkgPath = path.join(this.projectRoot, 'package.json');
+        if (await fs.pathExists(pkgPath)) {
+          const pkg = await fs.readJson(pkgPath);
+          if (pkg.scripts?.['test:integration']) {
+            await execFileAsync('npm', ['run', 'test:integration'], {
+              cwd: this.projectRoot,
+              timeout: 300_000,
+            });
+          }
+        }
+      } catch {
+        gateResult.passed = false;
+        gateResult.errors.push('integration test failed');
+      }
+
+      if (!gateResult.passed) {
+        this.log('sequence-gate', 'error', `Blocked: ${gateResult.errors.join(', ')}`);
+        if (state.sequences[seqId]) {
+          state.sequences[seqId].status = 'blocked';
+          await saveWorkflowState(this.projectRoot, state);
+        }
+        return;
+      }
+
+      this.log('sequence-gate', 'success', `Sequence ${seqId} gate passed`);
+    } catch {
+      // Gate check failure is non-blocking (fail-open)
+      this.log('sequence-gate', 'error', 'gate check failed — continuing (fail-open)');
+    }
+
     // L2 시퀀스 로그 생성
     try {
       const entry = await buildSequenceLogData(this.projectRoot, seqId, {
@@ -311,6 +365,21 @@ export class EventQueue {
           freshState.current_phase = null;
           await saveWorkflowState(this.projectRoot, freshState);
           this.log('phase-transition', 'success', `Phase "${phaseId}" completed and archived`);
+
+          // Librarian 자동 호출 (Phase 완료 기록)
+          try {
+            const { writeHandoff } = await import('./context-writer.js');
+            await writeHandoff(this.projectRoot, {
+              agent: 'system',
+              completedAt: getTimestamp(),
+              changedFiles: [],
+              warnings: [`Phase "${phaseId}" completed — Librarian recording needed`],
+              executionLogRef: `phases/${phaseId}.json`,
+            });
+            this.log('librarian-auto-invoke', 'success', `phase ${phaseId} complete → librarian queued`);
+          } catch {
+            // librarian 호출 실패 — non-blocking
+          }
         }
       } catch {
         // 실패 무시
@@ -323,6 +392,19 @@ export class EventQueue {
   private handleSourceChanged(paths: string[]): void {
     if (this.onSourceChanged) {
       this.onSourceChanged(paths);
+    }
+  }
+
+  // ── SSOT Changed ──
+
+  private async handleSSOTChanged(paths: string[]): Promise<void> {
+    try {
+      const { compileAll } = await import('../lib/compiler.js');
+      const controllerDir = path.join(this.projectRoot, '.claude', 'skills', 'controller');
+      await compileAll(this.projectRoot, controllerDir);
+      this.log('ssot-compile', 'success', `Auto-compiled after SSOT change: ${paths.join(', ')}`);
+    } catch (err) {
+      this.log('ssot-compile', 'error', `Compile failed: ${(err as Error).message}`);
     }
   }
 

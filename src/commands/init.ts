@@ -9,7 +9,7 @@ import { initializeProject } from '../lib/template.js';
 import { createDefaultConfig, saveConfig } from '../lib/config.js';
 import { getActiveAgents, formatActiveAgentsList } from '../lib/agent-generator.js';
 import { rebuildIndex } from '../lib/meta-index.js';
-import type { ProjectType, ProjectLevel, Domain } from '../types/index.js';
+import type { ProjectType, ProjectLevel, Domain, DevelopmentMethodology, ArchitecturePattern } from '../types/index.js';
 import { PROJECT_TYPE_DESCRIPTIONS, PROJECT_LEVEL_DESCRIPTIONS, DOMAIN_DESCRIPTIONS } from '../types/project.js';
 
 interface InitOptions {
@@ -107,12 +107,45 @@ async function runInit(options: InitOptions): Promise<void> {
     ]);
   }
 
-  // 5. Parse stack option
-  const stack = options.stack
-    ? options.stack.split(',').map(s => s.trim()).filter(Boolean)
-    : [];
+  // 5. Development methodology
+  let methodology: DevelopmentMethodology;
+  if (options.yes) {
+    methodology = 'tdd';
+  } else {
+    methodology = await promptSelect<DevelopmentMethodology>('Development methodology:', [
+      { name: 'TDD (Test-Driven Development)', value: 'tdd', description: '테스트를 먼저 작성하고 구현' },
+      { name: 'BDD (Behavior-Driven Development)', value: 'bdd', description: 'Gherkin 시나리오 기반 구현' },
+      { name: 'None (방법론 제약 없음)', value: 'none', description: '자유 구현' },
+    ]);
+  }
 
-  // 5b. Parse workspaces option
+  // 5b. Architecture pattern
+  let architecture: ArchitecturePattern;
+  if (options.yes) {
+    architecture = 'none';
+  } else {
+    architecture = await promptSelect<ArchitecturePattern>('Architecture pattern:', [
+      { name: 'Layered (전통적 계층 구조)', value: 'layered', description: 'Controller → Service → Repository' },
+      { name: 'Clean Architecture (의존성 역전)', value: 'clean', description: 'Use Cases, Entities, Adapters' },
+      { name: 'Hexagonal (포트 & 어댑터)', value: 'hexagonal', description: 'Ports & Adapters' },
+      { name: 'None (아키텍처 제약 없음)', value: 'none', description: '자유 설계' },
+    ]);
+  }
+
+  // 5c. Parse stack option (interactive if not provided)
+  let stack: string[];
+  if (options.stack) {
+    stack = options.stack.split(',').map(s => s.trim()).filter(Boolean);
+  } else if (options.yes) {
+    stack = [];
+  } else {
+    const stackInput = await promptText(
+      'Technology stack (comma-separated, e.g. react,node,prisma):',
+      '',
+    );
+    stack = stackInput ? stackInput.split(',').map(s => s.trim()).filter(Boolean) : [];
+  }
+
   const workspaces = options.workspaces
     ? options.workspaces.split(',').map(s => s.trim()).filter(Boolean)
     : undefined;
@@ -146,6 +179,10 @@ async function runInit(options: InitOptions): Promise<void> {
   printKeyValue('Type', `${type} (${PROJECT_TYPE_DESCRIPTIONS[type]})`);
   printKeyValue('Domain', `${domain} (${DOMAIN_DESCRIPTIONS[domain]})`);
   printKeyValue('Level', `${level} (${PROJECT_LEVEL_DESCRIPTIONS[level]})`);
+  printKeyValue('Methodology', methodology);
+  if (architecture !== 'none') {
+    printKeyValue('Architecture', architecture);
+  }
   if (stack.length > 0) {
     printKeyValue('Stack', stack.join(', '));
   }
@@ -173,7 +210,7 @@ async function runInit(options: InitOptions): Promise<void> {
 
   // Step 1: Create config (에이전트 동적 생성에 필요)
   printStep(1, totalSteps, 'Creating configuration...');
-  const config = createDefaultConfig(name, type, level, { domain, platform: 'claude-code', stack, workspaces });
+  const config = createDefaultConfig(name, type, level, { domain, platform: 'claude-code', stack, workspaces, methodology, architecture });
 
   // Step 2: Create directories
   printStep(2, totalSteps, 'Creating directory structure...');

@@ -56,7 +56,8 @@ export type AgentType =
   | 'qa'
   | 'security'
   | 'dba'
-  | 'designer';
+  | 'designer'
+  | 'librarian';
 
 /**
  * Project info

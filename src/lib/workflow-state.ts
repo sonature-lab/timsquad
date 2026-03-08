@@ -15,7 +15,7 @@ export interface TrackedTask {
  * Sequence state within workflow
  */
 export interface SequenceWorkflowState {
-  status: 'pending' | 'in_progress' | 'completed';
+  status: 'pending' | 'in_progress' | 'completed' | 'blocked';
   phase: string;
   expected_agents: string[];
   completed_tasks: TrackedTask[];
@@ -100,7 +100,7 @@ export function findSequenceForAgent(
   const matches: string[] = [];
 
   for (const [seqId, seq] of Object.entries(state.sequences)) {
-    if (seq.status === 'completed') continue;
+    if (seq.status === 'completed' || seq.status === 'blocked') continue;
     if (!seq.expected_agents.includes(agent)) continue;
     // Agent hasn't completed a task in this sequence yet
     const alreadyDone = seq.completed_tasks.some(t => t.agent === agent);

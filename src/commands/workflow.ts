@@ -329,7 +329,9 @@ async function showStatus(): Promise<void> {
         ? colors.success('✓')
         : seq.status === 'in_progress'
           ? colors.warning('▸')
-          : colors.dim('○');
+          : seq.status === 'blocked'
+            ? colors.error('✗')
+            : colors.dim('○');
       const l2Icon = seq.l2_created ? colors.success('[L2]') : colors.dim('[--]');
       const completedAgents = seq.completed_tasks.map(t => t.agent);
       const remaining = seq.expected_agents.filter(a => !completedAgents.includes(a));

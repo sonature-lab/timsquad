@@ -1332,6 +1332,35 @@ export async function buildPhaseGateData(
     }
   }
 
+  // Check E2E test gate (only if test:e2e script exists)
+  try {
+    const pkgPath = path.join(projectRoot, 'package.json');
+    if (await exists(pkgPath)) {
+      const pkg = await fs.readJson(pkgPath);
+      if (pkg.scripts?.['test:e2e']) {
+        const e2eMarker = path.join(projectRoot, '.e2e-passed');
+        if (await exists(e2eMarker)) {
+          const markerContent = await fs.readFile(e2eMarker, 'utf-8');
+          try {
+            const marker = JSON.parse(markerContent);
+            if (marker.exit_code != null && marker.exit_code !== 0) {
+              result.can_transition = false;
+              result.blocking_conditions.push(`E2E tests failed (exit_code=${marker.exit_code})`);
+            } else if (marker.expires_at && new Date(marker.expires_at) < new Date()) {
+              result.can_transition = false;
+              result.blocking_conditions.push('E2E marker expired — re-run E2E tests');
+            }
+          } catch {
+            // bare touch fallback — file exists means passed
+          }
+        } else {
+          result.can_transition = false;
+          result.blocking_conditions.push('E2E tests not passed (missing .e2e-passed marker)');
+        }
+      }
+    }
+  } catch { /* package.json read failure — skip E2E gate */ }
+
   // Check unresolved L2/L3 feedback
   try {
     const state = await loadWorkflowState(projectRoot);

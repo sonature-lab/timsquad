@@ -62,6 +62,8 @@ export interface CompileResult {
   skipped: string[];
   errors: string[];
   affected_e2e: E2eMapping[];
+  /** ssot-map.yaml 기반 티어별 컴파일 정보 */
+  ssotMapApplied?: boolean;
 }
 
 // ─── Markdown Parser ────────────────────────────────────────────
@@ -382,6 +384,36 @@ export async function compileAll(
         `${ssotName} 컴파일 실패: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
+  }
+
+  // Apply SSOT Map tier placement (Tier 0 → rules/, Tier 1-3 → references/)
+  try {
+    const { loadSSOTMap, getDocumentsForTier } = await import('./ssot-map.js');
+    const ssotMap = await loadSSOTMap(projectRoot);
+    if (ssotMap) {
+      result.ssotMapApplied = true;
+      const rulesDir = path.join(controllerDir, 'rules');
+      await fs.ensureDir(rulesDir);
+
+      // Tier 0 compiled specs → rules/ (skill-inject.sh가 읽는 경로)
+      for (const doc of getDocumentsForTier(ssotMap, 'tier-0-always')) {
+        const compiledPath = path.join(controllerDir, doc.compiled);
+        if (await exists(compiledPath)) continue; // 이미 compile에서 생성됨
+
+        // source가 컴파일되었으면 해당 출력을 rules/로 복사
+        const sourceBase = doc.source.replace('.md', '');
+        const compiled = result.compiled.find(c => c.source === sourceBase);
+        if (compiled && compiled.outputFiles.length > 0) {
+          const srcFile = compiled.outputFiles[0];
+          if (await exists(srcFile) && srcFile !== compiledPath) {
+            await fs.ensureDir(path.dirname(compiledPath));
+            await fs.copy(srcFile, compiledPath);
+          }
+        }
+      }
+    }
+  } catch {
+    // ssot-map 처리 실패 — non-blocking
   }
 
   // Save manifest

@@ -9,6 +9,10 @@ tags: [review, code-review, cross-review, quality]
 depends_on: [coding, testing, security]
 conflicts_with: []
 user-invocable: true
+context: fork
+agent: Explore
+allowed-tools: Read, Grep, Glob, Bash
+argument-hint: "[파일패턴] — 변경 사항 교차 리뷰"
 ---
 
 # Cross-Review
@@ -26,9 +30,9 @@ user-invocable: true
 ## Protocol
 
 1. **변경 수집**: `git diff` 또는 staged changes로 리뷰 대상 수집
-2. **서브에이전트 실행**: Task()로 별도 컨텍스트에서 리뷰 수행
+2. **격리 실행**: 별도 컨텍스트에서 리뷰 수행 (context: fork)
    - 리뷰어는 구현자와 독립된 컨텍스트에서 판단
-   - 리뷰어에게 6가지 관점 체크리스트 전달
+   - 6가지 관점 체크리스트 기반 분석
 3. **6가지 관점 분석**:
    - **보안**: OWASP Top 10, 시크릿 노출, injection, XSS
    - **타입 안전성**: any 타입, 타입 단언(as), 미검증 캐스팅
@@ -42,7 +46,7 @@ user-invocable: true
 
 | Check | Method | Pass Criteria |
 |-------|--------|---------------|
-| 리뷰 실행 | Task() 서브에이전트 | 리포트 반환 |
+| 리뷰 실행 | 격리 컨텍스트 (fork) | 리포트 반환 |
 | 관점 커버리지 | 6가지 관점 체크 | 모든 관점 포함 |
 | severity 분류 | 구조화 리포트 | severity 태그 존재 |
 | 파일/라인 참조 | 코드 위치 명시 | 정확한 위치 참조 |
@@ -65,4 +69,4 @@ user-invocable: true
 ### 원칙
 - `/review` 명시 호출만 실행 (토큰 절약)
 - critical 발견 시 즉시 알림
-- 리뷰어는 구현자와 다른 컨텍스트(Task)에서 수행
+- 리뷰어는 구현자와 다른 컨텍스트(fork)에서 수행

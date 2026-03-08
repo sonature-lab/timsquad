@@ -91,17 +91,15 @@ while [ "$i" -lt "$RULE_COUNT" ]; do
   i=$((i + 1))
 done
 
-# No matches
-if [ ${#MATCH_SKILLS[@]} -eq 0 ]; then
-  exit 0
-fi
-
 # Sort by score descending and take top 3
-SORTED_INDICES=$(
-  for idx in "${!MATCH_SCORES[@]}"; do
-    echo "${MATCH_SCORES[$idx]} $idx"
-  done | sort -rn | head -3 | awk '{print $2}'
-)
+SORTED_INDICES=""
+if [ ${#MATCH_SKILLS[@]} -gt 0 ]; then
+  SORTED_INDICES=$(
+    for idx in "${!MATCH_SCORES[@]}"; do
+      echo "${MATCH_SCORES[$idx]} $idx"
+    done | sort -rn | head -3 | awk '{print $2}'
+  )
+fi
 
 # Extract Contract + Protocol + Verification sections from matched skills
 INJECTION=""
@@ -163,6 +161,47 @@ $ENTRY"
   fi
   CHAR_COUNT=$((CHAR_COUNT + ENTRY_LEN))
 done
+
+# SSOT Map Tier 0 injection (always injected regardless of skill match)
+SSOT_MAP="$PROJECT_ROOT/.timsquad/ssot-map.yaml"
+if [ -f "$SSOT_MAP" ]; then
+  # Parse tier-0-always compiled paths from YAML
+  TIER0_PATHS=$(awk '
+    /^tier-0-always:/ { in_tier0=1; next }
+    /^tier-[0-9]/ { in_tier0=0 }
+    in_tier0 && /compiled:/ { gsub(/.*compiled: */, ""); gsub(/^ *| *$/, ""); print }
+  ' "$SSOT_MAP" 2>/dev/null)
+
+  TIER0_CONTENT=""
+  while IFS= read -r REL_PATH; do
+    [ -z "$REL_PATH" ] && continue
+    COMPILED_FILE="$PROJECT_ROOT/.claude/skills/controller/$REL_PATH"
+    if [ -f "$COMPILED_FILE" ]; then
+      FILE_CONTENT=$(cat "$COMPILED_FILE" 2>/dev/null || echo "")
+      if [ -n "$FILE_CONTENT" ]; then
+        if [ -n "$TIER0_CONTENT" ]; then
+          TIER0_CONTENT="$TIER0_CONTENT
+---
+$FILE_CONTENT"
+        else
+          TIER0_CONTENT="$FILE_CONTENT"
+        fi
+      fi
+    fi
+  done <<< "$TIER0_PATHS"
+
+  if [ -n "$TIER0_CONTENT" ]; then
+    if [ -n "$INJECTION" ]; then
+      INJECTION="[SSOT Tier-0 Constraints]
+$TIER0_CONTENT
+---
+$INJECTION"
+    else
+      INJECTION="[SSOT Tier-0 Constraints]
+$TIER0_CONTENT"
+    fi
+  fi
+fi
 
 # Output as systemMessage (mandatory injection)
 if [ -n "$INJECTION" ]; then

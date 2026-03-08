@@ -178,7 +178,17 @@ describe('UserService', () => {
 
 ---
 
-## 5. 테스트 자동화
+## 5. 테스트 게이트
+
+TimSquad 워크플로우에서 자동 실행되는 테스트 게이트 설정.
+
+### 5.0 게이트별 실행 명령
+
+| 게이트 | 실행 시점 | 명령 | 타임아웃 |
+|--------|----------|------|---------|
+| Task (Unit) | Task 완료 시 | `npm run test:unit` | 120s |
+| Sequence (Integration + Build) | Sequence 완료 시 | `npm run test:integration` + `tsc --noEmit` | 300s |
+| Phase (E2E) | Phase 완료 시 | `npm run test:e2e` | 300s |
 
 ### 5.1 CI 파이프라인
 

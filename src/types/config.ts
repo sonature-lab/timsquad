@@ -3,8 +3,12 @@ import type { ProjectType, ProjectLevel, AgentType, Platform, Domain } from './p
 /**
  * Methodology settings
  */
+export type DevelopmentMethodology = 'tdd' | 'bdd' | 'none';
+export type ArchitecturePattern = 'layered' | 'clean' | 'hexagonal' | 'none';
+
 export interface MethodologyConfig {
-  development: 'tdd' | 'bdd' | 'none';
+  development: DevelopmentMethodology;
+  architecture: ArchitecturePattern;
   process: 'agile' | 'waterfall' | 'kanban';
   branching: 'github-flow' | 'gitflow' | 'trunk-based';
   review: 'required' | 'optional' | 'none';
@@ -161,13 +165,13 @@ export interface TimsquadConfig {
  * Agent presets by project type
  */
 export const AGENT_PRESETS: Record<ProjectType, AgentType[]> = {
-  'web-service': ['architect', 'developer', 'designer', 'qa'],
-  'api-backend': ['architect', 'developer', 'dba', 'qa'],
-  'fintech': ['architect', 'developer', 'dba', 'security', 'qa'],
-  'web-app': ['architect', 'developer', 'designer', 'qa'],
-  'platform': ['architect', 'developer', 'qa'],
-  'infra': ['architect', 'developer', 'security'],
-  'mobile-app': ['architect', 'developer', 'designer', 'qa'],
+  'web-service': ['architect', 'developer', 'designer', 'qa', 'librarian'],
+  'api-backend': ['architect', 'developer', 'dba', 'qa', 'librarian'],
+  'fintech': ['architect', 'developer', 'dba', 'security', 'qa', 'librarian'],
+  'web-app': ['architect', 'developer', 'designer', 'qa', 'librarian'],
+  'platform': ['architect', 'developer', 'qa', 'librarian'],
+  'infra': ['architect', 'developer', 'security', 'librarian'],
+  'mobile-app': ['architect', 'developer', 'designer', 'qa', 'librarian'],
 };
 
 /**
@@ -178,30 +182,29 @@ export const SKILL_PRESETS: Record<ProjectType, string[]> = {
   'web-service': [
     'frontend/react', 'frontend/nextjs', 'backend/node',
     'database', 'database/prisma', 'ui-design',
-    'security', 'methodology/tdd',
+    'security',
   ],
   'web-app': [
     'frontend/react', 'frontend/nextjs',
-    'ui-design', 'security', 'methodology/tdd',
+    'ui-design', 'security',
   ],
   'api-backend': [
     'backend/node', 'database', 'database/prisma',
-    'security', 'methodology/tdd',
+    'security',
   ],
   'platform': [
-    'backend/node', 'methodology/tdd',
-    'methodology/ddd', 'security',
+    'backend/node', 'security',
   ],
   'fintech': [
     'backend/node', 'database', 'database/prisma',
-    'security', 'methodology/tdd', 'methodology/ddd',
+    'security',
   ],
   'infra': [
     'security',
   ],
   'mobile-app': [
     'mobile/flutter', 'mobile/dart',
-    'security', 'methodology/tdd',
+    'security',
   ],
 };
 
@@ -209,6 +212,7 @@ export const SKILL_PRESETS: Record<ProjectType, string[]> = {
 export const BASE_SKILLS: string[] = [
   'tsq-protocol',
   'controller',
+  'librarian',
   'coding', 'testing', 'typescript',
   'planning', 'architecture',
   'retrospective', 'prompt-engineering',
@@ -264,11 +268,11 @@ export const BASE_KNOWLEDGE: string[] = [
  */
 export const DOMAIN_SKILL_MAP: Partial<Record<Domain, string[]>> = {
   'general-web': [],  // web 스킬은 SKILL_PRESETS[type]에서 이미 커버
-  'ml-engineering': ['methodology/tdd'],
-  'fintech': ['methodology/ddd'],  // DDD는 도메인 고유 (security는 type에서 커버)
+  'ml-engineering': [],
+  'fintech': [],      // security는 type에서 커버
   'mobile': ['mobile/flutter', 'mobile/dart'],
   'gamedev': [],
-  'systems': [],  // security는 type에서 커버
+  'systems': [],      // security는 type에서 커버
 };
 
 /**
@@ -310,6 +314,7 @@ const AGENT_MODELS: Record<AgentType, 'opus' | 'sonnet' | 'haiku'> = {
   security: 'sonnet',
   dba: 'sonnet',
   designer: 'sonnet',
+  librarian: 'sonnet',
 };
 
 /**
@@ -319,7 +324,7 @@ export function buildAgentsConfig(
   projectType: ProjectType
 ): Partial<Record<AgentType, AgentConfig>> {
   const activeAgents = AGENT_PRESETS[projectType];
-  const allAgents: AgentType[] = ['architect', 'developer', 'qa', 'security', 'dba', 'designer'];
+  const allAgents: AgentType[] = ['architect', 'developer', 'qa', 'security', 'dba', 'designer', 'librarian'];
 
   const agents: Partial<Record<AgentType, AgentConfig>> = {};
   for (const agent of allAgents) {
@@ -337,6 +342,7 @@ export function buildAgentsConfig(
 export const DEFAULT_CONFIG: Omit<TimsquadConfig, 'project'> = {
   methodology: {
     development: 'tdd',
+    architecture: 'none',
     process: 'agile',
     branching: 'github-flow',
     review: 'required',
@@ -369,6 +375,7 @@ export const DEFAULT_CONFIG: Omit<TimsquadConfig, 'project'> = {
 export const FINTECH_CONFIG_OVERRIDES: Partial<TimsquadConfig> = {
   methodology: {
     development: 'tdd',
+    architecture: 'layered',
     process: 'agile',
     branching: 'gitflow',
     review: 'required',

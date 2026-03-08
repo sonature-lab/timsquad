@@ -65,7 +65,7 @@ describe('createTemplateVariables', () => {
   it('should handle config with agents', () => {
     const config = {
       project: { name: 'test', type: 'web-service' as ProjectType, level: 2 as ProjectLevel, created: '' },
-      methodology: { development: 'tdd' as const, process: 'agile' as const, branching: 'github-flow' as const, review: 'required' as const },
+      methodology: { development: 'tdd' as const, architecture: 'none' as const, process: 'agile' as const, branching: 'github-flow' as const, review: 'required' as const },
       stack: { language: 'typescript' as const, database: 'postgresql' as const },
       agents: {
         architect: { model: 'opus' as const, enabled: true },

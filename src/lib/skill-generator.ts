@@ -22,6 +22,20 @@ import { substituteVariables } from './template.js';
  * Get skills to deploy for a project.
  * Combines BASE_SKILLS + type-specific + domain-specific + stack-specific skills.
  */
+/**
+ * Get methodology skills based on config.
+ * Dynamically includes methodology/tdd, methodology/bdd etc. based on config.methodology.development.
+ */
+function getMethodologySkills(config: TimsquadConfig): string[] {
+  const dev = config.methodology?.development;
+  if (!dev || dev === 'none') return [];
+  return [`methodology/${dev}`];
+}
+
+/**
+ * Get skills to deploy for a project.
+ * Combines BASE_SKILLS + type-specific + domain-specific + stack-specific + methodology skills.
+ */
 export function getActiveSkills(config: TimsquadConfig): string[] {
   const typeSkills = SKILL_PRESETS[config.project.type] || [];
   const domainSkills = config.project.domain
@@ -29,8 +43,9 @@ export function getActiveSkills(config: TimsquadConfig): string[] {
     : [];
   const stackSkills = normalizeStack(config)
     .flatMap(s => STACK_SKILL_MAP[s] || []);
+  const methodologySkills = getMethodologySkills(config);
 
-  return [...new Set([...BASE_SKILLS, ...typeSkills, ...domainSkills, ...stackSkills])];
+  return [...new Set([...BASE_SKILLS, ...typeSkills, ...domainSkills, ...stackSkills, ...methodologySkills])];
 }
 
 /**
@@ -210,7 +225,7 @@ async function removeInactiveSubSkills(
 
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
-    if (['rules', 'references', 'scripts'].includes(entry.name)) continue; // belongs to parent skill
+    if (['rules', 'references', 'scripts', 'triggers', 'delegation', 'memory'].includes(entry.name)) continue; // belongs to parent skill
 
     const subSkillPath = `${parentName}/${entry.name}`;
     if (!activeSkills.includes(subSkillPath)) {

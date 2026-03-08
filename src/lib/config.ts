@@ -1,5 +1,6 @@
 import path from 'path';
 import type { TimsquadConfig, ProjectType, ProjectLevel, Platform, Domain } from '../types/index.js';
+import type { DevelopmentMethodology, ArchitecturePattern } from '../types/config.js';
 import { DEFAULT_CONFIG, FINTECH_CONFIG_OVERRIDES, buildAgentsConfig, DEFAULT_NAMING } from '../types/config.js';
 import { exists } from '../utils/fs.js';
 import { loadYaml, saveYaml } from '../utils/yaml.js';
@@ -24,7 +25,14 @@ export async function loadConfig(projectRoot: string): Promise<TimsquadConfig> {
     throw new Error(`Config file not found: ${configPath}`);
   }
 
-  return loadYaml<TimsquadConfig>(configPath);
+  const config = await loadYaml<TimsquadConfig>(configPath);
+
+  // Legacy config compatibility: ensure architecture field exists
+  if (config.methodology && !config.methodology.architecture) {
+    config.methodology.architecture = 'none';
+  }
+
+  return config;
 }
 
 /**
@@ -42,7 +50,7 @@ export function createDefaultConfig(
   name: string,
   type: ProjectType,
   level: ProjectLevel,
-  options?: { domain?: Domain; platform?: Platform; stack?: string[]; workspaces?: string[] },
+  options?: { domain?: Domain; platform?: Platform; stack?: string[]; workspaces?: string[]; methodology?: DevelopmentMethodology; architecture?: ArchitecturePattern },
 ): TimsquadConfig {
   const baseConfig: TimsquadConfig = {
     project: {
@@ -57,6 +65,11 @@ export function createDefaultConfig(
       workspaces: options?.workspaces,
     },
     ...DEFAULT_CONFIG,
+    methodology: {
+      ...DEFAULT_CONFIG.methodology,
+      ...(options?.methodology && { development: options.methodology }),
+      ...(options?.architecture && { architecture: options.architecture }),
+    },
     agents: buildAgentsConfig(type),
     naming: { ...DEFAULT_NAMING },
   };
@@ -66,11 +79,16 @@ export function createDefaultConfig(
     baseConfig.project.domain = 'mobile';
   }
 
-  // Apply fintech-specific overrides
+  // Apply fintech-specific overrides (preserve user methodology/architecture selection)
   if (type === 'fintech') {
     return {
       ...baseConfig,
       ...FINTECH_CONFIG_OVERRIDES,
+      methodology: {
+        ...FINTECH_CONFIG_OVERRIDES.methodology!,
+        ...(options?.methodology && options.methodology !== 'none' && { development: options.methodology }),
+        ...(options?.architecture && options.architecture !== 'none' && { architecture: options.architecture }),
+      },
       project: {
         ...baseConfig.project,
         level: 3, // Force level 3 for fintech

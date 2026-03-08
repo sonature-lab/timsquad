@@ -18,6 +18,7 @@ const AGENT_FILE_MAP: Record<AgentType, string> = {
   security: 'tsq-security.md',
   dba: 'tsq-dba.md',
   designer: 'tsq-designer.md',
+  librarian: 'tsq-librarian.md',
 };
 
 /**
@@ -30,6 +31,7 @@ const AGENT_SKILL_CATEGORIES: Record<AgentType, string[]> = {
   architect: [],
   qa:        [],
   security:  [],
+  librarian: [],
 };
 
 /**
@@ -216,6 +218,16 @@ export function generateDelegationRules(activeAgents: AgentType[]): string {
     <trigger>보안 검토, 취약점 분석, 컴플라이언스</trigger>
     <delegate-to>@tsq-security</delegate-to>
     <precondition>Security Phase 또는 보안 관련 요청</precondition>
+  </rule>`);
+    ruleId++;
+  }
+
+  // Librarian rule (Phase 기록)
+  if (activeAgents.includes('librarian')) {
+    rules.push(`  <rule id="DEL-${String(ruleId).padStart(3, '0')}">
+    <trigger>기록해줘, 리포트 작성, Phase 정리, 문서 갱신, SSOT 상태 점검</trigger>
+    <delegate-to>@tsq-librarian</delegate-to>
+    <precondition>Phase 완료 후 기록 단계</precondition>
   </rule>`);
     ruleId++;
   }

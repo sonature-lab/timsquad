@@ -9,6 +9,9 @@ tags: [audit, verification, quality, self-check]
 depends_on: [coding, testing, security]
 conflicts_with: []
 user-invocable: true
+context: fork
+allowed-tools: Read, Grep, Glob, Bash
+argument-hint: "[대상] — 변경 파일 자기감사"
 ---
 
 # Self-Audit

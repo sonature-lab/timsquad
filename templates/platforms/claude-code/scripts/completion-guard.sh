@@ -34,18 +34,44 @@ fi
 
 BLOCK_REASON=""
 
-# ── 1. Test execution gate (implementation phase only) ──
-# 자기 보고 금지: 테스트 exit code로 완료를 판정한다.
-# stop_hook_active=false일 때만 블로킹 (1회 기회 부여, 루프 방지는 섹션 0에서 처리)
+# ── 1. Test execution gate ──
+# 변경된 소스 파일에 대한 테스트 실행 여부 확인
+# implementation phase에서만 block, 그 외에는 warning
 PHASE_FILE="$PROJECT_ROOT/.timsquad/state/current-phase.json"
+PHASE="unknown"
 if [ -f "$PHASE_FILE" ]; then
   PHASE=$(jq -r '.current // .current_phase // .phase // "unknown"' "$PHASE_FILE" 2>/dev/null || echo "unknown")
-  if [ "$PHASE" = "implementation" ]; then
-    SESSION_STATE="$PROJECT_ROOT/.timsquad/.daemon/session-state.json"
-    if [ -f "$SESSION_STATE" ]; then
-      BASH_COMMANDS=$(jq -r '.metrics.bashCommands // 0' "$SESSION_STATE" 2>/dev/null || echo "0")
-      if [ "$BASH_COMMANDS" -eq 0 ] 2>/dev/null; then
-        BLOCK_REASON="[Completion Guard] 이번 세션에서 테스트가 실행되지 않았습니다. 프로젝트의 테스트를 실행하여 변경사항을 검증한 후 완료하세요."
+fi
+
+TEST_WARNING=""
+SESSION_STATE="$PROJECT_ROOT/.timsquad/.daemon/session-state.json"
+if [ -f "$SESSION_STATE" ]; then
+  # Check if any bash commands were executed (tests run via bash)
+  BASH_COMMANDS=$(jq -r '.metrics.bashCommands // 0' "$SESSION_STATE" 2>/dev/null || echo "0")
+
+  if [ "$BASH_COMMANDS" -eq 0 ] 2>/dev/null; then
+    # No tests or bash at all — check for changed source files
+    CHANGED_SRC=$(cd "$PROJECT_ROOT" && git diff --name-only --diff-filter=ACMR HEAD 2>/dev/null | grep -E '\.(ts|tsx|js|jsx)$' | grep -vE '\.(test|spec)\.' | head -5)
+    if [ -n "$CHANGED_SRC" ]; then
+      # List related test files that should have been run
+      RELATED_TESTS=""
+      while IFS= read -r SRC_FILE; do
+        [ -z "$SRC_FILE" ] && continue
+        BASE_NAME=$(basename "$SRC_FILE" | sed 's/\.[^.]*$//')
+        POTENTIAL=$(cd "$PROJECT_ROOT" && find . -name "${BASE_NAME}.test.*" -o -name "${BASE_NAME}.spec.*" 2>/dev/null | head -1)
+        if [ -n "$POTENTIAL" ]; then
+          RELATED_TESTS="$RELATED_TESTS $POTENTIAL"
+        fi
+      done <<< "$CHANGED_SRC"
+
+      if [ -n "$RELATED_TESTS" ]; then
+        TEST_WARNING="[Test Gate] 변경된 파일에 대한 테스트가 실행되지 않았습니다. 관련 테스트:$RELATED_TESTS"
+      else
+        TEST_WARNING="[Test Gate] 변경된 소스 파일이 있으나 테스트가 실행되지 않았습니다."
+      fi
+
+      if [ "$PHASE" = "implementation" ]; then
+        BLOCK_REASON="$TEST_WARNING 테스트를 실행한 후 완료하세요."
       fi
     fi
   fi
@@ -112,9 +138,13 @@ $SESSION_CTX"
   [ -n "$VERIFICATION" ] && FULL_REASON="$FULL_REASON
 $VERIFICATION"
   jq -n --arg reason "$FULL_REASON" '{"decision": "block", "reason": $reason}'
-elif [ -n "$SESSION_CTX" ] || [ -n "$VERIFICATION" ]; then
+elif [ -n "$SESSION_CTX" ] || [ -n "$VERIFICATION" ] || [ -n "$TEST_WARNING" ]; then
   FULL_MSG=""
   [ -n "$SESSION_CTX" ] && FULL_MSG="$SESSION_CTX"
+  if [ -n "$TEST_WARNING" ]; then
+    [ -n "$FULL_MSG" ] && FULL_MSG="$FULL_MSG
+$TEST_WARNING" || FULL_MSG="$TEST_WARNING"
+  fi
   if [ -n "$VERIFICATION" ]; then
     [ -n "$FULL_MSG" ] && FULL_MSG="$FULL_MSG
 $VERIFICATION" || FULL_MSG="$VERIFICATION"

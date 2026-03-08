@@ -9,6 +9,7 @@ tags: [spec, ssot, gate, documentation]
 depends_on: [tsq-protocol]
 conflicts_with: []
 user-invocable: true
+argument-hint: "[기능명] — SSOT 문서 존재 여부 확인"
 ---
 
 # Spec Gate
