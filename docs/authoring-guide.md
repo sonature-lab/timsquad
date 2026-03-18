@@ -74,10 +74,10 @@ skills: [tsq-protocol, {도메인1}, {도메인2}]   # 필수 스킬 주입 (tsq
     knowledge/templates/task-result.md 형식으로 리턴.
   </task-completion-protocol>
 
-  <!-- 10. 피드백 라우팅 -->
-  <feedback-routing>
-    <!-- 1.6 참조 -->
-  </feedback-routing>
+  <!-- 10. 피드백 가이드 (선택) -->
+  <!-- L1/L2/L3 피드백은 /tsq-retro feedback으로 기록.
+       에이전트 프롬프트에 별도 라우팅 섹션 불필요.
+       상세: tsq-retro 스킬의 references/feedback-guide.md 참조 -->
 
 </agent>
 ```
@@ -139,35 +139,19 @@ skills: [tsq-protocol, {도메인1}, {도메인2}]   # 필수 스킬 주입 (tsq
 >
 > 상세 내용: `templates/common/claude/skills/tsq-protocol/SKILL.md`
 
-### 1.6 피드백 라우팅 설계
+### 1.6 피드백 레벨 가이드
 
-3단계 구조. 도메인에 맞게 triggers를 커스텀하세요.
-
-```xml
-<feedback-routing>
-  <level id="1" severity="Minor">
-    <triggers>{즉시 자체 수정 가능한 이슈}</triggers>
-    <route>즉시 수정</route>
-  </level>
-  <level id="2" severity="Major">
-    <triggers>{설계 변경/SSOT 수정이 필요한 이슈}</triggers>
-    <route>메인세션(PM)</route>
-  </level>
-  <level id="3" severity="Critical">
-    <triggers>{요구사항 변경/데이터 손실 위험}</triggers>
-    <route>메인세션(PM) → 사용자 승인</route>
-    <requires-approval>true</requires-approval>
-  </level>
-</feedback-routing>
-```
+v3.7부터 피드백은 `/tsq-retro feedback` 스킬로 수집한다. 에이전트 프롬프트에 `<feedback-routing>` XML 섹션을 작성할 필요 없음.
 
 **레벨 분류 기준:**
 
 | 레벨 | 판단 질문 | 예시 |
 |------|----------|------|
-| L1 | 에이전트가 즉시 고칠 수 있는가? | 린트 오류, 타입 에러, 네이밍 위반, 누락 테스트 |
-| L2 | SSOT나 설계 문서 수정이 필요한가? | API 명세 불일치, 스키마 변경 필요, 아키텍처 이슈 |
-| L3 | 사용자 비즈니스 결정이 필요한가? | 요구사항 누락, 스코프 변경, 데이터 손실 위험, 컴플라이언스 |
+| L1 | 현재 Task에서 바로 고칠 수 있는가? | 버그, 타입 에러, 테스트 누락 |
+| L2 | 설계/구조 변경이 필요한가? | API 변경, 스키마 수정, 아키텍처 이슈 |
+| L3 | 요구사항/스펙 자체가 틀린가? | 요구사항 모순, 스코프 변경, 비즈니스 로직 변경 |
+
+상세 분류 기준과 예시: `tsq-retro` 스킬의 `references/feedback-guide.md` 참조.
 
 ### 1.7 Base Agent vs Overlay 구조 (설계 중, 미구현)
 
@@ -219,7 +203,7 @@ version: 1.0.0
 | REPLACE | base 섹션을 overlay로 교체 | role-summary, input-contract, task-completion-protocol |
 | APPEND | base 섹션 끝에 overlay 추가 | rules, does-not |
 | MERGE | 파일 목록 합산 (중복 제거) | prerequisites, knowledge-refs |
-| KEEP | base 유지, overlay 무시 | feedback-routing |
+| KEEP | base 유지, overlay 무시 | rules |
 
 #### Domain Overlay 작성 가이드
 
@@ -583,8 +567,6 @@ tsq log enrich {agent} --json '{...}'
     <on-task-start>              # 이벤트 핸들러
     <forbidden>                  # 금지 사항
   <task-completion-protocol>     # 출력 형식
-  <feedback-routing>             # 라우팅
-    <level id="N" severity=".."> # 개별 레벨
 </agent>
 ```
 
@@ -637,7 +619,7 @@ tsq log enrich {agent} --json '{...}'
 | SSOT 참조 없는 rules | 근거 없는 지시 → 환각 유발 | `<prerequisites>`로 SSOT 명시 |
 | tsq-cli 섹션 누락 | 로그 미기록 → 회고 불가 | 반드시 포함 |
 | input-contract 없음 | PM이 뭘 전달해야 할지 모름 | required/optional 명시 |
-| feedback-routing 없음 | 이슈 발견 시 행동 기준 모호 | 3단계 반드시 정의 |
+| 피드백 기준 없음 | 이슈 발견 시 행동 기준 모호 | `/tsq-retro feedback` 안내 또는 L1/L2/L3 기준 주석 |
 | persona 과잉 상세 | 토큰 낭비 | 3-4줄 이내 |
 | 여러 역할 혼합 | 책임 모호 → 품질 저하 | 1 에이전트 = 1 역할 |
 
@@ -683,7 +665,7 @@ tsq log enrich {agent} --json '{...}'
 - [ ] `<input-contract>` — required/optional 필드 정의
 - [ ] `<rules>` — must/must-not 최소 3개씩
 - [ ] `<task-completion-protocol>` — task-result.md 참조
-- [ ] `<feedback-routing>` — 3단계 (triggers + route)
+- [ ] 피드백 가이드 — L1/L2/L3 분류 기준 참조 (`tsq-retro` 스킬)
 
 ### 등록
 

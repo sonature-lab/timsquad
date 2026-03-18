@@ -86,6 +86,54 @@ Other content
     const sections = parseMarkdownSections(content, 'h2');
     expect(sections).toHaveLength(0);
   });
+
+  it('should exclude metadata headings (관련 문서, 변경 이력)', () => {
+    const content = `# Title
+
+## 1. 기능 A
+기능 A 내용
+
+## 2. 기능 B
+기능 B 내용
+
+## 관련 문서
+- [참고](./ref.md)
+
+## 변경 이력
+| 버전 | 날짜 |
+`;
+    const sections = parseMarkdownSections(content, 'h2');
+    expect(sections).toHaveLength(2);
+    expect(sections[0].heading).toBe('1. 기능 A');
+    expect(sections[1].heading).toBe('2. 기능 B');
+  });
+
+  it('should exclude numbered metadata headings (7. 참고)', () => {
+    const content = `# Title
+
+## 3. 핵심 기능
+내용
+
+## 7. 참고
+참고 자료
+`;
+    const sections = parseMarkdownSections(content, 'h2');
+    expect(sections).toHaveLength(1);
+    expect(sections[0].heading).toBe('3. 핵심 기능');
+  });
+
+  it('should not exclude non-metadata headings containing similar words', () => {
+    const content = `# Title
+
+## 문서 관리 시스템
+관리 시스템 내용
+
+## 이력 추적 기능
+이력 추적 내용
+`;
+    const sections = parseMarkdownSections(content, 'h2');
+    expect(sections).toHaveLength(2);
+  });
 });
 
 // ─── Slugify ────────────────────────────────────────────────────
@@ -230,6 +278,18 @@ describe('getCompileRules', () => {
   it('should deduplicate by source', () => {
     const rules = getCompileRules(['data-design']);
     const dataSources = rules.filter(r => r.source === 'data-design');
+    expect(dataSources).toHaveLength(1);
+  });
+
+  it('requirements rule should use Korean field name 우선순위', () => {
+    const rules = getCompileRules(['requirements']);
+    const reqRule = rules.find(r => r.source === 'requirements');
+    expect(reqRule?.requiredFields).toContain('우선순위');
+    expect(reqRule?.requiredFields).not.toContain('Priority');
+  });
+
+  it('should not have duplicate data-design rules in COMPILE_RULES', () => {
+    const dataSources = COMPILE_RULES.filter(r => r.source === 'data-design');
     expect(dataSources).toHaveLength(1);
   });
 });

@@ -1,7 +1,7 @@
-# {PROJECT_NAME} 기획서
+# {{PROJECT_NAME}} 기획서
 
 **Version**: 1.0
-**Created**: {DATE}
+**Created**: {{DATE}}
 **PRD Reference**: [prd.md](./prd.md)
 
 ---
@@ -91,4 +91,4 @@ PRD에서 정의한 목표를 달성하기 위한 실행 계획.
 
 | 버전 | 날짜 | 변경 내용 | 작성자 |
 |-----|-----|----------|-------|
-| 1.0 | {DATE} | 최초 작성 | |
+| 1.0 | {{DATE}} | 최초 작성 | |

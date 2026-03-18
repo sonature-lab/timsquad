@@ -1,6 +1,6 @@
 ---
 description: 계획 품질 검증 루프. Full Mode에서 구현 전 필수 수행.
-globs:
+paths:
   - ".timsquad/ssot/**"
   - ".timsquad/state/**"
 ---
@@ -8,7 +8,7 @@ globs:
 # 계획 품질 검증 (Plan Review Protocol)
 
 ## 언제 수행하나
-`tsq f`로 Full Mode 진입 시, SSOT 체크 후 / 에이전트 위임 전.
+Controller를 통한 위임 시, SSOT 체크 후 / 에이전트 위임 전.
 
 ## 검증 축 (3-Axis Plan Review)
 

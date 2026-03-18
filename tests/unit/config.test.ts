@@ -112,24 +112,24 @@ describe('SKILL_PRESETS', () => {
 
   it('should not include frontend skills for api-backend', () => {
     const skills = SKILL_PRESETS['api-backend'];
-    expect(skills.some(s => s.startsWith('frontend/'))).toBe(false);
-    expect(skills).not.toContain('ui-design');
+    expect(skills.some(s => s.includes('react'))).toBe(false);
+    expect(skills).not.toContain('tsq-ui');
   });
 
   it('should not include frontend skills for infra', () => {
     const skills = SKILL_PRESETS['infra'];
-    expect(skills.some(s => s.startsWith('frontend/'))).toBe(false);
-    expect(skills.some(s => s.startsWith('database'))).toBe(false);
+    expect(skills.some(s => s.includes('react'))).toBe(false);
+    expect(skills.some(s => s.includes('database'))).toBe(false);
   });
 
   it('should include frontend skills for web-service', () => {
     const skills = SKILL_PRESETS['web-service'];
-    expect(skills).toContain('frontend/react');
-    expect(skills).toContain('frontend/nextjs');
+    expect(skills).toContain('tsq-react');
+    expect(skills).toContain('tsq-nextjs');
   });
 
   it('should include security for fintech', () => {
-    expect(SKILL_PRESETS['fintech']).toContain('security');
+    expect(SKILL_PRESETS['fintech']).toContain('tsq-security');
   });
 });
 
@@ -156,11 +156,11 @@ describe('KNOWLEDGE_PRESETS', () => {
 
 describe('BASE constants', () => {
   it('BASE_SKILLS should include core skills', () => {
-    expect(BASE_SKILLS).toContain('coding');
-    expect(BASE_SKILLS).toContain('testing');
-    expect(BASE_SKILLS).toContain('typescript');
-    expect(BASE_SKILLS).toContain('planning');
-    expect(BASE_SKILLS).toContain('architecture');
+    expect(BASE_SKILLS).toContain('tsq-coding');
+    expect(BASE_SKILLS).toContain('tsq-testing');
+    expect(BASE_SKILLS).toContain('tsq-typescript');
+    expect(BASE_SKILLS).toContain('tsq-planning');
+    expect(BASE_SKILLS).toContain('tsq-architecture');
   });
 
   it('BASE_KNOWLEDGE should include ssot-validation', () => {

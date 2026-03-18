@@ -8,7 +8,7 @@
   <!-- 공통 Phase 정의 -->
   <phases>
     <phase id="planning" name="기획/설계">
-      <primary-agent>tsq-planner</primary-agent>
+      <primary-agent>tsq-architect</primary-agent>
       <description>요구사항 분석, SSOT 문서 작성, 아키텍처 설계</description>
 
       <tasks>
@@ -58,8 +58,8 @@
       </methodology-tasks>
 
       <escalation-rules>
-        <rule trigger="SSOT 불일치" route="tsq-planner" action="작업 중단">
-          SSOT와 요구사항이 맞지 않으면 즉시 중단하고 Planner에게 보고
+        <rule trigger="SSOT 불일치" route="tsq-architect" action="작업 중단">
+          SSOT와 요구사항이 맞지 않으면 즉시 중단하고 Architect에게 보고
         </rule>
         <rule trigger="요구사항 불명확" route="User" action="질문">
           불명확한 부분은 User에게 직접 질문
@@ -93,9 +93,9 @@
           <action>Developer에게 수정 요청</action>
           <return-to-phase>implementation</return-to-phase>
         </level>
-        <level id="2" severity="Major" route="tsq-planner">
+        <level id="2" severity="Major" route="tsq-architect">
           <triggers>API 명세 불일치, 데이터 모델 불일치, 설계 문제</triggers>
-          <action>Planner에게 SSOT 수정 요청</action>
+          <action>Architect에게 SSOT 수정 요청</action>
           <return-to-phase>planning</return-to-phase>
         </level>
         <level id="3" severity="Critical" route="User">
@@ -127,7 +127,7 @@
         <level id="1" severity="Low,Medium" route="tsq-developer">
           <triggers>코드 수준 보안 이슈</triggers>
         </level>
-        <level id="2" severity="High" route="tsq-planner">
+        <level id="2" severity="High" route="tsq-architect">
           <triggers>설계 수준 보안 이슈</triggers>
         </level>
         <level id="3" severity="Critical" route="User">
@@ -188,8 +188,8 @@
       </step>
       <step id="2" action="fallback-agent">
         <description>폴백 에이전트로 위임 (workflow에 정의된 fallback)</description>
-        <example>tsq-frontend 실패 → tsq-developer로 폴백</example>
-        <example>tsq-dba 실패 → tsq-planner(architect)로 폴백</example>
+        <example>tsq-developer 실패 → tsq-developer로 폴백</example>
+        <example>tsq-dba 실패 → tsq-architect(architect)로 폴백</example>
       </step>
       <step id="3" action="pm-direct">
         <description>PM(현재 에이전트)이 직접 처리</description>

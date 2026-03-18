@@ -54,15 +54,15 @@
       </additional-outputs>
 
       <agent-assignment>
-        <task ref="ui-ux" agent="tsq-designer" fallback="tsq-planner"/>
-        <task ref="api-design" agent="tsq-planner" mode="architect"/>
+        <task ref="ui-ux" agent="tsq-designer" fallback="tsq-architect"/>
+        <task ref="api-design" agent="tsq-architect" mode="architect"/>
       </agent-assignment>
     </extend-phase>
 
     <!-- 구현 Phase 확장: Frontend/Backend 분리 -->
     <extend-phase id="implementation">
       <parallel-tracks>
-        <track id="frontend" agent="tsq-frontend" fallback="tsq-developer">
+        <track id="frontend" agent="tsq-developer" fallback="tsq-developer">
           <description>프론트엔드 구현</description>
           <prerequisites>
             <check>ssot/ui-ux-spec.md</check>
@@ -152,11 +152,11 @@
 
   <!-- Web Service 특화 에스컬레이션 규칙 -->
   <escalation-extensions>
-    <rule trigger="UI/UX 불일치" route="tsq-designer" fallback="tsq-planner">
+    <rule trigger="UI/UX 불일치" route="tsq-designer" fallback="tsq-architect">
       화면 설계와 구현이 맞지 않으면 Designer에게 확인
     </rule>
-    <rule trigger="API 계약 불일치" route="tsq-planner" mode="architect">
-      프론트-백 API 명세 불일치 시 Planner(Architect)가 조율
+    <rule trigger="API 계약 불일치" route="tsq-architect" mode="architect">
+      프론트-백 API 명세 불일치 시 Architect가 조율
     </rule>
     <rule trigger="성능 이슈" route="tsq-developer">
       성능 기준 미달 시 Developer가 최적화

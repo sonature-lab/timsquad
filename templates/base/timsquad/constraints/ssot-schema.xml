@@ -25,7 +25,7 @@
 title: 서비스 명세서
 version: 1.0.0
 last_updated: 2026-02-03
-author: tsq-planner
+author: tsq-architect
 status: approved
 ---
         ]]>
@@ -41,7 +41,7 @@ status: approved
 
 | 버전 | 날짜 | 작성자 | 변경 내용 |
 |------|------|--------|----------|
-| 1.0.0 | 2026-02-03 | tsq-planner | 초기 작성 |
+| 1.0.0 | 2026-02-03 | tsq-architect | 초기 작성 |
         ]]>
       </template>
     </rule>

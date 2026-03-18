@@ -2,7 +2,7 @@
 title: "배포 명세서 (Deployment Specification)"
 version: 1.0.0
 last_updated: {{DATE}}
-author: tsq-planner
+author: tsq-architect
 status: draft
 project: {{PROJECT_NAME}}
 required_level: 3
@@ -21,13 +21,11 @@ required_level: 3
 
 ```
                     ┌─────────────┐
-                    │   CDN       │
-                    │ (CloudFront)│
+                    │     CDN     │
                     └──────┬──────┘
                            │
                     ┌──────▼──────┐
                     │ Load Balancer│
-                    │    (ALB)     │
                     └──────┬──────┘
                            │
          ┌─────────────────┼─────────────────┐
@@ -42,9 +40,10 @@ required_level: 3
               ┌────────────┼────────────┐
               │            │            │
          ┌────▼────┐  ┌───▼────┐  ┌───▼────┐
-         │  DB     │  │ Redis  │  │  S3    │
-         │ (RDS)   │  │(Cache) │  │(Storage)│
+         │   DB    │  │ Cache  │  │Storage │
          └─────────┘  └────────┘  └────────┘
+
+> 클라우드 예시: AWS (CloudFront, ALB, ECS, RDS), GCP (Cloud CDN, Cloud Run, Cloud SQL), Azure (Front Door, App Service, Azure DB)
 ```
 
 ### 1.2 환경 구성
@@ -63,34 +62,38 @@ required_level: 3
 
 | 리소스 | 서비스 | 사양 | 환경별 수량 |
 |-------|-------|------|-----------|
-| 애플리케이션 | ECS Fargate | 0.5 vCPU, 1GB | Dev:1, Stg:2, Prod:3+ |
-| 배치 작업 | Lambda | 256MB | 필요 시 |
+| 애플리케이션 | 컨테이너 서비스 | 0.5 vCPU, 1GB | Dev:1, Stg:2, Prod:3+ |
+| 배치 작업 | 서버리스 함수 | 256MB | 필요 시 |
+
+> 클라우드별: AWS(ECS Fargate, Lambda), GCP(Cloud Run, Cloud Functions), Azure(Container Apps, Azure Functions)
 
 ### 2.2 데이터베이스
 
 | 리소스 | 서비스 | 사양 | 백업 |
 |-------|-------|------|------|
-| Primary DB | RDS PostgreSQL | db.t3.medium | 7일 |
-| Read Replica | RDS (Prod만) | db.t3.medium | - |
-| Cache | ElastiCache Redis | cache.t3.micro | - |
+| Primary DB | Managed PostgreSQL | Medium | 7일 |
+| Read Replica | (Prod만) | Medium | - |
+| Cache | Managed Redis | Small | - |
+
+> 클라우드별: AWS(RDS, ElastiCache), GCP(Cloud SQL, Memorystore), Azure(Azure DB, Azure Cache)
 
 ### 2.3 스토리지
 
 | 리소스 | 서비스 | 용도 |
 |-------|-------|------|
-| 정적 파일 | S3 | 이미지, 파일 업로드 |
-| 로그 | S3 + CloudWatch | 애플리케이션 로그 |
-| 백업 | S3 Glacier | DB 백업 장기 보관 |
+| 정적 파일 | 오브젝트 스토리지 | 이미지, 파일 업로드 |
+| 로그 | 오브젝트 스토리지 + 로그 서비스 | 애플리케이션 로그 |
+| 백업 | 아카이브 스토리지 | DB 백업 장기 보관 |
 
 ### 2.4 네트워크
 
-| 리소스 | 서비스 | 설정 |
-|-------|-------|------|
-| VPC | VPC | 10.0.0.0/16 |
-| Public Subnet | 2개 AZ | 10.0.1.0/24, 10.0.2.0/24 |
-| Private Subnet | 2개 AZ | 10.0.10.0/24, 10.0.20.0/24 |
-| NAT Gateway | 각 AZ | 아웃바운드 트래픽 |
-| Security Group | 서비스별 | 최소 권한 |
+| 리소스 | 설정 |
+|-------|------|
+| VPC/VNet | 10.0.0.0/16 |
+| Public Subnet | 2개 AZ, 10.0.1.0/24, 10.0.2.0/24 |
+| Private Subnet | 2개 AZ, 10.0.10.0/24, 10.0.20.0/24 |
+| NAT Gateway | 아웃바운드 트래픽 |
+| Security Group | 서비스별 최소 권한 |
 
 ---
 
@@ -137,6 +140,7 @@ jobs:
           docker push $IMAGE_NAME
 
   test:
+    runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Unit Tests
@@ -149,6 +153,7 @@ jobs:
         run: npm audit
 
   deploy-staging:
+    runs-on: ubuntu-latest
     needs: test
     if: github.ref == 'refs/heads/develop'
     steps:
@@ -156,6 +161,7 @@ jobs:
         run: ./deploy.sh staging
 
   deploy-production:
+    runs-on: ubuntu-latest
     needs: test
     if: github.ref == 'refs/heads/main'
     environment: production  # 승인 필요
@@ -164,6 +170,7 @@ jobs:
         run: ./deploy.sh production
 
   verify:
+    runs-on: ubuntu-latest
     needs: [deploy-staging, deploy-production]
     steps:
       - name: Smoke Test
@@ -381,4 +388,4 @@ CMD ["node", "dist/main.js"]
 
 | 버전 | 날짜 | 작성자 | 변경 내용 |
 |------|------|--------|----------|
-| 1.0.0 | {{DATE}} | tsq-planner | 초기 작성 |
+| 1.0.0 | {{DATE}} | tsq-architect | 초기 작성 |

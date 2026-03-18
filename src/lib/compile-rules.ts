@@ -92,7 +92,7 @@ export const COMPILE_RULES: CompileRule[] = [
     output: 'rules',
     splitBy: 'none',
     filenamePattern: 'completion-criteria.md',
-    requiredFields: ['ID', 'Priority'],
+    requiredFields: ['ID', '우선순위'],
     description: '요건 목록 → 완료 기준 규칙',
   },
   {
@@ -128,13 +128,46 @@ export const COMPILE_RULES: CompileRule[] = [
     requiredFields: [],
     description: '테스트 명세 (분할 없음)',
   },
+  // ── 타입별 선택 배포 문서 ──
   {
-    source: 'data-design',
+    source: 'state-machine',
     output: 'references',
     splitBy: 'h2',
     filenamePattern: '{section}.spec.md',
-    requiredFields: ['Fields'],
-    description: '데이터 모델별 분할',
+    requiredFields: [],
+    description: '엔티티별 상태 머신 분할',
+  },
+  {
+    source: 'compliance-matrix',
+    output: 'rules',
+    splitBy: 'none',
+    filenamePattern: 'compliance-constraints.md',
+    requiredFields: [],
+    description: '규제 준수 요건 → 제약 규칙',
+  },
+  {
+    source: 'audit-trail-spec',
+    output: 'references',
+    splitBy: 'none',
+    filenamePattern: 'audit-trail-spec.spec.md',
+    requiredFields: [],
+    description: '감사 추적 설계 (분할 없음)',
+  },
+  {
+    source: 'navigation-map',
+    output: 'references',
+    splitBy: 'none',
+    filenamePattern: 'navigation-map.spec.md',
+    requiredFields: [],
+    description: '네비게이션 구조 (분할 없음)',
+  },
+  {
+    source: 'component-map',
+    output: 'references',
+    splitBy: 'h2',
+    filenamePattern: '{section}.spec.md',
+    requiredFields: [],
+    description: '컴포넌트 계층별 분할',
   },
 ];
 

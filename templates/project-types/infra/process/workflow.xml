@@ -21,7 +21,7 @@
       <tasks>
         <task id="architecture-design" required="true">
           <name>인프라 아키텍처 설계</name>
-          <agent>tsq-planner</agent>
+          <agent>tsq-architect</agent>
           <output>deployment-spec.md</output>
           <checklist>
             <item>네트워크 토폴로지</item>
@@ -47,7 +47,7 @@
 
         <task id="env-config" required="true">
           <name>환경 설정 정의</name>
-          <agent>tsq-planner</agent>
+          <agent>tsq-architect</agent>
           <output>env-config.md</output>
           <checklist>
             <item>환경별 설정</item>
@@ -58,7 +58,7 @@
 
         <task id="cost-estimation" required="true">
           <name>비용 산정</name>
-          <agent>tsq-planner</agent>
+          <agent>tsq-architect</agent>
           <checklist>
             <item>리소스별 비용</item>
             <item>예상 월간 비용</item>

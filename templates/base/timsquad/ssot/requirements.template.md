@@ -1,7 +1,7 @@
-# {PROJECT_NAME} 요건 정의서
+# {{PROJECT_NAME}} 요건 정의서
 
 **Version**: 1.0
-**Created**: {DATE}
+**Created**: {{DATE}}
 **PRD Reference**: [prd.md](./prd.md)
 
 ---
@@ -114,4 +114,4 @@
 
 | 버전 | 날짜 | 변경 내용 | 작성자 |
 |-----|-----|----------|-------|
-| 1.0 | {DATE} | 최초 작성 | |
+| 1.0 | {{DATE}} | 최초 작성 | |

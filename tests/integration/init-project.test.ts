@@ -47,7 +47,8 @@ describe('initializeProject - Common Structure', () => {
 
     expect(existsSync(path.join(tmpDir, 'CLAUDE.md'))).toBe(true);
     const content = readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
-    expect(content).toContain('test');
+    expect(content).toContain('<!-- tsq:start -->');
+    expect(content).toContain('<!-- tsq:end -->');
   });
 
   it('should create .gitignore', async () => {
@@ -124,16 +125,16 @@ describe('initializeProject - Selective Skill Deployment', () => {
     if (!existsSync(skillsDir)) return;
 
     const entries = readdirSync(skillsDir);
-    expect(entries).not.toContain('frontend');
-    expect(entries).not.toContain('ui-design');
+    expect(entries).not.toContain('tsq-react');
+    expect(entries).not.toContain('tsq-ui');
   });
 
   it('should deploy frontend skills for web-service', async () => {
     const config = createDefaultConfig('test', 'web-service', 2);
     await initializeProject(tmpDir, 'test', 'web-service', 2, config);
 
-    const frontendDir = path.join(tmpDir, '.claude', 'skills', 'frontend');
-    expect(existsSync(frontendDir)).toBe(true);
+    const reactDir = path.join(tmpDir, '.claude', 'skills', 'tsq-react');
+    expect(existsSync(reactDir)).toBe(true);
   });
 
   it('should deploy minimal skills for infra', async () => {
@@ -144,9 +145,9 @@ describe('initializeProject - Selective Skill Deployment', () => {
     if (!existsSync(skillsDir)) return;
 
     const entries = readdirSync(skillsDir);
-    expect(entries).not.toContain('frontend');
-    expect(entries).not.toContain('database');
-    expect(entries).not.toContain('backend');
+    expect(entries).not.toContain('tsq-react');
+    expect(entries).not.toContain('tsq-database');
+    expect(entries).not.toContain('tsq-hono');
   });
 });
 
@@ -191,7 +192,7 @@ describe('initializeProject - Composition Layer (v4.0)', () => {
     if (existsSync(devPath)) {
       const content = readFileSync(devPath, 'utf-8');
       expect(content).toContain('tsq-protocol');
-      expect(content).toContain('tsq log');
+      expect(content).toContain('.timsquad/logs/');
     }
   });
 
@@ -221,10 +222,10 @@ describe('initializeProject - Composition Layer (v4.0)', () => {
     const skillsDir = path.join(tmpDir, '.claude', 'skills');
     if (!existsSync(skillsDir)) return;
 
-    // Stack adds frontend/react and database/prisma even for infra type
+    // Stack adds tsq-react and tsq-prisma even for infra type
     const entries = readdirSync(skillsDir);
-    expect(entries).toContain('frontend');
-    expect(entries).toContain('database');
+    expect(entries).toContain('tsq-react');
+    expect(entries).toContain('tsq-prisma');
   });
 
   it('should not deploy stack skills when stack is empty', async () => {
@@ -237,7 +238,143 @@ describe('initializeProject - Composition Layer (v4.0)', () => {
     if (!existsSync(skillsDir)) return;
 
     const entries = readdirSync(skillsDir);
-    expect(entries).not.toContain('frontend');
+    expect(entries).not.toContain('tsq-react');
+  });
+});
+
+describe('initializeProject - Selective SSOT Deployment', () => {
+  it('should deploy compliance-matrix for fintech L1', async () => {
+    const config = createDefaultConfig('test', 'fintech', 1);
+    await initializeProject(tmpDir, 'test', 'fintech', 1, config);
+
+    const ssotDir = path.join(tmpDir, '.timsquad', 'ssot');
+    expect(existsSync(path.join(ssotDir, 'compliance-matrix.md'))).toBe(true);
+    expect(existsSync(path.join(ssotDir, 'audit-trail-spec.md'))).toBe(true);
+    expect(existsSync(path.join(ssotDir, 'state-machine.md'))).toBe(true);
+  });
+
+  it('should not deploy compliance-matrix for web-service', async () => {
+    const config = createDefaultConfig('test', 'web-service', 2);
+    await initializeProject(tmpDir, 'test', 'web-service', 2, config);
+
+    const ssotDir = path.join(tmpDir, '.timsquad', 'ssot');
+    expect(existsSync(path.join(ssotDir, 'compliance-matrix.md'))).toBe(false);
+    expect(existsSync(path.join(ssotDir, 'audit-trail-spec.md'))).toBe(false);
+  });
+
+  it('should deploy navigation-map for mobile-app', async () => {
+    const config = createDefaultConfig('test', 'mobile-app', 1);
+    await initializeProject(tmpDir, 'test', 'mobile-app', 1, config);
+
+    const ssotDir = path.join(tmpDir, '.timsquad', 'ssot');
+    expect(existsSync(path.join(ssotDir, 'navigation-map.md'))).toBe(true);
+  });
+
+  it('should not deploy navigation-map for api-backend', async () => {
+    const config = createDefaultConfig('test', 'api-backend', 2);
+    await initializeProject(tmpDir, 'test', 'api-backend', 2, config);
+
+    const ssotDir = path.join(tmpDir, '.timsquad', 'ssot');
+    expect(existsSync(path.join(ssotDir, 'navigation-map.md'))).toBe(false);
+  });
+
+  it('should deploy sdk-spec for platform', async () => {
+    const config = createDefaultConfig('test', 'platform', 1);
+    await initializeProject(tmpDir, 'test', 'platform', 1, config);
+
+    const ssotDir = path.join(tmpDir, '.timsquad', 'ssot');
+    expect(existsSync(path.join(ssotDir, 'sdk-spec.md'))).toBe(true);
+  });
+
+  it('should deploy infra-topology for infra L1', async () => {
+    const config = createDefaultConfig('test', 'infra', 1);
+    await initializeProject(tmpDir, 'test', 'infra', 1, config);
+
+    const ssotDir = path.join(tmpDir, '.timsquad', 'ssot');
+    expect(existsSync(path.join(ssotDir, 'infra-topology.md'))).toBe(true);
+    expect(existsSync(path.join(ssotDir, 'monitoring-spec.md'))).toBe(true);
+  });
+
+  it('should deploy component-map for web-service L2 but not L1', async () => {
+    const configL2 = createDefaultConfig('test', 'web-service', 2);
+    await initializeProject(tmpDir, 'test', 'web-service', 2, configL2);
+    expect(existsSync(path.join(tmpDir, '.timsquad', 'ssot', 'component-map.md'))).toBe(true);
+
+    const tmp2 = await createTmpDir();
+    try {
+      const configL1 = createDefaultConfig('test', 'web-service', 1);
+      await initializeProject(tmp2.dir, 'test', 'web-service', 1, configL1);
+      expect(existsSync(path.join(tmp2.dir, '.timsquad', 'ssot', 'component-map.md'))).toBe(false);
+    } finally {
+      await tmp2.cleanup();
+    }
+  });
+
+  it('should always deploy base SSOT documents', async () => {
+    for (const type of ALL_TYPES) {
+      const tmp = await createTmpDir();
+      try {
+        const config = createDefaultConfig('test', type, 1);
+        await initializeProject(tmp.dir, 'test', type, 1, config);
+
+        const ssotDir = path.join(tmp.dir, '.timsquad', 'ssot');
+        // Level 1 base documents should always exist
+        expect(existsSync(path.join(ssotDir, 'prd.md')), `Missing prd.md for ${type}`).toBe(true);
+        expect(existsSync(path.join(ssotDir, 'planning.md')), `Missing planning.md for ${type}`).toBe(true);
+        expect(existsSync(path.join(ssotDir, 'requirements.md')), `Missing requirements.md for ${type}`).toBe(true);
+      } finally {
+        await tmp.cleanup();
+      }
+    }
+  });
+
+  it('should have no unsubstituted {{}} in type-specific SSOT files', async () => {
+    const config = createDefaultConfig('test', 'fintech', 3);
+    await initializeProject(tmpDir, 'test', 'fintech', 3, config);
+
+    const ssotDir = path.join(tmpDir, '.timsquad', 'ssot');
+    const files = readdirSync(ssotDir).filter(f => f.endsWith('.md'));
+
+    for (const file of files) {
+      const content = readFileSync(path.join(ssotDir, file), 'utf-8');
+      const remaining = content.match(/\{\{[A-Z_]+\}\}/g);
+      expect(remaining, `Unsubstituted variables in ${file}: ${remaining?.join(', ')}`).toBeNull();
+    }
+  });
+
+  it('should use fintech override for compliance-matrix', async () => {
+    const config = createDefaultConfig('test', 'fintech', 3);
+    await initializeProject(tmpDir, 'test', 'fintech', 3, config);
+
+    const content = readFileSync(
+      path.join(tmpDir, '.timsquad', 'ssot', 'compliance-matrix.md'), 'utf-8',
+    );
+    // fintech 오버라이드에만 있는 내용
+    expect(content).toContain('전자금융거래법');
+    expect(content).toContain('PCI DSS v4.0');
+    expect(content).toContain('type_override: fintech');
+  });
+
+  it('should use fintech override for audit-trail-spec', async () => {
+    const config = createDefaultConfig('test', 'fintech', 3);
+    await initializeProject(tmpDir, 'test', 'fintech', 3, config);
+
+    const content = readFileSync(
+      path.join(tmpDir, '.timsquad', 'ssot', 'audit-trail-spec.md'), 'utf-8',
+    );
+    expect(content).toContain('TRADE_EXECUTED');
+    expect(content).toContain('FDS');
+    expect(content).toContain('type_override: fintech');
+  });
+
+  it('should use base compliance-matrix for non-fintech types that do not have override', async () => {
+    // web-service L2 doesn't have compliance-matrix at all (not in required)
+    // but if it did, it should be the base version
+    const config = createDefaultConfig('test', 'web-service', 2);
+    await initializeProject(tmpDir, 'test', 'web-service', 2, config);
+
+    // web-service L2 doesn't include compliance-matrix
+    expect(existsSync(path.join(tmpDir, '.timsquad', 'ssot', 'compliance-matrix.md'))).toBe(false);
   });
 });
 

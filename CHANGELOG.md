@@ -5,6 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.0] - 2026-03-18
+
+### Breaking Changes
+- **CLI 22개 커맨드 삭제**: `tsq status`, `tsq q`, `tsq f`, `tsq log`, `tsq feedback`, `tsq retro`, `tsq metrics`, `tsq mi`, `tsq knowledge`, `tsq wf`, `tsq compile`, `tsq audit`, `tsq session`, `tsq skills`, `tsq watch`, `tsq improve`, `tsq upgrade`, `tsq git commit/pr/release/sync` 삭제
+  - CLI는 핵심 3개만 유지: `tsq init`, `tsq update`, `tsq daemon`
+  - 모든 기능은 Claude Code 슬래시 커맨드(스킬)로 전환: `/tsq-status`, `/tsq-log`, `/tsq-retro` 등
+- **스킬 namespace 전환**: `coding/`, `testing/`, `controller/` 등 → `tsq-coding/`, `tsq-testing/`, `tsq-controller/` flat namespace
+- **레거시 삭제**: `scripts/` 디렉토리 (12파일), `install/` 디렉토리, CLAUDE.md.template, Feedback Routing (~900줄)
+
+### Added
+- **스킬 주도 파이프라인 아키텍처** (#20)
+  - 5-Layer 강제성: Hook Gate → Skill Protocol → CLAUDE.md → Slash Commands → Audit
+  - Capability Token 검증: `check-capability.sh` — controller 미경유 시 파일 쓰기 차단
+  - 변경 범위 추적: `change-scope-guard.sh` — 3파일 경고, 6파일 차단, 100줄 경고
+  - SSOT Readiness Guard: `context-restore.sh` — PRD 미작성 시 자동 안내
+  - SSOT Drift Detection: Daemon event-queue에서 7일 초과 미갱신 문서 감지
+- **35개 `tsq-*` 스킬**: 슬래시 커맨드 통합, 각 스킬에 description + "Use when" 트리거 조건 포함
+  - 신규: `tsq-start`, `tsq-status`, `tsq-update`, `tsq-delete`, `tsq-log`, `tsq-grill`, `tsq-decompose`, `tsq-hono`
+  - 통합: `tsq-audit` (감사+리뷰), `tsq-controller` (triggers/delegation 통합)
+- **8개 Hook Gate**: Fail-closed 5개 + Fail-open 3개
+  - `safe-guard.sh`, `phase-guard.sh`, `check-capability.sh`, `change-scope-guard.sh`, `completion-guard.sh`, `build-gate.sh`, `pre-compact.sh`, `context-restore.sh`
+- **4계층 메모리**: `decisions.jsonl` → `phase-memory.md` → `trails/` → `logs/`
+- **CLAUDE.md 주입블록**: `<!-- tsq:start/end -->` 마커로 PM 역할 자동 주입 (~15줄)
+
+### Changed
+- **Daemon 경량화**: 관찰자 전용 (event-queue 489→186줄), L1 + Decision Log 수집만 담당
+  - Meta Index 인메모리 캐시 비활성화 (IPC notify는 유지, 디스크 인덱스는 유지)
+- **Controller v2.1**: Delegation Rules 역할명 통일 (QA→`tsq-qa.md`, Architect→`tsq-architect.md`), workflow.json 갱신 프로토콜 추가
+- **tsq-protocol v2.1**: 메인세션/서브에이전트 분기, Completion Report 필수화
+
+### Fixed
+- **파이프라인 감사 14 Critical 전수정** (6-Agent 병렬 감사 + 5-Agent 교차 검증)
+  - PID 경로 불일치: `.daemon/daemon.pid` → `.daemon.pid`
+  - Phase 읽기 버그: `workflow.json` → `current-phase.json`
+  - SSOT auto-compile 경로: `'controller'` → `'tsq-controller'`
+  - Hook stdin 읽기: `read -t 1 -r line` → `cat 2>/dev/null` (4개 스크립트)
+  - check-capability deny 포맷: `hookSpecificOutput` 래퍼 누락
+  - compiler exists() 상대경로 → 절대경로 변환
+  - SIGTERM 이중 실행 방지: `shuttingDown` guard 추가
+  - eventLog 무한 증가: 1000건 초과 시 500건으로 trim
+  - build-gate staged 파일 감지: `--cached` 추가
+  - context-restore division by zero 방어
+
+### Removed
+- CLI 22개 커맨드 (→ 스킬 전환)
+- 레거시 스킬 181개 파일 (→ `tsq-*` namespace 재구성)
+- `scripts/` 디렉토리 12개 파일, `install/` 디렉토리
+- `CLAUDE.md.template` (→ 동적 주입블록)
+- Feedback Routing 시스템 (~900줄)
+
+---
+
 ## [3.6.0] - 2026-03-08
 
 ### Added
@@ -277,6 +329,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[3.7.0]: https://github.com/sonature-lab/timsquad/compare/v3.6.0...v3.7.0
+[3.6.0]: https://github.com/sonature-lab/timsquad/compare/v3.5.0...v3.6.0
 [3.5.0]: https://github.com/sonature-lab/timsquad/compare/v3.4.0...v3.5.0
 [3.4.0]: https://github.com/sonature-lab/timsquad/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/sonature-lab/timsquad/compare/v3.2.0...v3.3.0

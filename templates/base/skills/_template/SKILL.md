@@ -5,8 +5,6 @@ description: |
   {에이전트가 이 description만 보고 스킬 필요 여부를 판단함.}
 version: "1.0.0"
 tags: [{tag1}, {tag2}]
-depends_on: []
-conflicts_with: []
 user-invocable: false
 ---
 
@@ -26,7 +24,7 @@ user-invocable: false
 - **Input**: {필요한 입력/컨텍스트}
 - **Output**: {보장하는 출력/결과}
 - **Error**: {실패 시 행동}
-- **Dependencies**: {depends_on 스킬 목록 또는 "없음"}
+- **Dependencies**: {관련 스킬 또는 "없음"}
 
 ## Protocol
 

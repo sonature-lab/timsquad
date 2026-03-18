@@ -1,6 +1,6 @@
 ---
 description: 피드백 라우팅 규칙. Level 1/2/3 분류 기준과 라우팅.
-globs:
+paths:
   - ".timsquad/feedback/**"
 ---
 
@@ -15,4 +15,4 @@ globs:
 ## 규칙
 - User 승인 없이 Level 3 변경 금지
 - 모든 피드백에 Level 분류 필수
-- `tsq feedback "{설명}"` 으로 기록 (직접 파일 생성 금지)
+- 피드백은 `.timsquad/state/decisions.jsonl`에 기록

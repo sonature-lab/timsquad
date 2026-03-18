@@ -57,9 +57,9 @@
       </additional-outputs>
 
       <agent-assignment>
-        <task ref="ui-ux" agent="tsq-designer" fallback="tsq-planner"/>
-        <task ref="platform-spec" agent="tsq-planner" mode="architect"/>
-        <task ref="data-model" agent="tsq-planner" mode="architect"/>
+        <task ref="ui-ux" agent="tsq-designer" fallback="tsq-architect"/>
+        <task ref="platform-spec" agent="tsq-architect" mode="architect"/>
+        <task ref="data-model" agent="tsq-architect" mode="architect"/>
       </agent-assignment>
     </extend-phase>
 
@@ -152,7 +152,7 @@
 
   <!-- Mobile App 특화 에스컬레이션 규칙 -->
   <escalation-extensions>
-    <rule trigger="UI/UX 불일치" route="tsq-designer" fallback="tsq-planner">
+    <rule trigger="UI/UX 불일치" route="tsq-designer" fallback="tsq-architect">
       화면 설계와 구현이 맞지 않으면 Designer에게 확인
     </rule>
     <rule trigger="플랫폼 호환성 이슈" route="tsq-developer">

@@ -21,7 +21,7 @@
       <tasks>
         <task id="public-api" required="true">
           <name>Public API 설계</name>
-          <agent>tsq-planner</agent>
+          <agent>tsq-architect</agent>
           <output>service-spec.md</output>
           <checklist>
             <item>함수/클래스 시그니처</item>
@@ -33,7 +33,7 @@
 
         <task id="extension-points" required="true">
           <name>확장 포인트 정의</name>
-          <agent>tsq-planner</agent>
+          <agent>tsq-architect</agent>
           <output>integration-spec.md</output>
           <checklist>
             <item>훅/콜백</item>
@@ -44,7 +44,7 @@
 
         <task id="glossary" required="true">
           <name>용어 정의</name>
-          <agent>tsq-planner</agent>
+          <agent>tsq-architect</agent>
           <output>glossary.md</output>
           <checklist>
             <item>핵심 개념</item>

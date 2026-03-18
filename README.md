@@ -24,7 +24,7 @@ Optimized Role Definitions + Advanced Skills + Retrospective Learning = Continuo
 | Philosophy | "Zero learning curve" | **"Structure leads to better results"** |
 | Decision Making | LLM decides everything | **Developer stays in control** |
 | Priority | Speed | **Quality + Consistency** |
-| Repetitive Tasks | LLM handles (token cost) | **Program handles (zero tokens)** |
+| Enforcement | Prompt only (soft) | **Hook Gate + Capability Token (hard)** |
 | Learning | None | **Retrospective learning for continuous improvement** |
 
 **For developers who want structure, not magic.**
@@ -66,43 +66,37 @@ tsq init -n my-app -t web-service -l 2 -y     # Non-interactive
 
 ```
 my-app/
-├── CLAUDE.md                      # PM role definition (agent instructions)
+├── CLAUDE.md                      # PM role (auto-injected ~15 lines)
 ├── .claude/
-│   ├── settings.json              # Claude Code settings
-│   ├── rules/                     # Main session rules
-│   ├── agents/                    # 6 specialized agents
-│   │   ├── tsq-architect.md       # Architecture design (Sonnet)
-│   │   ├── tsq-developer.md       # Code implementation (Sonnet)
-│   │   ├── tsq-qa.md              # Verification/review (Sonnet)
-│   │   ├── tsq-security.md        # Security audit (Sonnet)
-│   │   ├── tsq-dba.md             # DB design (Sonnet)
-│   │   └── tsq-designer.md        # UI/UX design (Sonnet)
-│   ├── skills/                    # Domain-specific skillsets
+│   ├── settings.json              # Claude Code settings (8 hooks)
+│   ├── rules/                     # Path-specific rules (15)
+│   ├── agents/                    # 7 specialized agents
+│   │   ├── tsq-architect.md       # Architecture design
+│   │   ├── tsq-developer.md       # Code implementation
+│   │   ├── tsq-qa.md              # Verification/review
+│   │   ├── tsq-security.md        # Security audit
+│   │   ├── tsq-dba.md             # DB design
+│   │   ├── tsq-designer.md        # UI/UX design
+│   │   └── tsq-librarian.md       # Phase recording
+│   ├── skills/                    # tsq-* skills (selected by project type)
 │   │   ├── tsq-protocol/          # Shared agent protocol
-│   │   ├── coding/                # Coding rules + rules/
-│   │   ├── testing/               # Test strategies + references/
-│   │   ├── typescript/            # TypeScript patterns + rules/
-│   │   ├── frontend/(react|nextjs)/ # Frontend + 22 Vercel rules
-│   │   ├── backend/node/          # Node.js backend + rules/
-│   │   ├── database/prisma/       # Prisma ORM + rules/
-│   │   ├── mobile/dart/             # Dart language + rules/
-│   │   ├── mobile/flutter/          # Flutter dev + rules/ + refs/
-│   │   │   └── push-notifications/  # FCM + local + background
-│   │   ├── product-audit/            # Product audit (7 areas, 156 items)
-│   │   │   ├── rules/               # Protocol, scoring, FP guard
-│   │   │   ├── checklists/           # Security ~ Functional (7)
-│   │   │   └── templates/            # Report + improvement plan
-│   │   ├── methodology/(tdd|bdd|ddd|debugging)/
-│   │   └── ...
+│   │   ├── tsq-controller/        # Context DI + delegation
+│   │   ├── tsq-coding/            # Coding rules
+│   │   ├── tsq-testing/           # Test strategies
+│   │   ├── tsq-typescript/        # TypeScript patterns
+│   │   ├── tsq-react/             # React (if configured)
+│   │   ├── tsq-nextjs/            # Next.js + Vercel rules
+│   │   ├── tsq-database/          # DB design
+│   │   ├── tsq-product-audit/     # Product audit (7 areas)
+│   │   ├── tsq-tdd/               # TDD methodology
+│   │   └── ...                    # Others (per config)
 │   └── knowledge/                 # Agent reference knowledge
-│       ├── checklists/            # Security, accessibility, SSOT validation
-│       └── templates/             # Output formats (task-result, etc.)
 └── .timsquad/
     ├── config.yaml                # Project configuration
     ├── ssot/                      # SSOT documents (5–14 per level)
     ├── process/                   # Workflow definitions
-    ├── state/                     # State management + Meta Index
-    ├── feedback/                  # Feedback store
+    ├── state/                     # State management
+    ├── trails/                    # Phase thinking archives
     ├── logs/                      # 3-tier logs (L1→L2→L3)
     └── retrospective/             # Retrospective data
 ```
@@ -112,24 +106,51 @@ my-app/
 ```bash
 claude                                    # Launch Claude Code
 
-# PM (CLAUDE.md) automatically classifies tasks and delegates to agents
-@tsq-architect "Design the system architecture"
+# Use slash commands for all operations
+/tsq-start                               # Start pipeline + onboarding
+/tsq-status                              # Check current status
+/tsq-grill                               # Deep interview for Sub-PRD
+/tsq-decompose                           # Generate Phase-Sequence-Task plan
+
+# PM (CLAUDE.md) delegates to agents via controller
 @tsq-developer "Implement the login API"
 @tsq-qa "Review the code"
 ```
 
-### 4. Manage Tasks via CLI
+### 4. CLI Commands
 
 ```bash
-tsq status                        # Check current status
-tsq q "change button color"       # Quick mode (simple tasks)
-tsq f "add payment feature"       # Full mode (SSOT validation)
-tsq retro auto                    # Run retrospective automatically
+tsq init                          # Initialize project
+tsq update                        # Update skills/agents to latest
+tsq daemon start                  # Start background daemon
 ```
+
+> All other operations use Claude Code slash commands. See [CLI Reference](docs/cli.en.md).
 
 ---
 
 ## Key Features
+
+### 5-Layer Enforcement Architecture
+
+```
+Layer 1: Hook Gate (100% enforced)
+  └ PreToolUse hooks + Capability Token — system-level blocking
+
+Layer 2: Skill Protocol (90-95% compliance)
+  └ tsq-protocol + controller — process guidance
+  └ Agent-specific skills preloaded via skills: field
+
+Layer 3: CLAUDE.md (role definition only)
+  └ PM role + pipeline prerequisites (~15 lines)
+
+Layer 4: Slash Commands (explicit process)
+  └ /tsq-start, /tsq-status, /tsq-grill, /tsq-retro
+
+Layer 5: Audit (async post-tracking)
+  └ Daemon observes → session logs, metrics
+  └ Daemon failure doesn't affect main pipeline
+```
 
 ### SSOT Document System
 
@@ -143,87 +164,59 @@ Required documents are automatically determined by project level:
 
 ### Agent System
 
-The PM (CLAUDE.md) orchestrates and delegates to 6 specialized agents. Each agent features XML-structured prompts, mandatory skill injection, and 3-tier feedback routing.
+7 specialized agents with Controller-based delegation:
 
 | Agent | Role |
 |-------|------|
-| `@tsq-architect` | Architecture design, ADR, code structure review |
+| `@tsq-architect` | Architecture design, ADR, plan review |
 | `@tsq-developer` | SSOT-driven code implementation, TDD |
 | `@tsq-qa` | Code review, test verification, SSOT compliance |
 | `@tsq-security` | Security audit, OWASP, vulnerability analysis |
 | `@tsq-dba` | DB design, query optimization, migrations |
 | `@tsq-designer` | UI/UX design, accessibility, design tokens |
+| `@tsq-librarian` | Phase recording, memory management |
 
-### Feedback Routing (L1/L2/L3)
+### 35 Skills (Slash Commands)
 
-Feedback is automatically classified into 3 tiers with appropriate actions:
+All skills use `tsq-*` flat namespace and are available as slash commands:
+
+| Category | Skills |
+|----------|--------|
+| **Core** | `tsq-protocol`, `tsq-controller`, `tsq-start`, `tsq-status` |
+| **Coding** | `tsq-coding`, `tsq-testing`, `tsq-typescript`, `tsq-hono` |
+| **Planning** | `tsq-planning`, `tsq-spec`, `tsq-grill`, `tsq-decompose` |
+| **Frontend** | `tsq-react`, `tsq-nextjs`, `tsq-ui` |
+| **Backend** | `tsq-database`, `tsq-prisma`, `tsq-security` |
+| **Mobile** | `tsq-dart`, `tsq-flutter` (+ 6 sub-skills) |
+| **Quality** | `tsq-product-audit`, `tsq-audit`, `tsq-stability` |
+| **Methodology** | `tsq-tdd`, `tsq-bdd`, `tsq-ddd`, `tsq-debugging` |
+| **Operations** | `tsq-librarian`, `tsq-log`, `tsq-retro`, `tsq-prompt` |
+
+### 8 Hook Gates
+
+| Hook | Script | Role | Strategy |
+|------|--------|------|----------|
+| PreToolUse (Bash) | `safe-guard.sh` | Block destructive commands | Fail-closed |
+| PreToolUse (Write\|Edit) | `phase-guard.sh` | Phase file restrictions | Fail-closed |
+| PreToolUse (Write\|Edit) | `check-capability.sh` | Capability Token verification | Fail-closed |
+| PreToolUse (Write\|Edit) | `change-scope-guard.sh` | Change scope tracking | Fail-open |
+| Stop | `completion-guard.sh` | Test + TDD + SSOT check | Fail-closed |
+| Stop | `build-gate.sh` | TypeScript build errors | Fail-closed |
+| PreCompact | `pre-compact.sh` | Save state before compact | Fail-open |
+| SessionStart (compact) | `context-restore.sh` | Restore context + SSOT readiness | Fail-open |
+
+### Daemon-Based Automation
+
+**Observer-only daemon** — no token cost:
 
 ```
-L1 (Implementation fix) → Developer auto-handles     → No approval needed
-L2 (Design change)      → Transitions to in_review   → Phase Gate blocks
-L3 (Planning change)    → Awaits user approval        → approve/reject required
+Claude Code session → Daemon observes via IPC
+  → L1 task logs recorded (SubagentStop hook)
+  → Decision Log accumulated (decisions.jsonl)
+  → SSOT Drift detection (7-day stale warning)
+  → Session metrics tracked
+  → Daemon failure doesn't block pipeline
 ```
-
-> Details: [docs/feedback-and-retrospective.en.md](docs/feedback-and-retrospective.en.md)
-
-### Retrospective Learning
-
-Task logs → Pattern analysis → Improvement suggestions → Prompt/template updates. Instead of LLM fine-tuning, we improve through prompt/template refinement.
-
-```bash
-tsq retro auto              # Collect → Analyze → Report → Apply (one-click)
-tsq improve analyze          # Pattern analysis + improvement suggestions
-```
-
-> Details: [docs/feedback-and-retrospective.en.md](docs/feedback-and-retrospective.en.md)
-
-### Daemon-Based Automation Pipeline
-
-**All orchestration at zero token cost** — the program decides:
-
-```
-Claude Code session → Daemon watches JSONL in real-time
-  → L1 task logs recorded automatically
-  → L2 sequence logs aggregated automatically
-  → L3 phase logs generated automatically
-  → Phase Gate checked automatically
-  → Metrics accumulated in-memory → flushed at session end
-  → Meta Index updated automatically
-```
-
-> Details: [docs/token-efficiency.en.md](docs/token-efficiency.en.md)
-
-### Meta Index (Code Structure Index)
-
-AST-based code/UI structure auto-indexing + agent semantic data merging:
-
-```bash
-tsq mi rebuild              # Build full code+UI index
-tsq mi stats                # Health Score + UI Health
-```
-
-> Details: [docs/meta-index-architecture.en.md](docs/meta-index-architecture.en.md)
-
----
-
-## CLI Commands
-
-| Command | Description |
-|---------|-------------|
-| `tsq init` | Initialize project (interactive/non-interactive) |
-| `tsq status` | Check project status |
-| `tsq q "task"` | Quick mode (simple tasks) |
-| `tsq f "task"` | Full mode (SSOT validation) |
-| `tsq log` | 3-tier task log management (L1/L2/L3) |
-| `tsq feedback` | Feedback classification + auto actions |
-| `tsq retro` | Run retrospective (manual/auto) |
-| `tsq metrics` | Metrics collection/trends |
-| `tsq mi` | Meta Index management (rebuild/stats) |
-| `tsq knowledge` | Knowledge file management |
-| `tsq wf` | Workflow automation |
-| `tsq daemon` | Background daemon management |
-
-> Full CLI reference: [docs/cli.en.md](docs/cli.en.md)
 
 ---
 
@@ -236,6 +229,7 @@ tsq mi stats                # Health Score + UI Health
 | `api-backend` | API servers, microservices |
 | `platform` | Frameworks, SDKs |
 | `fintech` | Exchanges, payments (Level 3 enforced) |
+| `mobile-app` | Cross-platform mobile apps |
 | `infra` | DevOps, automation |
 
 ---
@@ -246,14 +240,12 @@ tsq mi stats                # Health Score + UI Health
 |----------|-------------|
 | [PRD](docs/PRD.en.md) | Full framework specification |
 | [Core Concepts](docs/core-concepts.en.md) | Fountain model, SSOT, agent/skill architecture |
-| [CLI Reference](docs/cli.en.md) | Complete CLI command reference |
-| [Authoring Guide](docs/authoring-guide.en.md) | Agent/skill/knowledge authoring guide |
-| [Log Architecture](docs/log-architecture.en.md) | 3-tier log system (L1→L2→L3) |
-| [Feedback & Retrospective](docs/feedback-and-retrospective.en.md) | Feedback routing + retrospective learning |
-| [Token Efficiency](docs/token-efficiency.en.md) | Token efficiency design |
-| [Knowledge Architecture](docs/knowledge-architecture.en.md) | Knowledge system |
-| [Meta Index Architecture](docs/meta-index-architecture.en.md) | Code/UI structure index |
+| [CLI Reference](docs/cli.en.md) | CLI command reference |
 | [File Structure](docs/file-structure.en.md) | Templates + post-init structure |
+| [Hook Execution Order](docs/hook-execution-order.md) | Hook sequence, fail strategy |
+| [Log Architecture](docs/log-architecture.en.md) | 3-tier log system (L1→L2→L3) |
+| [Feedback & Retrospective](docs/feedback-and-retrospective.en.md) | Feedback routing + retrospective |
+| [SDCA Architecture](docs/sdca-architecture.md) | Skill-Driven Controller Architecture |
 
 ---
 

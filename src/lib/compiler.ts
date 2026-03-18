@@ -69,7 +69,15 @@ export interface CompileResult {
 // ─── Markdown Parser ────────────────────────────────────────────
 
 /**
+ * Headings that should be excluded from split output.
+ * These are metadata sections present in most SSOT templates
+ * that don't contain spec-relevant content.
+ */
+const EXCLUDED_HEADING_PATTERN = /^(?:\d+\.\s*)?(?:관련\s*문서|변경\s*이력|참고|References?|Change\s*Log)/i;
+
+/**
  * Parse a markdown document into sections by heading level.
+ * Metadata headings matching EXCLUDED_HEADING_PATTERN are skipped.
  */
 export function parseMarkdownSections(
   content: string,
@@ -81,6 +89,7 @@ export function parseMarkdownSections(
 
   let currentSection: ParsedSection | null = null;
   let currentH2 = '';
+  let excluded = false;
   const contentLines: string[] = [];
 
   for (const line of lines) {
@@ -96,11 +105,18 @@ export function parseMarkdownSections(
       }
 
       if (level === targetLevel) {
-        // Save previous section
-        if (currentSection) {
+        // Save previous section (if not excluded)
+        if (currentSection && !excluded) {
           currentSection.content = contentLines.join('\n').trim();
           sections.push(currentSection);
-          contentLines.length = 0;
+        }
+        contentLines.length = 0;
+
+        // Check if this heading should be excluded
+        excluded = EXCLUDED_HEADING_PATTERN.test(heading);
+        if (excluded) {
+          currentSection = null;
+          continue;
         }
 
         currentSection = {
@@ -113,13 +129,13 @@ export function parseMarkdownSections(
       }
     }
 
-    if (currentSection) {
+    if (currentSection && !excluded) {
       contentLines.push(line);
     }
   }
 
   // Don't forget the last section
-  if (currentSection) {
+  if (currentSection && !excluded) {
     currentSection.content = contentLines.join('\n').trim();
     sections.push(currentSection);
   }
@@ -344,15 +360,33 @@ export async function compileAll(
     return result;
   }
 
-  const ssotFiles = (await fs.readdir(ssotDir))
-    .filter((f) => f.endsWith('.md') && !f.startsWith('adr'))
-    .map((f) => f.replace('.md', ''));
+  const entries = await fs.readdir(ssotDir, { withFileTypes: true });
+  const ssotFiles = entries
+    .filter((e) => !e.isDirectory() && e.name.endsWith('.md') && !e.name.startsWith('adr'))
+    .map((e) => e.name.replace('.md', ''));
+
+  // Collect sub-documents from folders (e.g., ssot/service-spec/auth-api.md)
+  const subDocuments: Array<{ parent: string; name: string; filePath: string }> = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory() || entry.name === 'adr' || entry.name.startsWith('.')) continue;
+    const subDir = path.join(ssotDir, entry.name);
+    const subFiles = (await fs.readdir(subDir)).filter(
+      (f) => f.endsWith('.md') && !f.startsWith('_'),
+    );
+    for (const sf of subFiles) {
+      subDocuments.push({
+        parent: entry.name,
+        name: sf.replace('.md', ''),
+        filePath: path.join(subDir, sf),
+      });
+    }
+  }
 
   // Get applicable rules
   const rules = getCompileRules(ssotFiles);
   const ruledSources = new Set(rules.map((r) => r.source));
 
-  // Compile each SSOT document
+  // Compile each root SSOT document
   for (const ssotName of ssotFiles) {
     const ssotPath = path.join(ssotDir, `${ssotName}.md`);
 
@@ -386,6 +420,42 @@ export async function compileAll(
     }
   }
 
+  // Compile sub-documents (e.g., ssot/service-spec/auth-api.md)
+  // Each sub-document is compiled as splitBy:'none' into references/{parent}-{name}.spec.md
+  for (const sub of subDocuments) {
+    // Skip prd/ sub-documents — they are planning docs, not compilable specs
+    if (sub.parent === 'prd') {
+      continue;
+    }
+
+    const content = await readFile(sub.filePath);
+    if (content.length < 200) {
+      result.skipped.push(`${sub.parent}/${sub.name}`);
+      continue;
+    }
+
+    const subRule = getDefaultRule(`${sub.parent}/${sub.name}`);
+    subRule.filenamePattern = `${sub.parent}-${sub.name}.spec.md`;
+
+    try {
+      const { outputFiles, validation, e2eMappings } = await compileSsotDocument(
+        sub.filePath,
+        subRule,
+        controllerDir,
+        `${sub.parent}/${sub.name}`,
+        projectRoot,
+      );
+      result.compiled.push({ source: `${sub.parent}/${sub.name}`, outputFiles });
+      result.validations.push(validation);
+      result.affected_e2e.push(...e2eMappings);
+    } catch (err) {
+      result.success = false;
+      result.errors.push(
+        `${sub.parent}/${sub.name} 컴파일 실패: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
   // Apply SSOT Map tier placement (Tier 0 → rules/, Tier 1-3 → references/)
   try {
     const { loadSSOTMap, getDocumentsForTier } = await import('./ssot-map.js');
@@ -405,9 +475,10 @@ export async function compileAll(
         const compiled = result.compiled.find(c => c.source === sourceBase);
         if (compiled && compiled.outputFiles.length > 0) {
           const srcFile = compiled.outputFiles[0];
-          if (await exists(srcFile) && srcFile !== compiledPath) {
+          const srcAbsPath = path.isAbsolute(srcFile) ? srcFile : path.join(controllerDir, srcFile);
+          if (await exists(srcAbsPath) && srcAbsPath !== compiledPath) {
             await fs.ensureDir(path.dirname(compiledPath));
-            await fs.copy(srcFile, compiledPath);
+            await fs.copy(srcAbsPath, compiledPath);
           }
         }
       }

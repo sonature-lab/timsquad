@@ -96,82 +96,80 @@ describe('injectSkillsIntoFrontmatter', () => {
     `---\nname: tsq-developer\nskills: [${skills.join(', ')}]\n---\n\nBody content here.`;
 
   it('should inject matching stack skills for developer', () => {
-    const content = makeFrontmatter(['tsq-protocol', 'coding', 'testing']);
+    const content = makeFrontmatter(['tsq-protocol', 'tsq-coding', 'tsq-testing']);
     const result = injectSkillsIntoFrontmatter(
-      content, 'developer' as AgentType, ['frontend/react', 'frontend/nextjs', 'backend/node', 'database/prisma'],
+      content, 'developer' as AgentType, ['tsq-react', 'tsq-nextjs', 'tsq-hono', 'tsq-prisma'],
     );
-    expect(result).toContain('frontend/react');
-    expect(result).toContain('frontend/nextjs');
-    expect(result).toContain('backend/node');
-    expect(result).toContain('database/prisma');
-    // 기존 스킬 유지
+    expect(result).toContain('tsq-react');
+    expect(result).toContain('tsq-nextjs');
+    expect(result).toContain('tsq-hono');
+    expect(result).toContain('tsq-prisma');
+    // existing skills preserved
     expect(result).toContain('tsq-protocol');
-    expect(result).toContain('coding');
+    expect(result).toContain('tsq-coding');
   });
 
   it('should inject only database skills for dba', () => {
-    const content = makeFrontmatter(['tsq-protocol', 'database']);
+    const content = makeFrontmatter(['tsq-protocol', 'tsq-database']);
     const result = injectSkillsIntoFrontmatter(
-      content, 'dba' as AgentType, ['frontend/react', 'database/prisma', 'backend/node'],
+      content, 'dba' as AgentType, ['tsq-react', 'tsq-prisma', 'tsq-hono'],
     );
-    expect(result).toContain('database/prisma');
-    expect(result).not.toContain('frontend/react');
-    expect(result).not.toContain('backend/node');
+    expect(result).toContain('tsq-prisma');
+    expect(result).not.toContain('tsq-react');
+    expect(result).not.toContain('tsq-hono');
   });
 
   it('should inject only frontend skills for designer', () => {
-    const content = makeFrontmatter(['tsq-protocol', 'ui-design']);
+    const content = makeFrontmatter(['tsq-protocol', 'tsq-ui']);
     const result = injectSkillsIntoFrontmatter(
-      content, 'designer' as AgentType, ['frontend/react', 'backend/node', 'database/prisma'],
+      content, 'designer' as AgentType, ['tsq-react', 'tsq-hono', 'tsq-prisma'],
     );
-    expect(result).toContain('frontend/react');
-    expect(result).not.toContain('backend/node');
-    expect(result).not.toContain('database/prisma');
+    expect(result).toContain('tsq-react');
+    expect(result).not.toContain('tsq-hono');
+    expect(result).not.toContain('tsq-prisma');
   });
 
-  it('should not inject skills for architect (empty categories)', () => {
-    const content = makeFrontmatter(['tsq-protocol', 'architecture']);
+  it('should not inject skills for architect (empty keywords)', () => {
+    const content = makeFrontmatter(['tsq-protocol', 'tsq-architecture']);
     const result = injectSkillsIntoFrontmatter(
-      content, 'architect' as AgentType, ['frontend/react', 'backend/node'],
+      content, 'architect' as AgentType, ['tsq-react', 'tsq-hono'],
     );
-    // 변경 없어야 함
     expect(result).toBe(content);
   });
 
-  it('should not inject skills for qa (empty categories)', () => {
-    const content = makeFrontmatter(['tsq-protocol', 'testing']);
+  it('should not inject skills for qa (empty keywords)', () => {
+    const content = makeFrontmatter(['tsq-protocol', 'tsq-testing']);
     const result = injectSkillsIntoFrontmatter(
-      content, 'qa' as AgentType, ['frontend/react'],
+      content, 'qa' as AgentType, ['tsq-react'],
     );
     expect(result).toBe(content);
   });
 
   it('should deduplicate skills', () => {
-    const content = makeFrontmatter(['tsq-protocol', 'database']);
+    const content = makeFrontmatter(['tsq-protocol', 'tsq-database']);
     const result = injectSkillsIntoFrontmatter(
-      content, 'dba' as AgentType, ['database', 'database/prisma'],
+      content, 'dba' as AgentType, ['tsq-database', 'tsq-prisma'],
     );
-    // 'database'는 카테고리 매칭되지 않음 (category === skill 전체)
-    // 'database/prisma'만 추가
-    expect(result).toContain('database/prisma');
-    const matches = result.match(/database/g);
-    // 'database' (기존) + 'database/prisma' (신규) = 최소 2회
-    expect(matches!.length).toBeGreaterThanOrEqual(2);
+    expect(result).toContain('tsq-prisma');
+    // tsq-database should appear only once (already existed)
+    const matches = result.match(/tsq-database/g);
+    expect(matches!.length).toBe(1);
   });
 
   it('should return content unchanged when no matching skills', () => {
-    const content = makeFrontmatter(['tsq-protocol', 'coding']);
+    const content = makeFrontmatter(['tsq-protocol', 'tsq-coding']);
     const result = injectSkillsIntoFrontmatter(
-      content, 'developer' as AgentType, ['typescript', 'tsq-protocol'],
+      content, 'developer' as AgentType, ['tsq-typescript', 'tsq-protocol'],
     );
-    // 'typescript'와 'tsq-protocol'은 카테고리에 `/` 없어서 매칭 안 됨
+    // tsq-typescript doesn't match developer keywords (react, nextjs, node, prisma, database, flutter, dart, ui)
+    // tsq-protocol doesn't match either
     expect(result).toBe(content);
   });
 
   it('should return content unchanged when no frontmatter', () => {
     const content = 'No frontmatter content';
     const result = injectSkillsIntoFrontmatter(
-      content, 'developer' as AgentType, ['frontend/react'],
+      content, 'developer' as AgentType, ['tsq-react'],
     );
     expect(result).toBe(content);
   });
@@ -179,13 +177,13 @@ describe('injectSkillsIntoFrontmatter', () => {
   it('should return content unchanged when no skills field in frontmatter', () => {
     const content = '---\nname: tsq-developer\nmodel: sonnet\n---\n\nBody';
     const result = injectSkillsIntoFrontmatter(
-      content, 'developer' as AgentType, ['frontend/react'],
+      content, 'developer' as AgentType, ['tsq-react'],
     );
     expect(result).toBe(content);
   });
 
   it('should return content unchanged with empty active skills', () => {
-    const content = makeFrontmatter(['tsq-protocol', 'coding']);
+    const content = makeFrontmatter(['tsq-protocol', 'tsq-coding']);
     const result = injectSkillsIntoFrontmatter(
       content, 'developer' as AgentType, [],
     );
@@ -194,11 +192,11 @@ describe('injectSkillsIntoFrontmatter', () => {
 
   it('should preserve body content after frontmatter', () => {
     const body = '\n## Agent Instructions\n\nDo stuff here.';
-    const content = `---\nname: tsq-developer\nskills: [tsq-protocol, coding]\n---${body}`;
+    const content = `---\nname: tsq-developer\nskills: [tsq-protocol, tsq-coding]\n---${body}`;
     const result = injectSkillsIntoFrontmatter(
-      content, 'developer' as AgentType, ['frontend/react'],
+      content, 'developer' as AgentType, ['tsq-react'],
     );
-    expect(result).toContain('frontend/react');
+    expect(result).toContain('tsq-react');
     expect(result).toContain('## Agent Instructions');
     expect(result).toContain('Do stuff here.');
   });
@@ -208,24 +206,20 @@ describe('getActiveSkills — stack normalization', () => {
   it('should derive skills from project.stack array', () => {
     const config = createDefaultConfig('test', 'web-service', 2, { stack: ['react', 'node'] });
     const skills = getActiveSkills(config);
-    expect(skills).toContain('frontend/react');
-    expect(skills).toContain('backend/node');
+    expect(skills).toContain('tsq-react');
+    expect(skills).toContain('tsq-hono');
   });
 
   it('should not add stack-derived skills when project.stack is empty array', () => {
     const config = createDefaultConfig('test', 'api-backend', 2, { stack: [] });
-    // Empty array = intentional "no stack skills" (type preset only)
     const skills = getActiveSkills(config);
-    // api-backend preset does NOT include frontend/nextjs, but top-level stack has nextjs
-    // With empty array, stack fallback should NOT activate
-    expect(skills).not.toContain('frontend/nextjs');
+    expect(skills).not.toContain('tsq-nextjs');
   });
 
   it('should derive skills from top-level stack when project.stack is missing', () => {
     const config = createDefaultConfig('test', 'web-service', 2);
     (config.project as Record<string, unknown>).stack = undefined;
     const skills = getActiveSkills(config);
-    // Should fallback to top-level stack config values
     expect(skills.length).toBeGreaterThan(0);
   });
 
@@ -233,6 +227,6 @@ describe('getActiveSkills — stack normalization', () => {
     const config = createDefaultConfig('test', 'web-service', 2);
     (config.project as Record<string, unknown>).stack = { language: 'typescript', frontend: 'react' };
     const skills = getActiveSkills(config);
-    expect(skills).toContain('frontend/react');
+    expect(skills).toContain('tsq-react');
   });
 });

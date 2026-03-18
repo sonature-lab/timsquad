@@ -5,7 +5,7 @@ description: |
   Use when: "기록해줘", "리포트 작성", "Phase 정리", "문서 갱신"
 model: sonnet
 tools: [Read, Write, Edit, Grep, Glob, Bash]
-skills: [tsq-protocol, librarian]
+skills: [tsq-protocol, tsq-librarian]
 ---
 
 <agent role="librarian">

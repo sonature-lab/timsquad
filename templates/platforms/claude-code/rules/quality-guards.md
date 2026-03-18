@@ -1,7 +1,5 @@
 ---
 description: 품질 가드 시스템. 파괴적 명령 차단, 페이즈 제한, 완료 검증.
-globs:
-  - "**/*"
 ---
 
 # 품질 가드 시스템 (Quality Guards)

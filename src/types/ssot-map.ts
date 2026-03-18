@@ -13,6 +13,8 @@ export interface SSOTDocumentEntry {
   source: string;
   /** H2/H3 기준 분할 (선택) */
   split?: 'H2' | 'H3';
+  /** 타입별 선택 배포 문서 — 미존재 시 건너뜀 (validate에서 missing 제외) */
+  optional?: boolean;
   /** 메모 */
   note?: string;
 }

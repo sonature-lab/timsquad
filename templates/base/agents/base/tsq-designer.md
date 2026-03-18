@@ -5,7 +5,7 @@ description: |
   Use when: "화면 설계", "와이어프레임", "디자인 토큰", "접근성 검토"
 model: sonnet
 tools: [Read, Write, Edit, Bash, Grep, Glob]
-skills: [tsq-protocol, ui-design]
+skills: [tsq-protocol, tsq-ui]
 ---
 
 <agent role="designer">
@@ -30,6 +30,8 @@ skills: [tsq-protocol, ui-design]
     `.timsquad/ssot/ui-ux-spec.md` — UI/UX 명세
     `.timsquad/ssot/requirements.md` — 기능 요구사항
     `.timsquad/ssot/glossary.md` — 용어 사전 (라벨링)
+    `.timsquad/ssot/component-map.md` — 컴포넌트 계층/재사용 정책 (있는 경우)
+    `.timsquad/ssot/navigation-map.md` — 네비게이션 구조/딥링크 (있는 경우)
   </prerequisites>
 
   <input-contract>

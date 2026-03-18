@@ -27,11 +27,9 @@
 | component | layout | colorScheme | spacing | states | responsive |
 |-----------|--------|-------------|---------|--------|------------|
 
-### TSQ Log Enrich (필수)
-위 내용을 기반으로 반드시 tsq log enrich를 호출하세요:
-```bash
-tsq log enrich {agent} --json '{"summary":"...", "techniques":[...], "ssot_refs":[...], "decisions":[...], "issues":[...]}'
-```
+### Decision Log (필수)
+위 내용을 기반으로 `.timsquad/state/decisions.jsonl`에 결정 사항을 기록하세요.
+tsq-protocol 스킬의 로그 프로토콜을 따릅니다.
 
 ---
 
@@ -67,11 +65,8 @@ POST /auth/login 엔드포인트 구현 + 단위 테스트 3개 작성
 ### Issues / Handoff Notes
 - 없음
 
-### TSQ Log Enrich
-```
-
-```bash
-tsq log enrich developer --json '{"summary":"POST /auth/login 엔드포인트 구현 + 단위 테스트 3개","techniques":[{"name":"Zod validation","reason":"런타임 입력 검증"},{"name":"Repository pattern","reason":"Supabase 추상화"}],"ssot_refs":[{"doc":"service-spec.md","section":"POST-auth-login","status":"aligned"},{"doc":"data-design.md","section":"users-table","status":"aligned"}],"decisions":[{"decision":"session-based auth","rationale":"Supabase RLS 호환성"}],"issues":[]}'
+### Decision Log
+decisions.jsonl에 결정 사항 기록 완료.
 ```
 
 ### 예제 2: QA — 리뷰 결과

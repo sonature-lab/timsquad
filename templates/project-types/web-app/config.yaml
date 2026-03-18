@@ -4,7 +4,7 @@
 template:
   name: web-app
   description: BaaS 기반 웹앱을 위한 템플릿
-  version: 2.0.0
+  version: 3.7.0
 
 # ============================================================
 # 프로젝트 기본값
@@ -57,19 +57,10 @@ stack:
 # ============================================================
 # 스킬 자동 로딩 규칙
 # ============================================================
-skills:
-  base:
-    - coding
-    - testing
-    - security
-    - planning
-    - architecture
-
-  type-specific:
-    - typescript
-    - frontend/react
-    - frontend/nextjs
-    - methodology/tdd
+# 스킬은 project.type으로 자동 결정됩니다 (이 섹션은 참고용).
+# skills:
+#   base: [tsq-coding, tsq-testing, tsq-security, tsq-planning, tsq-architecture]
+#   type-specific: [tsq-typescript, tsq-react, tsq-nextjs, tsq-tdd]
 
 # ============================================================
 # SSOT 문서 설정
@@ -93,6 +84,9 @@ ssot:
   optional:
     - integration-spec.md   # BaaS 외 외부 연동이 있을 때만
     - security-spec.md
+
+  # 타입×레벨 자동 배포 (SSOT_TYPE_LEVEL_MAP 기반):
+  #   L2+: performance-budget, component-map
     - deployment-spec.md
 
 # ============================================================
@@ -128,7 +122,7 @@ additional_agents:
   - name: tsq-frontend
     description: 프론트엔드 전문 개발자
     base: tsq-developer
-    skills: [frontend/react, frontend/nextjs, typescript]
+    skills: [tsq-react, tsq-nextjs, tsq-typescript]
 
 # ============================================================
 # 레벨별 권장 사항

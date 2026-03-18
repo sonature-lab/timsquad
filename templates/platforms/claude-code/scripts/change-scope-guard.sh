@@ -19,10 +19,7 @@ SESSION_ID="${CLAUDE_SESSION_ID:-default}"
 STATE_FILE="/tmp/tsq-scope-guard-${SESSION_ID}.json"
 
 # Read hook input from stdin
-INPUT=""
-if read -t 1 -r line; then
-  INPUT="$line"
-fi
+INPUT=$(cat 2>/dev/null || echo "")
 
 # Fail-open: no input → allow
 if [ -z "$INPUT" ]; then

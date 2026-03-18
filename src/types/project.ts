@@ -150,6 +150,22 @@ export const REQUIRED_SSOT_BY_TYPE: Record<ProjectType, string[]> = {
 };
 
 /**
+ * Type-specific SSOT documents with minimum level requirement.
+ * Value = minimum ProjectLevel at which the document becomes required for that type.
+ */
+export const SSOT_TYPE_LEVEL_MAP: Record<string, Partial<Record<ProjectType, ProjectLevel>>> = {
+  'state-machine':       { 'web-service': 2, 'api-backend': 2, 'mobile-app': 2, 'fintech': 1 },
+  'performance-budget':  { 'web-service': 2, 'api-backend': 2, 'web-app': 2, 'mobile-app': 2, 'fintech': 2 },
+  'monitoring-spec':     { 'web-service': 3, 'api-backend': 3, 'fintech': 2, 'infra': 1 },
+  'compliance-matrix':   { 'fintech': 1 },
+  'audit-trail-spec':    { 'fintech': 1 },
+  'navigation-map':      { 'mobile-app': 1 },
+  'infra-topology':      { 'fintech': 3, 'infra': 1 },
+  'sdk-spec':            { 'platform': 1 },
+  'component-map':       { 'web-service': 2, 'web-app': 2, 'mobile-app': 2 },
+};
+
+/**
  * Platform descriptions
  */
 export const PLATFORM_DESCRIPTIONS: Record<Platform, string> = {

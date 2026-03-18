@@ -36,14 +36,7 @@ describe('Phase sync (5-D)', () => {
     await fs.writeJson(path.join(tmpDir, '.timsquad', 'state', 'workflow.json'), initialWorkflow, { spaces: 2 });
     await fs.writeJson(path.join(tmpDir, '.timsquad', 'state', 'current-phase.json'), initialPhase, { spaces: 2 });
 
-    // Simulate syncPhaseFiles by importing the module and calling it indirectly
-    // Since syncPhaseFiles is private, we test via the public state
-    const { syncPhaseFiles } = await import('../../src/commands/workflow.js') as unknown as {
-      syncPhaseFiles: (root: string, state: typeof initialWorkflow) => Promise<void>;
-    };
-
-    // If syncPhaseFiles is not exported, test the outcome directly
-    // Write like syncPhaseFiles does: temp + rename
+    // Test the outcome directly by simulating atomic write (temp + rename)
     const stateDir = path.join(tmpDir, '.timsquad', 'state');
     const newState = {
       ...initialWorkflow,

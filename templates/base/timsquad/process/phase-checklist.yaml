@@ -35,7 +35,7 @@ planning_to_implementation:
       check: "workspace.xml의 handoff 섹션이 작성되었는가?"
       required: true
       validation:
-        - "from: tsq-planner"
+        - "from: tsq-architect"
         - "to: tsq-developer"
         - "message: 인수인계 내용 작성됨"
         - "attachments: 참조할 SSOT 문서 목록"

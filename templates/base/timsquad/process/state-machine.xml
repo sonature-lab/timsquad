@@ -12,7 +12,7 @@
   <states>
     <state id="planning" name="기획/설계">
       <description>요구사항 분석, SSOT 문서 작성, 아키텍처 설계</description>
-      <primary-agent>tsq-planner</primary-agent>
+      <primary-agent>tsq-architect</primary-agent>
       <allowed-actions>
         <action>SSOT 문서 생성/수정</action>
         <action>ADR 작성</action>
@@ -245,7 +245,7 @@
       <trigger>Level 2 피드백 발생</trigger>
 
       <on-transition>
-        <action>피드백 내용 Planner에게 전달</action>
+        <action>피드백 내용 Architect에게 전달</action>
         <action>SSOT 수정 필요 항목 기록</action>
       </on-transition>
     </transition>

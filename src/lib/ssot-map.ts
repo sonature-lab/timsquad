@@ -84,6 +84,8 @@ export async function validateSSOTMap(
     for (const doc of getDocumentsForTier(ssotMap, tier)) {
       // split 패턴 ({section} 등)은 검증 스킵
       if (doc.source.includes('{')) continue;
+      // optional 문서는 미존재 허용 (타입별 선택 배포)
+      if (doc.optional) continue;
       const sourcePath = path.join(projectRoot, '.timsquad', 'ssot', doc.source);
       if (!await exists(sourcePath)) {
         missing.push(doc.source);

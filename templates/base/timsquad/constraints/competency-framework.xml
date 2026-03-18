@@ -65,8 +65,8 @@
        에이전트별 역량 정의
        ============================================================ -->
   <agents>
-    <!-- tsq-planner 역량 -->
-    <agent id="tsq-planner">
+    <!-- tsq-architect 역량 -->
+    <agent id="tsq-architect">
       <role>Planning Agent</role>
       <description>PRD, 기획, 아키텍처 설계 담당</description>
 

@@ -1,16 +1,5 @@
 {
   "hooks": {
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/scripts/skill-inject.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "Write|Edit",
@@ -18,6 +7,16 @@
           {
             "type": "command",
             "command": "bash .claude/scripts/phase-guard.sh",
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/check-capability.sh",
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/change-scope-guard.sh 2>/dev/null || true",
             "timeout": 3
           }
         ]
@@ -28,43 +27,6 @@
           {
             "type": "command",
             "command": "bash .claude/scripts/safe-guard.sh",
-            "timeout": 3
-          }
-        ]
-      },
-      {
-        "matcher": "Task",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "tsq daemon notify subagent-start 2>/dev/null || true",
-            "timeout": 3
-          }
-        ]
-      }
-    ],
-    "SubagentStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "tsq daemon notify subagent-start 2>/dev/null || true",
-            "timeout": 3
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/scripts/subagent-inject.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "tsq daemon notify subagent-stop 2>/dev/null || true",
             "timeout": 3
           }
         ]
@@ -91,36 +53,9 @@
         ]
       }
     ],
-    "PostToolUse": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "tsq daemon notify tool-use --status success 2>/dev/null || true",
-            "timeout": 3
-          }
-        ]
-      }
-    ],
-    "PostToolUseFailure": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "tsq daemon notify tool-use --status failure 2>/dev/null || true",
-            "timeout": 3
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [
-          {
-            "type": "command",
-            "command": "tsq daemon notify stop 2>/dev/null || true",
-            "timeout": 3
-          },
           {
             "type": "command",
             "command": "bash .claude/scripts/completion-guard.sh",
@@ -134,23 +69,34 @@
         ]
       }
     ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/subagent-start.sh 2>/dev/null || true",
+            "timeout": 2
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/subagent-stop.sh 2>/dev/null || true",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
     "PreCompact": [
       {
         "hooks": [
           {
             "type": "command",
             "command": "bash .claude/scripts/pre-compact.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "tsq daemon notify session-end 2>/dev/null || true",
             "timeout": 5
           }
         ]

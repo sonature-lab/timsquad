@@ -1,7 +1,7 @@
-# {PROJECT_NAME} 데이터 설계서
+# {{PROJECT_NAME}} 데이터 설계서
 
 **Version**: 1.0
-**Created**: {DATE}
+**Created**: {{DATE}}
 **Database**: PostgreSQL / MySQL / MongoDB
 
 ---
@@ -104,7 +104,7 @@ VALUES ('admin@example.com', 'Admin', '$2b$...', 'active');
 
 | Version | Date | Description |
 |---------|------|-------------|
-| 001 | {DATE} | 초기 스키마 생성 |
+| 001 | {{DATE}} | 초기 스키마 생성 |
 
 ---
 
@@ -129,4 +129,4 @@ VALUES ('admin@example.com', 'Admin', '$2b$...', 'active');
 
 | 버전 | 날짜 | 변경 내용 | 작성자 |
 |-----|-----|----------|-------|
-| 1.0 | {DATE} | 최초 작성 | |
+| 1.0 | {{DATE}} | 최초 작성 | |

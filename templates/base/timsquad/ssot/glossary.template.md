@@ -2,7 +2,7 @@
 title: "용어 사전 (Glossary)"
 version: 1.0.0
 last_updated: {{DATE}}
-author: tsq-planner
+author: tsq-architect
 status: draft
 project: {{PROJECT_NAME}}
 ---
@@ -145,4 +145,4 @@ project: {{PROJECT_NAME}}
 
 | 버전 | 날짜 | 작성자 | 변경 내용 |
 |------|------|--------|----------|
-| 1.0.0 | {{DATE}} | tsq-planner | 초기 작성 |
+| 1.0.0 | {{DATE}} | tsq-architect | 초기 작성 |

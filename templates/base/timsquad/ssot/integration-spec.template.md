@@ -2,7 +2,7 @@
 title: "외부 연동 명세서 (Integration Specification)"
 version: 1.0.0
 last_updated: {{DATE}}
-author: tsq-planner
+author: tsq-architect
 status: draft
 project: {{PROJECT_NAME}}
 required_level: 3
@@ -388,4 +388,4 @@ const retryConfig = {
 
 | 버전 | 날짜 | 작성자 | 변경 내용 |
 |------|------|--------|----------|
-| 1.0.0 | {{DATE}} | tsq-planner | 초기 작성 |
+| 1.0.0 | {{DATE}} | tsq-architect | 초기 작성 |

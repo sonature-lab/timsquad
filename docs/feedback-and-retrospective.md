@@ -1,119 +1,49 @@
 [English](feedback-and-retrospective.en.md) | [**한국어**](feedback-and-retrospective.md)
 
-# Feedback Routing & Retrospective Learning
+# 피드백 & 회고적 학습
 
-> PRD Section 3, 4에서 분리된 문서
-
----
-
-## 1. 피드백 라우팅 시스템
-
-### 1.1 피드백 레벨 정의
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    피드백 발생                              │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   피드백 분류기                             │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │ 트리거 분석                                          │   │
-│  │ - test_failure, lint_error, type_error              │   │
-│  │ - architecture_issue, api_mismatch                  │   │
-│  │ - requirement_ambiguity, scope_change               │   │
-│  └─────────────────────────────────────────────────────┘   │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-          ┌─────────────────┼─────────────────┐
-          ▼                 ▼                 ▼
-    ┌──────────┐     ┌──────────┐     ┌──────────┐
-    │ Level 1  │     │ Level 2  │     │ Level 3  │
-    │ 구현 수정 │     │ 설계 수정 │     │ 기획 수정 │
-    └────┬─────┘     └────┬─────┘     └────┬─────┘
-         │                │                │
-         ▼                ▼                ▼
-    ┌──────────┐     ┌──────────┐     ┌──────────┐
-    │developer │     │ planner  │     │ planner  │
-    │          │     │(architect)│    │(planning)│
-    └──────────┘     └──────────┘     └────┬─────┘
-                                           │
-                                           ▼
-                                    ┌──────────┐
-                                    │  User    │
-                                    │ Approval │
-                                    └──────────┘
-```
-
-### 1.2 피드백 라우팅 규칙
-
-```yaml
-feedback_routing:
-  level_1:
-    name: "구현 수정"
-    triggers:
-      - test_failure
-      - lint_error
-      - type_error
-      - runtime_error
-      - code_style_violation
-    route_to: developer
-    approval_required: false
-
-  level_2:
-    name: "설계 수정"
-    triggers:
-      - architecture_issue
-      - api_mismatch
-      - performance_problem
-      - scalability_concern
-      - security_vulnerability
-    route_to: planner (architect mode)
-    approval_required: false
-    ssot_update: true
-
-  level_3:
-    name: "기획/PRD 수정"
-    triggers:
-      - requirement_ambiguity
-      - scope_change
-      - business_logic_error
-      - feature_request
-      - stakeholder_feedback
-    route_to: planner (planning mode)
-    approval_required: true  # 반드시 사용자 승인
-    ssot_update: true
-```
-
-### 1.3 피드백 패턴 학습
-
-```yaml
-feedback_patterns:
-  tracking:
-    - feedback_type
-    - root_cause
-    - resolution
-    - time_to_resolve
-    - recurrence_count
-
-  learning:
-    # 같은 패턴 3회 이상 발생 시
-    threshold: 3
-    actions:
-      - update_agent_skill
-      - update_prompt_template
-      - add_to_lessons_learned
-```
+> PRD Section 4에서 분리된 문서
 
 ---
 
-## 2. 회고적 학습 시스템 (Retrospective Learning)
+## 피드백 수집
 
-### 2.1 개요
+작업 중 발생하는 피드백은 `/tsq-retro feedback` 명령으로 **L1/L2/L3 레벨로 분류**하여 기록한다.
+
+| 레벨 | 설명 | 처리 방식 |
+|------|------|----------|
+| **L1** (구현) | 버그, 테스트 누락, 코드 품질 | 현재 Task에서 즉시 수정 |
+| **L2** (설계) | API 변경, 스키마 수정, 아키텍처 이슈 | Sequence 완료 후 Architect 검토 |
+| **L3** (기획) | 요구사항 변경, 스펙 모순, 우선순위 변경 | Phase 완료 시 회고에서 우선 다룸 |
+
+피드백은 `.timsquad/retrospective/feedback.jsonl`에 누적되며, 회고 시 입력 데이터로 사용된다.
+
+상세 분류 기준: `tsq-retro` 스킬의 `references/feedback-guide.md` 참조.
+
+---
+
+## 회고적 학습 시스템 (Retrospective Learning)
+
+### 개요
 
 Agentsway의 핵심 개념을 TimSquad에 맞게 적용. LLM 파인튜닝 대신 **프롬프트/템플릿 개선**으로 실용화.
+
+### 전체 사이클
+
+```
+작업 중 이슈 발견
+  → /tsq-retro feedback "메시지"     ← L1/L2/L3 분류, 기록
+
+Phase 완료
+  → /tsq-retro                       ← KPT 회고, 패턴 분석, 개선 제안
+
+승인된 개선 적용
+  → /tsq-retro improve               ← 스킬 패치, 패턴 등록, lessons 기록
+
+다음 retro에서 효과 측정              ← 루프 완성
+```
+
+### 회고 흐름
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -122,26 +52,26 @@ Agentsway의 핵심 개념을 TimSquad에 맞게 적용. LLM 파인튜닝 대신
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   로그 수집                                 │
-│  - 에이전트별 작업 로그                                     │
-│  - 피드백 이력                                              │
-│  - 성공/실패 메트릭                                         │
+│                   데이터 수집                               │
+│  - 작업 로그 (.timsquad/logs/)                             │
+│  - 피드백 이력 (feedback.jsonl)                             │
+│  - 메트릭 데이터                                           │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   패턴 분석                                 │
-│  - 반복 실패 패턴                                           │
-│  - 성공 패턴                                                │
-│  - 병목 지점                                                │
+│                   KPT 분석 + 패턴 식별                     │
+│  - Keep / Problem / Try 분류                               │
+│  - 실패 패턴 (FP, 3회+ 반복)                               │
+│  - 성공 패턴 (SP, 효과 검증)                               │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                   개선 제안 생성                            │
-│  - 프롬프트 개선안                                          │
-│  - 템플릿 개선안                                            │
-│  - AGENT.md 업데이트                                        │
+│  - 스킬 패치 (SKILL.md 규칙 수정)                          │
+│  - 템플릿 수정 (에이전트, config)                           │
+│  - 패턴 등록 (FP/SP)                                       │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
@@ -151,134 +81,33 @@ Agentsway의 핵심 개념을 TimSquad에 맞게 적용. LLM 파인튜닝 대신
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   적용                                      │
-│  - 프롬프트 템플릿 업데이트                                 │
-│  - SSOT 템플릿 업데이트                                     │
-│  - Lessons Learned 추가                                     │
+│                   적용 (/tsq-retro improve)                │
+│  - 스킬/템플릿 변경 적용                                   │
+│  - lessons.md 기록                                         │
+│  - 다음 사이클에서 효과 측정                               │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 회고 디렉토리 구조
+### 회고 디렉토리 구조
 
 ```
-/retrospective
-├── cycles/
-│   ├── cycle-001.md          # 사이클별 회고 리포트
-│   ├── cycle-002.md
-│   └── ...
-│
+.timsquad/retrospective/
+├── feedback.jsonl              # 피드백 엔트리 (L1/L2/L3)
+├── retro-{phase}.md            # Phase별 회고 리포트
+├── lessons.md                  # 적용된 개선 이력
 ├── metrics/
-│   ├── agent-performance.json    # 에이전트별 성과
-│   ├── feedback-stats.json       # 피드백 통계
-│   └── improvement-history.json  # 개선 이력
-│
-├── improvements/
-│   ├── prompts/                  # 프롬프트 개선 이력
-│   │   ├── developer-v1.md
-│   │   ├── developer-v2.md
-│   │   └── changelog.md
-│   │
-│   └── templates/                # 템플릿 개선 이력
-│       ├── prd-v1.md
-│       ├── prd-v2.md
-│       └── changelog.md
-│
+│   ├── agent-performance.json  # 에이전트별 성과
+│   └── improvement-history.json # 개선 이력
 └── patterns/
-    ├── failure-patterns.md       # 실패 패턴 모음
-    └── success-patterns.md       # 성공 패턴 모음
+    ├── FP-{NNN}.md             # 실패 패턴
+    └── SP-{NNN}.md             # 성공 패턴
 ```
 
-### 2.3 회고 리포트 템플릿
+### 회고 리포트 구성
 
-```markdown
-# Cycle {N} Retrospective Report
-
-## 기간
-- 시작: {start_date}
-- 종료: {end_date}
-
-## 메트릭 요약
-| 지표 | 값 | 이전 대비 |
-|-----|-----|---------|
-| 총 작업 수 | {n} | +{diff} |
-| 성공률 | {rate}% | +{diff}% |
-| 평균 수정 횟수 | {n} | -{diff} |
-| Level 3 피드백 수 | {n} | -{diff} |
-
-## 에이전트별 성과
-| 에이전트 | 성공률 | 평균 수정 횟수 | 주요 이슈 |
-|---------|-------|--------------|----------|
-| developer | {rate}% | {n} | {issue} |
-| dba | {rate}% | {n} | {issue} |
-| qa | {rate}% | {n} | {issue} |
-
-## 발견된 패턴
-
-### 실패 패턴
-1. **{패턴명}**
-   - 빈도: {n}회
-   - 원인: {cause}
-   - 제안: {suggestion}
-
-### 성공 패턴
-1. **{패턴명}**
-   - 빈도: {n}회
-   - 요인: {factor}
-   - 적용 확대: {recommendation}
-
-## 개선 조치
-| 조치 | 대상 | 상태 |
-|-----|-----|-----|
-| 프롬프트 수정 | developer | ✅ 적용됨 |
-| 템플릿 수정 | prd.template.md | ✅ 적용됨 |
-| Lessons Learned 추가 | AGENT.md | ✅ 적용됨 |
-
-## 다음 사이클 목표
-- [ ] {goal_1}
-- [ ] {goal_2}
-```
-
-### 2.4 자동화 스크립트
-
-```bash
-#!/bin/bash
-# timsquad-retrospective.sh
-
-# 1. 로그 수집
-collect_logs() {
-  find ./agents -name "*.log" -exec cat {} \; > ./retrospective/raw-logs.txt
-}
-
-# 2. 메트릭 계산
-calculate_metrics() {
-  # 성공률, 수정 횟수, 피드백 통계 등
-  node ./scripts/calculate-metrics.js
-}
-
-# 3. 패턴 분석 (Claude API 호출)
-analyze_patterns() {
-  # Claude에게 로그 분석 요청
-  # 실패/성공 패턴 추출
-  node ./scripts/analyze-patterns.js
-}
-
-# 4. 개선안 생성
-generate_improvements() {
-  # 프롬프트/템플릿 개선안 생성
-  node ./scripts/generate-improvements.js
-}
-
-# 5. 리포트 생성
-generate_report() {
-  node ./scripts/generate-report.js
-}
-
-# 실행
-collect_logs
-calculate_metrics
-analyze_patterns
-generate_improvements
-generate_report
-
-echo "회고 완료. ./retrospective/cycles/cycle-{N}.md 확인"
-```
+1. 메트릭 요약 (작업 수, 성공률, 수정 횟수)
+2. 에이전트별 성과
+3. 피드백 분석 (L1/L2/L3 건수)
+4. 발견된 패턴 (FP/SP)
+5. 개선 조치
+6. 다음 사이클 목표

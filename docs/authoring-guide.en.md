@@ -74,10 +74,10 @@ skills: [tsq-protocol, {domain1}, {domain2}]   # Required skill injection (tsq-p
     Return in knowledge/templates/task-result.md format.
   </task-completion-protocol>
 
-  <!-- 10. Feedback Routing -->
-  <feedback-routing>
-    <!-- See 1.6 -->
-  </feedback-routing>
+  <!-- 10. Feedback Guide (optional) -->
+  <!-- L1/L2/L3 feedback is recorded via /tsq-retro feedback.
+       No separate routing section needed in agent prompts.
+       Details: tsq-retro skill's references/feedback-guide.md -->
 
 </agent>
 ```
@@ -139,35 +139,19 @@ Additional sections inserted between the required structure elements depending o
 >
 > Details: `templates/common/claude/skills/tsq-protocol/SKILL.md`
 
-### 1.6 Feedback Routing Design
+### 1.6 Feedback Level Guide
 
-A 3-level structure. Customize triggers to fit your domain.
-
-```xml
-<feedback-routing>
-  <level id="1" severity="Minor">
-    <triggers>{Issues that can be self-fixed immediately}</triggers>
-    <route>Fix immediately</route>
-  </level>
-  <level id="2" severity="Major">
-    <triggers>{Issues requiring design changes or SSOT modifications}</triggers>
-    <route>Main session (PM)</route>
-  </level>
-  <level id="3" severity="Critical">
-    <triggers>{Requirement changes or data loss risks}</triggers>
-    <route>Main session (PM) -> User approval</route>
-    <requires-approval>true</requires-approval>
-  </level>
-</feedback-routing>
-```
+Since v3.7, feedback is collected via the `/tsq-retro feedback` skill. No need to write `<feedback-routing>` XML sections in agent prompts.
 
 **Level Classification Criteria:**
 
 | Level | Decision Question | Examples |
 |-------|-------------------|----------|
-| L1 | Can the agent fix it immediately? | Lint errors, type errors, naming violations, missing tests |
-| L2 | Does it require SSOT or design document changes? | API spec mismatches, schema changes needed, architecture issues |
-| L3 | Does it require a user business decision? | Missing requirements, scope changes, data loss risk, compliance |
+| L1 | Can it be fixed in the current Task? | Bugs, type errors, missing tests |
+| L2 | Does it require design/structural changes? | API changes, schema modifications, architecture issues |
+| L3 | Is the requirement/spec itself wrong? | Requirement conflicts, scope changes, business logic changes |
+
+For detailed classification criteria and examples, see `references/feedback-guide.md` in the `tsq-retro` skill.
 
 ### 1.7 Base Agent vs Overlay Structure (In Design, Not Yet Implemented)
 
@@ -219,7 +203,7 @@ version: 1.0.0
 | REPLACE | Replace base section with overlay | role-summary, input-contract, task-completion-protocol |
 | APPEND | Append overlay to end of base section | rules, does-not |
 | MERGE | Combine file lists (deduplicate) | prerequisites, knowledge-refs |
-| KEEP | Keep base, ignore overlay | feedback-routing |
+| KEEP | Keep base, ignore overlay | rules |
 
 #### Domain Overlay Writing Guide
 
@@ -583,8 +567,6 @@ tsq log enrich {agent} --json '{...}'
     <on-task-start>              # Event handler
     <forbidden>                  # Prohibited actions
   <task-completion-protocol>     # Output format
-  <feedback-routing>             # Routing
-    <level id="N" severity=".."> # Individual level
 </agent>
 ```
 
@@ -637,7 +619,7 @@ Patterns to avoid when writing new agents or skills.
 | Rules without SSOT references | Baseless instructions -> hallucination risk | Specify SSOT via `<prerequisites>` |
 | Missing tsq-cli section | No log recording -> retrospective impossible | Must be included |
 | No input-contract | PM doesn't know what to provide | Specify required/optional |
-| No feedback-routing | Ambiguous behavior criteria when issues are found | Always define 3 levels |
+| No feedback criteria | Ambiguous behavior criteria when issues are found | Reference `/tsq-retro feedback` or include L1/L2/L3 criteria comment |
 | Overly detailed persona | Token waste | Keep to 3-4 lines |
 | Mixing multiple roles | Ambiguous responsibility -> quality degradation | 1 agent = 1 role |
 
@@ -683,7 +665,7 @@ When creating a new agent, verify the following items in order.
 - [ ] `<input-contract>` -- required/optional field definitions
 - [ ] `<rules>` -- at least 3 must/must-not each
 - [ ] `<task-completion-protocol>` -- references task-result.md
-- [ ] `<feedback-routing>` -- 3 levels (triggers + route)
+- [ ] Feedback guide -- L1/L2/L3 classification criteria reference (`tsq-retro` skill)
 
 ### Registration
 

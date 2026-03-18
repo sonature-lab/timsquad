@@ -62,7 +62,7 @@
           Planning Phase를 먼저 완료하세요.
         </error-message>
         <action-on-fail>block</action-on-fail>
-        <route-to>tsq-planner</route-to>
+        <route-to>tsq-architect</route-to>
       </precondition>
 
       <precondition id="IMPL-PRE-002" severity="critical">
@@ -120,7 +120,7 @@
        에이전트별 Pre-condition
        ============================================================ -->
   <agent-preconditions>
-    <agent id="tsq-planner">
+    <agent id="tsq-architect">
       <precondition id="PLN-PRE-001">
         <name>기존 결정 확인</name>
         <check>.timsquad/ssot/adr/ 디렉토리 확인</check>
@@ -148,7 +148,7 @@
           2. data-design.md의 데이터 모델
           3. error-codes.md의 에러 코드
 
-          SSOT와 다르게 구현하면 즉시 중단하고 tsq-planner에게 보고
+          SSOT와 다르게 구현하면 즉시 중단하고 tsq-architect에게 보고
         </instruction>
       </precondition>
     </agent>
@@ -194,8 +194,8 @@
       <action-on-fail>block-completion</action-on-fail>
     </condition>
 
-    <!-- Planner -->
-    <condition id="POST-PLN-001" applies-to="tsq-planner" severity="critical">
+    <!-- Architect -->
+    <condition id="POST-PLN-001" applies-to="tsq-architect" severity="critical">
       <name>SSOT 문서 생성/수정</name>
       <check>SSOT 파일 생성 또는 수정됨</check>
       <validation>
@@ -204,7 +204,7 @@
       </validation>
     </condition>
 
-    <condition id="POST-PLN-002" applies-to="tsq-planner">
+    <condition id="POST-PLN-002" applies-to="tsq-architect">
       <name>주요 결정 ADR 기록</name>
       <check>아키텍처/설계 결정 시 ADR 생성</check>
       <triggers>
@@ -236,7 +236,7 @@
       </validation>
       <on-mismatch>
         <action>작업 중단</action>
-        <route-to>tsq-planner</route-to>
+        <route-to>tsq-architect</route-to>
         <report>SSOT 불일치 내용 보고</report>
       </on-mismatch>
     </condition>
@@ -285,7 +285,7 @@
       <rule>SSOT 문서와 구현이 항상 일치해야 함</rule>
       <on-violation>
         <action>작업 중단</action>
-        <report>불일치 내용을 tsq-planner에게 보고</report>
+        <report>불일치 내용을 tsq-architect에게 보고</report>
       </on-violation>
     </invariant>
 

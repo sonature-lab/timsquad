@@ -29,7 +29,7 @@ import { substituteVariables } from './template.js';
 function getMethodologySkills(config: TimsquadConfig): string[] {
   const dev = config.methodology?.development;
   if (!dev || dev === 'none') return [];
-  return [`methodology/${dev}`];
+  return [`tsq-${dev}`];
 }
 
 /**
@@ -169,7 +169,7 @@ export function validateSkillStructure(skillDir: string): string[] {
 
 /**
  * Remove skill directories that are not in the active list.
- * Preserves _template/ always.
+ * All skills are flat (tsq-* prefix), no nested structure.
  */
 async function removeInactiveSkills(
   destSkillsDir: string,
@@ -177,66 +177,13 @@ async function removeInactiveSkills(
 ): Promise<void> {
   if (!await fs.pathExists(destSkillsDir)) return;
 
-  // Build a set of top-level directories to keep
-  const keepSet = new Set<string>();
-  keepSet.add('_template');
-  for (const skill of activeSkills) {
-    // For nested skills like 'frontend/react', keep the top-level 'frontend'
-    const topLevel = skill.split('/')[0];
-    keepSet.add(topLevel);
-  }
-
+  const keepSet = new Set<string>(['_template', '_shared', ...activeSkills]);
   const entries = await fs.readdir(destSkillsDir, { withFileTypes: true });
+
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
-    if (keepSet.has(entry.name)) {
-      // For parent dirs like 'frontend/', check subdirectories
-      await removeInactiveSubSkills(
-        path.join(destSkillsDir, entry.name),
-        activeSkills,
-        entry.name,
-      );
-      continue;
-    }
-    // Completely inactive top-level skill
+    if (keepSet.has(entry.name)) continue;
     await fs.remove(path.join(destSkillsDir, entry.name));
-  }
-}
-
-/**
- * For parent skill directories (e.g. frontend/, methodology/),
- * remove inactive sub-skills while keeping active ones.
- */
-async function removeInactiveSubSkills(
-  parentDir: string,
-  activeSkills: string[],
-  parentName: string,
-): Promise<void> {
-  const entries = await fs.readdir(parentDir, { withFileTypes: true });
-
-  // Check if this directory itself is a skill (has SKILL.md)
-  const hasSelfSkill = entries.some(e => e.name === 'SKILL.md');
-  const isParentActive = activeSkills.includes(parentName);
-
-  // If parent itself is an active skill, keep it
-  if (hasSelfSkill && !isParentActive) {
-    // Remove only SKILL.md and rules/ from parent, keep subdirs
-  }
-
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    if (['rules', 'references', 'scripts', 'triggers', 'delegation', 'memory'].includes(entry.name)) continue; // belongs to parent skill
-
-    const subSkillPath = `${parentName}/${entry.name}`;
-    if (!activeSkills.includes(subSkillPath)) {
-      await fs.remove(path.join(parentDir, entry.name));
-    }
-  }
-
-  // If parent directory is now empty (no SKILL.md, no subdirs), remove it
-  const remaining = await fs.readdir(parentDir);
-  if (remaining.length === 0) {
-    await fs.remove(parentDir);
   }
 }
 

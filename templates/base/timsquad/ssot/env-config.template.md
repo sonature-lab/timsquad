@@ -2,7 +2,7 @@
 title: "환경 설정 (Environment Configuration)"
 version: 1.0.0
 last_updated: {{DATE}}
-author: tsq-planner
+author: tsq-architect
 status: draft
 project: {{PROJECT_NAME}}
 ---
@@ -118,6 +118,8 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/{{PROJECT_NAME}}_dev
 REDIS_URL=redis://localhost:6379
 
 # Auth
+# ⚠️ 아래는 로컬 개발 전용. 절대 프로덕션에서 사용 금지.
+# 프로덕션은 반드시 시크릿 매니저(Vault, AWS Secrets Manager 등)에서 주입.
 JWT_SECRET=local-dev-secret-change-in-production
 JWT_EXPIRES_IN=1d
 SESSION_SECRET=local-session-secret
@@ -343,4 +345,4 @@ if (await featureService.isEnabled('NEW_UI', userId)) {
 
 | 버전 | 날짜 | 작성자 | 변경 내용 |
 |------|------|--------|----------|
-| 1.0.0 | {{DATE}} | tsq-planner | 초기 작성 |
+| 1.0.0 | {{DATE}} | tsq-architect | 초기 작성 |

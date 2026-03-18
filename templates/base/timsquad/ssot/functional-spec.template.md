@@ -2,7 +2,7 @@
 title: "기능 명세서 (Functional Specification)"
 version: 1.0.0
 last_updated: {{DATE}}
-author: tsq-planner
+author: tsq-architect
 status: draft
 project: {{PROJECT_NAME}}
 ---
@@ -130,7 +130,44 @@ Feature: [기능명]
 
 ### FS-002: [기능명]
 
-(위와 동일한 형식으로 작성)
+#### 3.2.1 개요
+
+| 항목 | 내용 |
+|-----|------|
+| **ID** | FS-002 |
+| **기능명** | |
+| **우선순위** | P0 / P1 / P2 |
+| **관련 PRD** | [prd/xxx](./prd/xxx.md) |
+| **관련 요건** | FR-XXX-001 |
+| **관련 화면** | [SCR-002](./ui-ux-spec.md#SCR-002) |
+| **관련 API** | [service-spec](./service-spec.md) |
+
+#### 3.2.2 사전 조건 (Preconditions)
+-
+
+#### 3.2.3 주요 흐름 (Main Flow)
+
+| 단계 | Actor | Action | System Response |
+|:----:|-------|--------|----------------|
+| 1 | | | |
+| 2 | | | |
+
+#### 3.2.4 대안 흐름 / 예외 흐름
+-
+
+#### 3.2.5 사후 조건 (Postconditions)
+- [ ]
+
+#### 3.2.6 수용 조건 (Acceptance Criteria)
+
+```gherkin
+Feature: [기능명]
+
+  Scenario: [시나리오명]
+    Given [사전 조건]
+    When [행동]
+    Then [기대 결과]
+```
 
 ---
 
@@ -182,4 +219,4 @@ graph LR
 
 | 버전 | 날짜 | 작성자 | 변경 내용 |
 |------|------|--------|----------|
-| 1.0.0 | {{DATE}} | tsq-planner | 초기 작성 |
+| 1.0.0 | {{DATE}} | tsq-architect | 초기 작성 |

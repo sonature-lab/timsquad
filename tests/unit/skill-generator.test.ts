@@ -21,18 +21,18 @@ describe('getActiveSkills', () => {
     const config = createDefaultConfig('test', 'web-service', 2);
     const skills = getActiveSkills(config);
 
-    expect(skills).toContain('frontend/react');
-    expect(skills).toContain('frontend/nextjs');
-    expect(skills).toContain('ui-design');
+    expect(skills).toContain('tsq-react');
+    expect(skills).toContain('tsq-nextjs');
+    expect(skills).toContain('tsq-ui');
   });
 
   it('should NOT include frontend skills for api-backend', () => {
     const config = createDefaultConfig('test', 'api-backend', 2);
     const skills = getActiveSkills(config);
 
-    expect(skills).not.toContain('frontend/react');
-    expect(skills).not.toContain('frontend/nextjs');
-    expect(skills).not.toContain('ui-design');
+    expect(skills).not.toContain('tsq-react');
+    expect(skills).not.toContain('tsq-nextjs');
+    expect(skills).not.toContain('tsq-ui');
   });
 
   it('should have minimal skills for infra', () => {
@@ -40,25 +40,25 @@ describe('getActiveSkills', () => {
     const skills = getActiveSkills(config);
 
     // Only BASE_SKILLS + security
-    expect(skills).toContain('security');
-    expect(skills).not.toContain('database');
-    expect(skills).not.toContain('backend/node');
+    expect(skills).toContain('tsq-security');
+    expect(skills).not.toContain('tsq-database');
+    expect(skills).not.toContain('tsq-hono');
   });
 
   it('should include methodology skill based on config', () => {
     const config = createDefaultConfig('test', 'platform', 2, { methodology: 'tdd' });
     const skills = getActiveSkills(config);
 
-    expect(skills).toContain('methodology/tdd');
-    expect(skills).not.toContain('methodology/bdd');
+    expect(skills).toContain('tsq-tdd');
+    expect(skills).not.toContain('tsq-bdd');
   });
 
   it('should exclude methodology skills when none', () => {
     const config = createDefaultConfig('test', 'platform', 2, { methodology: 'none' });
     const skills = getActiveSkills(config);
 
-    expect(skills).not.toContain('methodology/tdd');
-    expect(skills).not.toContain('methodology/bdd');
+    expect(skills).not.toContain('tsq-tdd');
+    expect(skills).not.toContain('tsq-bdd');
   });
 
   it('should have no duplicates', () => {
@@ -76,21 +76,20 @@ describe('getActiveSkills', () => {
     });
     const skills = getActiveSkills(config);
 
-    expect(skills).toContain('frontend/react');
-    expect(skills).toContain('database/prisma');
+    expect(skills).toContain('tsq-react');
+    expect(skills).toContain('tsq-prisma');
   });
 
   it('should include domain-specific skills when domain has entries', () => {
-    // Temporarily add entries to test
     const original = DOMAIN_SKILL_MAP['ml-engineering'];
-    DOMAIN_SKILL_MAP['ml-engineering'] = ['methodology/debugging'];
+    DOMAIN_SKILL_MAP['ml-engineering'] = ['tsq-ml-debug'];
 
     const config = createDefaultConfig('test', 'infra', 2, {
       domain: 'ml-engineering',
     });
     const skills = getActiveSkills(config);
 
-    expect(skills).toContain('methodology/debugging');
+    expect(skills).toContain('tsq-ml-debug');
 
     // Restore
     DOMAIN_SKILL_MAP['ml-engineering'] = original;
@@ -104,12 +103,12 @@ describe('getActiveSkills', () => {
     const skills = getActiveSkills(config);
 
     // react from both SKILL_PRESETS and STACK_SKILL_MAP — should not duplicate
-    const reactCount = skills.filter(s => s === 'frontend/react').length;
+    const reactCount = skills.filter(s => s === 'tsq-react').length;
     expect(reactCount).toBe(1);
 
-    // node from both sources — no duplication
-    const nodeCount = skills.filter(s => s === 'backend/node').length;
-    expect(nodeCount).toBe(1);
+    // hono from both sources — no duplication
+    const honoCount = skills.filter(s => s === 'tsq-hono').length;
+    expect(honoCount).toBe(1);
   });
 
   it('should handle empty stack gracefully', () => {
@@ -119,7 +118,7 @@ describe('getActiveSkills', () => {
     const skills = getActiveSkills(config);
 
     // Should still have type-based skills
-    expect(skills).toContain('frontend/react');
+    expect(skills).toContain('tsq-react');
   });
 
   it('should handle undefined stack gracefully', () => {
@@ -138,7 +137,7 @@ describe('getActiveSkills', () => {
     });
     const skills = getActiveSkills(config);
 
-    expect(skills).toContain('database');
+    expect(skills).toContain('tsq-database');
   });
 
   it('should add typescript skill via stack entry', () => {
@@ -147,8 +146,8 @@ describe('getActiveSkills', () => {
     });
     const skills = getActiveSkills(config);
 
-    // typescript is already in BASE_SKILLS — no error, just dedup
-    const tsCount = skills.filter(s => s === 'typescript').length;
+    // tsq-typescript is already in BASE_SKILLS — no error, just dedup
+    const tsCount = skills.filter(s => s === 'tsq-typescript').length;
     expect(tsCount).toBe(1);
   });
 });

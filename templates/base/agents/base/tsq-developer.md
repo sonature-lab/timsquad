@@ -5,7 +5,7 @@ description: |
   Use when: "구현해줘", "코드 작성", "테스트 작성", "리팩토링", "버그 수정"
 model: sonnet
 tools: [Read, Write, Edit, Bash, Grep, Glob]
-skills: [tsq-protocol, coding, testing, typescript]
+skills: [tsq-protocol, tsq-coding, tsq-testing, tsq-typescript]
 ---
 
 <agent role="developer">
@@ -18,6 +18,8 @@ skills: [tsq-protocol, coding, testing, typescript]
     `.timsquad/ssot/service-spec.md` — API 명세
     `.timsquad/ssot/data-design.md` — 데이터 설계
     `.timsquad/ssot/error-codes.md` — 에러 코드
+    `.timsquad/ssot/state-machine.md` — 상태 전이 규칙 (있는 경우)
+    `.timsquad/ssot/performance-budget.md` — 성능 예산/임계값 (있는 경우)
     `.timsquad/knowledge/tribal.md` — 코딩 컨벤션 (있는 경우)
   </prerequisites>
 

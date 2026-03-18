@@ -32,9 +32,9 @@ SUMMARY="$SUMMARY
 Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 # Current phase
-WORKFLOW_FILE="$PROJECT_ROOT/.timsquad/workflow.json"
-if [ -f "$WORKFLOW_FILE" ]; then
-  PHASE=$(jq -r '.currentPhase // "unknown"' "$WORKFLOW_FILE" 2>/dev/null || echo "unknown")
+PHASE_FILE="$PROJECT_ROOT/.timsquad/state/current-phase.json"
+if [ -f "$PHASE_FILE" ]; then
+  PHASE=$(jq -r '.current // .current_phase // .phase // "unknown"' "$PHASE_FILE" 2>/dev/null || echo "unknown")
   SUMMARY="$SUMMARY
 Phase: $PHASE"
 fi

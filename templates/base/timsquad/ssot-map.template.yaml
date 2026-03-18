@@ -3,6 +3,7 @@
 # Tier 1: Phase 시작 시 Controller가 주입
 # Tier 2: Sequence 범위 문서 (Controller가 선택 주입)
 # Tier 3: 개별 Task에 필요한 구체 spec (Controller가 선택 주입)
+# optional: true → 타입별 선택 배포 문서 (미존재 시 건너뜀)
 
 tier-0-always:
   description: "모든 작업에 항상 주입되는 제약 문서"
@@ -21,6 +22,12 @@ tier-1-phase:
       source: prd.md
     - compiled: references/architecture.spec.md
       source: planning.md
+    - compiled: references/compliance-matrix.spec.md
+      source: compliance-matrix.md
+      optional: true
+    - compiled: references/infra-topology.spec.md
+      source: infra-topology.md
+      optional: true
 
 tier-2-sequence:
   description: "Sequence 범위의 기능별 문서"
@@ -30,6 +37,21 @@ tier-2-sequence:
       source: service-spec.md
     - compiled: references/data-design.spec.md
       source: data-design.md
+    - compiled: references/state-machine.spec.md
+      source: state-machine.md
+      optional: true
+    - compiled: references/performance-budget.spec.md
+      source: performance-budget.md
+      optional: true
+    - compiled: references/component-map.spec.md
+      source: component-map.md
+      optional: true
+    - compiled: references/navigation-map.spec.md
+      source: navigation-map.md
+      optional: true
+    - compiled: references/monitoring-spec.spec.md
+      source: monitoring-spec.md
+      optional: true
 
 tier-3-task:
   description: "개별 Task에 필요한 구체 spec"
@@ -39,3 +61,9 @@ tier-3-task:
       source: error-codes.md
     - compiled: references/functional.spec.md
       source: functional-spec.md
+    - compiled: references/sdk-spec.spec.md
+      source: sdk-spec.md
+      optional: true
+    - compiled: references/audit-trail-spec.spec.md
+      source: audit-trail-spec.md
+      optional: true

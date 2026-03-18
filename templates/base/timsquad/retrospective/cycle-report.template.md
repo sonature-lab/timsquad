@@ -46,14 +46,14 @@ status: draft
 
 | 에이전트 | 작업 수 | 성공률 | 평균 수정 | 점수 | 추세 |
 |---------|:-------:|:------:|:--------:|:----:|:----:|
-| tsq-planner | {{PLANNER_TASKS}} | {{PLANNER_SUCCESS}}% | {{PLANNER_REVISIONS}} | {{PLANNER_SCORE}} | {{PLANNER_TREND}} |
+| tsq-architect | {{PLANNER_TASKS}} | {{PLANNER_SUCCESS}}% | {{PLANNER_REVISIONS}} | {{PLANNER_SCORE}} | {{PLANNER_TREND}} |
 | tsq-developer | {{DEVELOPER_TASKS}} | {{DEVELOPER_SUCCESS}}% | {{DEVELOPER_REVISIONS}} | {{DEVELOPER_SCORE}} | {{DEVELOPER_TREND}} |
 | tsq-qa | {{QA_TASKS}} | {{QA_SUCCESS}}% | {{QA_REVISIONS}} | {{QA_SCORE}} | {{QA_TREND}} |
 | tsq-security | {{SECURITY_TASKS}} | {{SECURITY_SUCCESS}}% | {{SECURITY_REVISIONS}} | {{SECURITY_SCORE}} | {{SECURITY_TREND}} |
 
 ### 3.2 에이전트별 세부 분석
 
-#### tsq-planner
+#### tsq-architect
 - **강점**: {{PLANNER_STRENGTHS}}
 - **개선 필요**: {{PLANNER_IMPROVEMENTS}}
 - **주요 이슈**: {{PLANNER_ISSUES}}

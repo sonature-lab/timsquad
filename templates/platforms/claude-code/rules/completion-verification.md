@@ -1,7 +1,5 @@
 ---
 description: 완료 검증 루프. 자기 보고 금지, exit code로 완료 판정.
-globs:
-  - "**/*"
 ---
 
 # 완료 검증 루프 (Completion Verification)

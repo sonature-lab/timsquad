@@ -1,7 +1,7 @@
-# {PROJECT_NAME} 서비스 명세서
+# {{PROJECT_NAME}} 서비스 명세서
 
 **Version**: 1.0
-**Created**: {DATE}
+**Created**: {{DATE}}
 **Base URL**: `https://api.example.com/v1`
 
 ---
@@ -191,4 +191,4 @@
 
 | 버전 | 날짜 | 변경 내용 | 작성자 |
 |-----|-----|----------|-------|
-| 1.0 | {DATE} | 최초 작성 | |
+| 1.0 | {{DATE}} | 최초 작성 | |

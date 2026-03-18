@@ -5,7 +5,7 @@ description: |
   Use when: "리뷰해줘", "검증해줘", "테스트 확인", "품질 검토"
 model: sonnet
 tools: [Read, Bash, Grep, Glob]
-skills: [tsq-protocol, testing, security]
+skills: [tsq-protocol, tsq-testing, tsq-security]
 ---
 
 <agent role="qa">
@@ -29,6 +29,8 @@ skills: [tsq-protocol, testing, security]
     `.timsquad/ssot/service-spec.md` — API 명세
     `.timsquad/ssot/data-design.md` — 데이터 설계
     `.timsquad/ssot/error-codes.md` — 에러 코드
+    `.timsquad/ssot/performance-budget.md` — 성능 테스트 기준선 (있는 경우)
+    `.timsquad/ssot/monitoring-spec.md` — 모니터링 검증 기준 (있는 경우)
   </prerequisites>
 
   <input-contract>

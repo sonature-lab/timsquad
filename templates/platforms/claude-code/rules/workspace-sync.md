@@ -1,6 +1,6 @@
 ---
 description: workspace.xml 실시간 상태 관리 규칙.
-globs:
+paths:
   - ".timsquad/state/workspace.xml"
 ---
 

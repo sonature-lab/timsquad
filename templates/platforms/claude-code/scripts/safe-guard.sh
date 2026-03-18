@@ -7,11 +7,8 @@
 
 set -e
 
-# Read hook input from stdin (non-blocking)
-INPUT=""
-if read -t 1 -r line; then
-  INPUT="$line"
-fi
+# Read hook input from stdin
+INPUT=$(cat 2>/dev/null || echo "")
 
 # Fail-open: no input → allow
 if [ -z "$INPUT" ]; then

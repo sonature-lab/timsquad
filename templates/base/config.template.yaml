@@ -59,33 +59,22 @@ stack:
 # ============================================================
 # 에이전트 스킬 설정
 # ============================================================
-# 스킬 구조 (Vercel 패턴):
-#   SKILL.md     = 인덱스 (~100줄, 항상 로드)
-#   rules/       = 개별 패턴 파일 (on-demand 로드)
-# 500줄 초과 스킬은 반드시 SKILL.md(인덱스) + rules/(개별 파일)로 분리
-# 새 스킬 생성 시 _template/ 참조
-skills:
-  # 기본 스킬 (항상 로드)
-  base:
-    - coding
-    - testing
-    - security
-
-  # 방법론에 따라 자동 로드
-  methodology:
-    tdd: [methodology/tdd]
-    bdd: [methodology/bdd]
-
-  # 스택에 따라 자동 로드
-  stack:
-    typescript: [typescript]
-    react: [frontend/react]
-    nextjs: [frontend/nextjs, frontend/react]
-    vue: [frontend/vue]
-    node: [backend/node]
-    python: [backend/python]
-    prisma: [database/prisma]
-    typeorm: [database/typeorm]
+# 스킬은 project.type / project.domain / project.stack / methodology.development 으로
+# 자동 결정됩니다 (BASE_SKILLS + SKILL_PRESETS + DOMAIN_SKILL_MAP + STACK_SKILL_MAP).
+# 아래 섹션은 참고용이며 코드에서 읽히지 않습니다.
+#
+# skills:
+#   base: [tsq-coding, tsq-testing, tsq-security]
+#   methodology:
+#     tdd: [tsq-tdd]
+#     bdd: [tsq-bdd]
+#   stack:
+#     typescript: [tsq-typescript]
+#     react: [tsq-react]
+#     nextjs: [tsq-nextjs, tsq-react]
+#     node: [tsq-hono]
+#     prisma: [tsq-prisma]
+#     typeorm: [tsq-typeorm]
 
 # ============================================================
 # 에이전트 설정
@@ -163,7 +152,7 @@ quality:
 # 네이밍 규칙
 # ============================================================
 # Phase/Sequence/Task ID 자동 생성 시 사용하는 숫자 기반 패턴.
-# PM이 이 규칙에 따라 tsq wf set-phase / add-sequence를 자동 호출합니다.
+# Controller가 이 규칙에 따라 Phase/Sequence/Task ID를 자동 생성합니다.
 # 예: P1 = planning, P3-S001 = implementation 1번 시퀀스, P3-S001-T002 = 2번 태스크
 naming:
   # Phase ID: P{N} — N은 order 배열의 인덱스 (1부터)

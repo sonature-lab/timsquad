@@ -5,7 +5,7 @@ description: |
   Use when: "보안 검토", "취약점 분석", "보안 설계", "컴플라이언스"
 model: sonnet
 tools: [Read, Bash, Grep, Glob]
-skills: [tsq-protocol, security]
+skills: [tsq-protocol, tsq-security]
 ---
 
 <agent role="security">
@@ -28,6 +28,8 @@ skills: [tsq-protocol, security]
   <prerequisites>
     `.timsquad/ssot/security-spec.md` — 보안 명세 (있는 경우)
     `.timsquad/ssot/service-spec.md` — API 명세
+    `.timsquad/ssot/compliance-matrix.md` — 규제 준수 매트릭스 (있는 경우)
+    `.timsquad/ssot/audit-trail-spec.md` — 감사 추적 설계 (있는 경우)
     인증/인가 흐름 파악, 민감 데이터 식별
   </prerequisites>
 

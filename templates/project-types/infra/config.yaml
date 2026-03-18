@@ -8,8 +8,8 @@ description: "DevOps, IaC, CI/CD 파이프라인, 모니터링, 자동화"
 # 에이전트 설정
 # ============================================================
 agents:
-  # Planner는 인프라 아키텍처에 집중
-  planner:
+  # Architect는 인프라 아키텍처에 집중
+  architect:
     model: opus
     focus:
       - infrastructure_architecture
@@ -25,8 +25,8 @@ agents:
   developer:
     model: sonnet
     skills:
-      - coding
-      - terraform  # 또는 적절한 IaC
+      - tsq-coding
+      # terraform: 프로젝트에 맞는 IaC 스킬 추가
     focus:
       - iac_implementation
       - automation_scripts
@@ -70,6 +70,9 @@ ssot:
     - ui-ux-spec.md
     - data-design.md
     - functional-spec.md
+
+  # 타입×레벨 자동 배포 (SSOT_TYPE_LEVEL_MAP 기반):
+  #   L1+: infra-topology, monitoring-spec
 
 # ============================================================
 # 워크플로우 설정

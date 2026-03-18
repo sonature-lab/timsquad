@@ -8,8 +8,8 @@ description: "프레임워크, SDK, 라이브러리, 플러그인 시스템"
 # 에이전트 설정
 # ============================================================
 agents:
-  # Planner는 API 설계와 문서화에 집중
-  planner:
+  # Architect는 API 설계와 문서화에 집중
+  architect:
     model: opus
     focus:
       - api_design
@@ -25,9 +25,9 @@ agents:
   developer:
     model: sonnet
     skills:
-      - coding
-      - testing
-      - typescript
+      - tsq-coding
+      - tsq-testing
+      - tsq-typescript
     focus:
       - clean_code
       - type_safety
@@ -72,6 +72,9 @@ ssot:
     - ui-ux-spec.md
     - data-design.md       # 내부 상태만
     - deployment-spec.md   # npm publish 정도
+
+  # 타입×레벨 자동 배포 (SSOT_TYPE_LEVEL_MAP 기반):
+  #   L1+: sdk-spec
 
 # ============================================================
 # 워크플로우 설정

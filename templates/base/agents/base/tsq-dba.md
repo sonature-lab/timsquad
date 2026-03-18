@@ -5,7 +5,7 @@ description: |
   Use when: "DB 설계", "스키마 변경", "쿼리 최적화", "마이그레이션"
 model: sonnet
 tools: [Read, Write, Edit, Bash, Grep, Glob]
-skills: [tsq-protocol, database]
+skills: [tsq-protocol, tsq-database]
 ---
 
 <agent role="dba">
@@ -29,6 +29,8 @@ skills: [tsq-protocol, database]
     `.timsquad/ssot/data-design.md` — 데이터 설계 문서
     `.timsquad/ssot/requirements.md` — 요구사항 (NFR 포함)
     `.timsquad/ssot/glossary.md` — 용어 사전
+    `.timsquad/ssot/performance-budget.md` — DB 쿼리 성능 예산 (있는 경우)
+    `.timsquad/ssot/audit-trail-spec.md` — 감사 테이블 스키마 (있는 경우)
   </prerequisites>
 
   <input-contract>

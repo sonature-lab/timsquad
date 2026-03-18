@@ -56,7 +56,7 @@
 
     <agents>
       <!--
-      <agent id="tsq-planner">
+      <agent id="tsq-architect">
         <tasks-completed>0</tasks-completed>
         <success-rate>0</success-rate>
         <avg-revisions>0</avg-revisions>
@@ -124,7 +124,7 @@
         <occurrences>5</occurrences>
         <success-rate>95</success-rate>
         <related-agents>
-          <agent>tsq-planner</agent>
+          <agent>tsq-architect</agent>
           <agent>tsq-developer</agent>
         </related-agents>
         <factor>명확한 계약서 역할</factor>

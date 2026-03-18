@@ -4,7 +4,7 @@
 template:
   name: web-service
   description: SaaS, 웹앱을 위한 템플릿
-  version: 2.0.0
+  version: 3.7.0
 
 # ============================================================
 # 프로젝트 기본값 (덮어쓰기 가능)
@@ -54,22 +54,10 @@ stack:
 # ============================================================
 # 스킬 자동 로딩 규칙
 # ============================================================
-skills:
-  base:
-    - coding
-    - testing
-    - security
-    - planning
-    - architecture
-
-  # web-service 타입 추가 스킬
-  type-specific:
-    - typescript
-    - frontend/react
-    - frontend/nextjs
-    - backend/node
-    - database/prisma
-    - methodology/tdd
+# 스킬은 project.type으로 자동 결정됩니다 (이 섹션은 참고용).
+# skills:
+#   base: [tsq-coding, tsq-testing, tsq-security, tsq-planning, tsq-architecture]
+#   type-specific: [tsq-typescript, tsq-react, tsq-nextjs, tsq-hono, tsq-prisma, tsq-tdd]
 
 # ============================================================
 # 추가 SSOT 문서
@@ -77,6 +65,9 @@ skills:
 ssot:
   additional:
     - ui-ux-spec.md
+  # 타입×레벨 자동 배포 (SSOT_TYPE_LEVEL_MAP 기반):
+  #   L2+: state-machine, performance-budget, component-map
+  #   L3:  monitoring-spec
 
 # ============================================================
 # 추가 에이전트
@@ -85,12 +76,12 @@ additional_agents:
   - name: tsq-frontend
     description: 프론트엔드 전문 개발자
     base: tsq-developer
-    skills: [frontend/react, frontend/nextjs, typescript]
+    skills: [tsq-react, tsq-nextjs, tsq-typescript]
 
   - name: tsq-backend
     description: 백엔드 전문 개발자
     base: tsq-developer
-    skills: [backend/node, database/prisma, typescript]
+    skills: [tsq-hono, tsq-prisma, tsq-typescript]
 
 # ============================================================
 # 레벨별 권장 사항

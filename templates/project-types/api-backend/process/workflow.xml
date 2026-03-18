@@ -21,7 +21,7 @@
       <tasks>
         <task id="api-spec" required="true">
           <name>API 명세 작성</name>
-          <agent>tsq-planner</agent>
+          <agent>tsq-architect</agent>
           <output>service-spec.md</output>
           <checklist>
             <item>엔드포인트 정의</item>
@@ -45,7 +45,7 @@
 
         <task id="error-codes" required="true">
           <name>에러 코드 정의</name>
-          <agent>tsq-planner</agent>
+          <agent>tsq-architect</agent>
           <output>error-codes.md</output>
           <checklist>
             <item>에러 코드 체계</item>

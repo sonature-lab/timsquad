@@ -74,7 +74,7 @@ export async function restoreFromBackup(projectRoot: string): Promise<string> {
   const manifest = await getBackupManifest(projectRoot);
 
   if (!manifest) {
-    throw new Error('No upgrade backup found. Run "tsq upgrade" first to create a backup.');
+    throw new Error('No upgrade backup found. Run "tsq update" first to create a backup.');
   }
 
   for (const entry of manifest.entries) {

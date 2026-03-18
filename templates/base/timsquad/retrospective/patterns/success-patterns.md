@@ -67,7 +67,7 @@ last_updated: {{TIMESTAMP}}
 | **카테고리** | DC (문서화) |
 | **최초 발견** | - |
 | **적용 횟수** | 0회 |
-| **관련 에이전트** | tsq-planner, tsq-developer |
+| **관련 에이전트** | tsq-architect, tsq-developer |
 | **검증 상태** | standard |
 
 **패턴 설명**
@@ -184,7 +184,7 @@ last_updated: {{TIMESTAMP}}
 | **카테고리** | DC (문서화) |
 | **최초 발견** | - |
 | **적용 횟수** | 0회 |
-| **관련 에이전트** | tsq-planner |
+| **관련 에이전트** | tsq-architect |
 | **검증 상태** | validated |
 
 **패턴 설명**

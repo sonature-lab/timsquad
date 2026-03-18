@@ -1,6 +1,6 @@
 ---
 description: 컨텍스트 윈도우 모니터. 85% 임계값 도달 시 사전 대응.
-globs:
+paths:
   - ".timsquad/.daemon/**"
 ---
 

@@ -45,6 +45,22 @@
 - **이유**: 단일 에이전트는 컨텍스트 오버플로우 및 교차 검증 불가. 역할 분리로 CCTV식 변경 추적, 완료 후 자동 검사, 보안 리마인더 가능
 - **관련 자료**: `docs/sprint/work-protocol.md`
 
+### D-008: Pipeline Hardening (경쟁 하네스 분석 + 교차 리뷰)
+- **결정**: Superpowers/OMC/Claude Harness 베스트 프랙티스 중 7항목 선별, 3에이전트 교차 리뷰 후 5항목 확정
+- **이유**: 기존 SSOT 기반 차별점 유지하면서 TDD Gate, Plan Reviewer, Drift Detection 등 검증된 패턴 흡수
+- **삭제 항목**: 병렬 디스패치(1-C), 동적 모델 라우팅(2-A), 매 task-complete 리뷰(2-C), Visual Brainstorm(3-A)
+- **관련 자료**: `docs/sprint/pipeline-hardening-plan.md`, `docs/sprint/pipeline-hardening-tasks.md`
+
+### D-009: SSOT Readiness Guard (3계층)
+- **결정**: CLAUDE.md 주입 + completion-guard Stop hook + context-restore SessionStart hook으로 SSOT 미충족 시 안내
+- **이유**: PRD 미작성 상태에서 구현 착수 방지. 자동화보다 질문/가이드로 유도 (중단지점 커버)
+- **관련 자료**: `src/lib/template.ts`, `templates/platforms/claude-code/scripts/completion-guard.sh`, `context-restore.sh`
+
+### D-010: SSOT Drift Detection
+- **결정**: Daemon event-queue에서 source-changed 이벤트 시 SSOT 문서 mtime 비교, 7일 초과 시 drift-warnings.json 기록
+- **이유**: 경쟁 하네스 0개 보유 기능. Document-Code Coherence 차별점 강화
+- **관련 자료**: `src/daemon/event-queue.ts` (checkSSOTDrift), `tests/unit/event-queue.test.ts`
+
 ---
 
 ## 2. 관련 자료 위치 (Resource Map)
@@ -91,6 +107,16 @@
 | `templates/base/skills/_template/SKILL.md` | 스킬 템플릿 | #7 |
 | `src/daemon/context-writer.ts` | 핸드오프 기반 | #9 |
 | `src/daemon/session-notes.ts` | 세션 노트 | #9 |
+
+### Pipeline Hardening 관련
+| 파일 | 역할 |
+|------|------|
+| `docs/sprint/pipeline-hardening-plan.md` | 경쟁 하네스 분석 + 교차 리뷰 결과 |
+| `docs/sprint/pipeline-hardening-tasks.md` | 상세 작업 계획 + 체크리스트 |
+| `src/daemon/event-queue.ts` | SSOT Drift Detection (checkSSOTDrift) |
+| `tests/unit/event-queue.test.ts` | Drift Detection 단위 테스트 (3개) |
+| `templates/platforms/claude-code/scripts/completion-guard.sh` | TDD Gate + SSOT 미충족 경고 |
+| `templates/platforms/claude-code/scripts/context-restore.sh` | SSOT Readiness 안내 |
 
 ### 프로젝트 기준 문서
 | 파일 | 설명 |

@@ -9,7 +9,7 @@
 
   <!-- 현재 활성 에이전트 -->
   <active-session>
-    <agent>tsq-planner</agent>
+    <agent>tsq-architect</agent>
     <started-at>{{TIMESTAMP}}</started-at>
     <mode>planning</mode>
   </active-session>
@@ -21,7 +21,7 @@
     <id>TASK-001</id>
     <title>PRD 작성</title>
     <description>제품 요구사항 정의서 초안 작성</description>
-    <agent>tsq-planner</agent>
+    <agent>tsq-architect</agent>
     <phase>planning</phase>
     <started-at>{{TIMESTAMP}}</started-at>
     <status>in_progress</status>
@@ -44,7 +44,7 @@
     <task id="TASK-002" priority="1">
       <title>요구사항 정의</title>
       <description>기능/비기능 요건 작성</description>
-      <assigned-to>tsq-planner</assigned-to>
+      <assigned-to>tsq-architect</assigned-to>
       <phase>planning</phase>
       <depends-on>TASK-001</depends-on>
       <estimated-effort>medium</estimated-effort>
@@ -73,7 +73,7 @@
     <!--
     현재 에이전트가 다음 에이전트에게 전달할 내용
 
-    <from>tsq-planner</from>
+    <from>tsq-architect</from>
     <to>tsq-developer</to>
     <timestamp>{{TIMESTAMP}}</timestamp>
     <message>
@@ -124,7 +124,7 @@
     <approval id="APV-001" type="phase-transition">
       <from-phase>planning</from-phase>
       <to-phase>implementation</to-phase>
-      <requested-by>tsq-planner</requested-by>
+      <requested-by>tsq-architect</requested-by>
       <requested-at>{{TIMESTAMP}}</requested-at>
       <reason>SSOT 문서 작성 완료, 구현 단계 진입 요청</reason>
       <checklist>
@@ -174,27 +174,27 @@
   <next-steps>
     <step order="1">
       <action>PRD 작성 완료</action>
-      <agent>tsq-planner</agent>
+      <agent>tsq-architect</agent>
       <output>ssot/prd.md</output>
     </step>
     <step order="2">
       <action>요구사항 정의</action>
-      <agent>tsq-planner</agent>
+      <agent>tsq-architect</agent>
       <output>ssot/requirements.md</output>
     </step>
     <step order="3">
       <action>API 명세 작성</action>
-      <agent>tsq-planner</agent>
+      <agent>tsq-architect</agent>
       <output>ssot/service-spec.md</output>
     </step>
     <step order="4">
       <action>데이터 설계</action>
-      <agent>tsq-planner</agent>
+      <agent>tsq-architect</agent>
       <output>ssot/data-design.md</output>
     </step>
     <step order="5">
       <action>User 승인 요청</action>
-      <agent>tsq-planner</agent>
+      <agent>tsq-architect</agent>
       <requires-approval>true</requires-approval>
     </step>
     <step order="6">
@@ -209,7 +209,7 @@
        ============================================================ -->
   <session-notes>
     <!--
-    <note timestamp="{{TIMESTAMP}}" agent="tsq-planner">
+    <note timestamp="{{TIMESTAMP}}" agent="tsq-architect">
       사용자가 MVP 우선 요청. 소셜 로그인은 v2로 미룸.
     </note>
     -->

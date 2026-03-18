@@ -2,7 +2,7 @@
 
 # File Structure
 
-> Document separated from PRD Section 8. As of v3.5.
+> Document separated from PRD Section 8. As of v3.7.
 
 ## Template Structure
 
@@ -94,7 +94,6 @@
 │   │       ├── /generators                # Document generators (XML)
 │   │       ├── /process                   # Workflow definitions
 │   │       ├── /constraints               # Constraints
-│   │       ├── /feedback                  # Feedback routing
 │   │       ├── /retrospective             # Retrospective system
 │   │       ├── /patterns                  # Success/failure patterns
 │   │       ├── /logs                      # Log templates
@@ -204,16 +203,27 @@ After running `tsq init -t web-service -l 2`:
     │
     ├── /state                             # State management
     │   ├── current-phase.json
+    │   ├── decisions.jsonl                # Decision Log (accumulated during Phase)
+    │   ├── phase-memory.md               # Previous Phase summary (sliding window)
+    │   ├── onboarding-progress.json      # Onboarding state (grill queue, SSOT readiness)
     │   └── /meta-index                    # Code/UI structure index
     │
-    ├── /feedback                          # Feedback store
-    │   └── routing-rules.yaml
+    ├── /trails                            # Per-phase thinking process archive
+    │   ├── phase-{id}.md                  # Phase Trail (work/decision/carry-over summary)
+    │   └── phase-{id}-decisions.jsonl     # Decision Log archive
+    │
+    ├── /feedback                          # Feedback store (created at runtime)
     │
     ├── /retrospective                     # Retrospective data
     │   ├── /cycles
     │   ├── /metrics
     │   ├── /patterns
     │   └── /improvements
+    │
+    ├── /.daemon                             # Daemon runtime state (gitignored)
+    │   ├── daemon.pid                       # Daemon PID
+    │   ├── session-state.json               # Session metrics (tokens, events)
+    │   └── drift-warnings.json              # SSOT Drift warnings (docs >7 days stale)
     │
     └── /logs                              # 3-tier logs (L1→L2→L3)
 ```

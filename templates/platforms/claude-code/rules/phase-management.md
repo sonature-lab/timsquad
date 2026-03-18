@@ -1,6 +1,6 @@
 ---
 description: Phase 관리 규칙. Phase 전환, 허용/금지 작업, 종료 조건.
-globs:
+paths:
   - ".timsquad/state/**"
   - ".timsquad/ssot/**"
 ---
@@ -19,5 +19,5 @@ globs:
 | deployment | 배포 | - | 배포 완료 |
 
 ## Phase 종료 시
-- `skills/retrospective/SKILL.md`를 활용하여 회고 실행
+- `/retro` (tsq-retro 스킬)를 활용하여 회고 실행
 - Phase 전환 조건 미충족 시 다음 Phase 진행 금지

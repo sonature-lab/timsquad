@@ -8,8 +8,8 @@ description: "API 서버, 마이크로서비스, REST/GraphQL 백엔드"
 # 에이전트 설정
 # ============================================================
 agents:
-  # Planner는 API 설계에 집중
-  planner:
+  # Architect는 API 설계에 집중
+  architect:
     model: opus
     focus:
       - api_design
@@ -24,9 +24,9 @@ agents:
   developer:
     model: sonnet
     skills:
-      - coding
-      - testing
-      - backend/node  # 또는 적절한 백엔드 기술
+      - tsq-coding
+      - tsq-testing
+      - tsq-hono  # 또는 적절한 백엔드 기술
     focus:
       - api_implementation
       - database_queries
@@ -78,6 +78,10 @@ ssot:
   optional:
     - ui-ux-spec.md        # API만이므로 불필요
     - deployment-spec.md
+
+  # 타입×레벨 자동 배포 (SSOT_TYPE_LEVEL_MAP 기반):
+  #   L2+: state-machine, performance-budget
+  #   L3:  monitoring-spec
     - integration-spec.md
 
 # ============================================================

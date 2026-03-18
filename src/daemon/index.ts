@@ -4,7 +4,7 @@
  * - JSONL 스트림 감시 (옵셔널 — 레거시 모드)
  * - IPC notify 이벤트 수신 (훅 기반 모드)
  * - 소스 파일 변경 감시 (메타인덱스 갱신)
- * - 이벤트 큐 (task → sequence → phase 연쇄)
+ * - 이벤트 큐 (task-complete, source-changed, ssot-changed, session-end)
  * - 인메모리 메타인덱스 + IPC 쿼리
  */
 
@@ -91,13 +91,13 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
   // 4. 메타 캐시
   const metaCache = new MetaCache(projectRoot);
 
-  // 메타인덱스 로드
-  try {
-    await metaCache.load();
-    log(`Meta cache loaded: ${metaCache.totalFiles} files, ${metaCache.totalMethods} methods`, 'meta_cache', { files: metaCache.totalFiles, methods: metaCache.totalMethods });
-  } catch (err) {
-    log(`Meta cache load failed: ${(err as Error).message}`, 'error', { error: (err as Error).message });
-  }
+  // 메타인덱스 로드 (비활성화 — 스킬 레이어 미연결 상태, IPC notify만 유지)
+  // try {
+  //   await metaCache.load();
+  //   log(`Meta cache loaded: ${metaCache.totalFiles} files, ${metaCache.totalMethods} methods`, 'meta_cache', { files: metaCache.totalFiles, methods: metaCache.totalMethods });
+  // } catch (err) {
+  //   log(`Meta cache load failed: ${(err as Error).message}`, 'error', { error: (err as Error).message });
+  // }
 
   // IPC 서버 시작
   metaCache.startIPC();
@@ -228,9 +228,8 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
     }
   };
 
-  // 소스 변경 → 메타 캐시 갱신
+  // 소스 변경 로깅 (메타인덱스 갱신 비활성화)
   eventQueue.onSourceChanged = (paths: string[]) => {
-    metaCache.updateFiles(paths);
     log(`Source changed: ${paths.join(', ')}`, 'info', { paths });
   };
 
@@ -299,9 +298,8 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
       }
     }
 
-    // 2. 메타 캐시 디스크 flush
-    await metaCache.flushToDisk();
-    log('Meta cache flushed', 'meta_cache');
+    // 2. 메타 캐시 디스크 flush (비활성화 — 메타인덱스 미사용)
+    // await metaCache.flushToDisk();
 
     // 3. 정리
     await fileWatcher.stop();
@@ -315,7 +313,10 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
   };
 
   // SIGTERM/SIGINT 핸들러
+  let shuttingDown = false;
   const gracefulStop = async () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
     log('Signal received, shutting down...', 'shutdown');
     if (eventQueue.onShutdown) {
       await eventQueue.onShutdown();

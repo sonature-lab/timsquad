@@ -10,8 +10,6 @@ const mockVariables: TemplateVariables = {
   DATE: '2026-02-15',
   TIMESTAMP: '20260215_120000',
   INIT_DATE: '2026-02-15T12:00:00.000Z',
-  ACTIVE_AGENTS: '@tsq-architect, @tsq-developer',
-  DELEGATION_RULES: '<rule>test</rule>',
 };
 
 describe('substituteVariables', () => {
@@ -76,9 +74,8 @@ describe('createTemplateVariables', () => {
     };
 
     const vars = createTemplateVariables('test', 'web-service', 2, config);
-    expect(vars.ACTIVE_AGENTS).toContain('@tsq-architect');
-    expect(vars.ACTIVE_AGENTS).toContain('@tsq-developer');
-    expect(vars.DELEGATION_RULES).toContain('<rule');
+    expect(vars.PROJECT_NAME).toBe('test');
+    expect(vars.PROJECT_TYPE).toBe('web-service');
   });
 });
 

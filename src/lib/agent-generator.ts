@@ -22,12 +22,13 @@ const AGENT_FILE_MAP: Record<AgentType, string> = {
 };
 
 /**
- * Stack skill categories each agent role should receive
+ * Stack skill keywords each agent role should receive.
+ * Skills matching any keyword (via includes) are injected into agent frontmatter.
  */
-const AGENT_SKILL_CATEGORIES: Record<AgentType, string[]> = {
-  developer: ['frontend', 'backend', 'database', 'mobile'],
-  designer:  ['frontend'],
-  dba:       ['database'],
+const AGENT_SKILL_KEYWORDS: Record<AgentType, string[]> = {
+  developer: ['react', 'nextjs', 'hono', 'node', 'prisma', 'database', 'flutter', 'dart', 'ui'],
+  designer:  ['react', 'nextjs', 'ui'],
+  dba:       ['prisma', 'database'],
   architect: [],
   qa:        [],
   security:  [],
@@ -42,13 +43,12 @@ export function injectSkillsIntoFrontmatter(
   agent: AgentType,
   activeSkills: string[],
 ): string {
-  const categories = AGENT_SKILL_CATEGORIES[agent] || [];
-  if (categories.length === 0) return content;
+  const keywords = AGENT_SKILL_KEYWORDS[agent] || [];
+  if (keywords.length === 0) return content;
 
-  // Filter active skills matching this agent's categories
+  // Filter active skills matching this agent's keywords
   const agentSkills = activeSkills.filter(skill => {
-    const category = skill.split('/')[0];
-    return categories.includes(category);
+    return keywords.some(kw => skill.includes(kw));
   });
 
   if (agentSkills.length === 0) return content;

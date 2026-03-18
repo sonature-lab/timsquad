@@ -276,16 +276,12 @@ async function runInit(options: InitOptions): Promise<void> {
 
   console.log('\n' + colors.header('Next steps:'));
   console.log(colors.dim('  1. ') + colors.command('cd ' + (targetDir === '.' ? '' : targetDir)));
-  console.log(colors.dim('  2. ') + colors.command('tsq status') + colors.dim(' - Check project status'));
-  console.log(colors.dim('  3. ') + 'Start with PRD: ' + colors.path('.timsquad/ssot/prd.md'));
+  console.log(colors.dim('  2. ') + 'Start with PRD: ' + colors.path('.timsquad/ssot/prd.md'));
   console.log('\n');
 
-  console.log(colors.dim('Available commands:'));
-  console.log(colors.dim('  tsq status    ') + '- Show project status');
-  console.log(colors.dim('  tsq log       ') + '- Manage work logs');
-  console.log(colors.dim('  tsq q "task"  ') + '- Quick mode for simple tasks');
-  console.log(colors.dim('  tsq f "task"  ') + '- Full mode with SSOT checks');
-  console.log(colors.dim('  tsq retro     ') + '- Run retrospective');
+  console.log(colors.dim('Getting started:'));
+  console.log(colors.dim('  In Claude Code, type ') + colors.command('/tsq-start') + colors.dim(' to activate the pipeline'));
+  console.log(colors.dim('  Slash commands: /tsq-status, /tsq-update, /tsq-audit, etc.'));
   console.log('\n');
 }
 

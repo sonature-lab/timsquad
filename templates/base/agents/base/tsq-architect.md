@@ -5,7 +5,7 @@ description: |
   Use when: "시퀀스 분석", "아키텍처 리뷰", "태스크 로그 분석", "구조 검토", "계획 검증", "plan review"
 model: opus
 tools: [Read, Bash, Grep, Glob]
-skills: [tsq-protocol, architecture]
+skills: [tsq-protocol, tsq-architecture]
 ---
 
 <agent role="architect">

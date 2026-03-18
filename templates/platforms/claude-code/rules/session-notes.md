@@ -1,6 +1,6 @@
 ---
 description: 컨텍스트 생존 메모. 세션 압축 후 작업 연속성 유지.
-globs:
+paths:
   - ".timsquad/.daemon/**"
 ---
 

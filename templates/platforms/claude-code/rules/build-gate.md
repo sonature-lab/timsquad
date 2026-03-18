@@ -1,6 +1,6 @@
 ---
 description: 빌드 게이트. 변경 파일의 TypeScript 에러를 자동 감지하여 완료 차단.
-globs:
+paths:
   - "src/**/*.ts"
   - "src/**/*.tsx"
 ---

@@ -4,7 +4,7 @@
 template:
   name: fintech
   description: 금융/결제 시스템을 위한 보안 강화 템플릿
-  version: 2.0.0
+  version: 3.7.0
 
 # ============================================================
 # 프로젝트 기본값
@@ -57,21 +57,10 @@ stack:
 # ============================================================
 # 스킬 자동 로딩 규칙
 # ============================================================
-skills:
-  base:
-    - coding
-    - testing
-    - security  # 보안 필수
-    - planning
-    - architecture
-
-  # fintech 타입 추가 스킬
-  type-specific:
-    - typescript
-    - backend/node
-    - database/prisma
-    - methodology/tdd
-    - methodology/ddd  # 복잡한 도메인 필수
+# 스킬은 project.type으로 자동 결정됩니다 (이 섹션은 참고용).
+# skills:
+#   base: [tsq-coding, tsq-testing, tsq-security, tsq-planning, tsq-architecture]
+#   type-specific: [tsq-typescript, tsq-hono, tsq-prisma, tsq-tdd, tsq-ddd]
 
 # ============================================================
 # 추가 SSOT 문서 (필수)
@@ -79,9 +68,14 @@ skills:
 ssot:
   additional:
     - security-spec.md      # 보안 명세 필수
-    - compliance-spec.md    # 컴플라이언스 명세
-    - audit-log-spec.md     # 감사 로그 명세
     - error-codes.md        # 에러 코드 (상세)
+  # 타입×레벨 자동 배포 (SSOT_TYPE_LEVEL_MAP 기반):
+  #   L1+: compliance-matrix, audit-trail-spec, state-machine
+  #   L2+: performance-budget
+  #   L3:  monitoring-spec, infra-topology
+  # fintech 특화 오버라이드 (project-types/fintech/ssot/):
+  #   compliance-matrix — 전자금융거래법, PCI DSS 사전 구성
+  #   audit-trail-spec  — 금융 거래 감사 로그, FDS 연동
 
 # ============================================================
 # 추가 에이전트
@@ -94,7 +88,7 @@ additional_agents:
 
   - name: tsq-auditor
     description: 감사/컴플라이언스 전문가
-    skills: [security, compliance]
+    skills: [tsq-security]
 
 # ============================================================
 # Consensus 설정 (fintech 필수)

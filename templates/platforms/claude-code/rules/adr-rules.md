@@ -1,6 +1,6 @@
 ---
 description: ADR (Architecture Decision Record) 작성 규칙.
-globs:
+paths:
   - ".timsquad/ssot/ADR-*"
 ---
 

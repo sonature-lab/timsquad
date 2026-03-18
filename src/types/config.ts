@@ -180,44 +180,43 @@ export const AGENT_PRESETS: Record<ProjectType, AgentType[]> = {
  */
 export const SKILL_PRESETS: Record<ProjectType, string[]> = {
   'web-service': [
-    'frontend/react', 'frontend/nextjs', 'backend/node',
-    'database', 'database/prisma', 'ui-design',
-    'security',
+    'tsq-react', 'tsq-nextjs', 'tsq-hono',
+    'tsq-database', 'tsq-prisma', 'tsq-ui',
+    'tsq-security',
   ],
   'web-app': [
-    'frontend/react', 'frontend/nextjs',
-    'ui-design', 'security',
+    'tsq-react', 'tsq-nextjs',
+    'tsq-ui', 'tsq-security',
   ],
   'api-backend': [
-    'backend/node', 'database', 'database/prisma',
-    'security',
+    'tsq-hono', 'tsq-database', 'tsq-prisma',
+    'tsq-security',
   ],
   'platform': [
-    'backend/node', 'security',
+    'tsq-hono', 'tsq-security',
   ],
   'fintech': [
-    'backend/node', 'database', 'database/prisma',
-    'security',
+    'tsq-hono', 'tsq-database', 'tsq-prisma',
+    'tsq-security',
   ],
   'infra': [
-    'security',
+    'tsq-security',
   ],
   'mobile-app': [
-    'mobile/flutter', 'mobile/dart',
-    'security',
+    'tsq-flutter', 'tsq-dart',
+    'tsq-security',
   ],
 };
 
 /** Skills always deployed regardless of project type */
 export const BASE_SKILLS: string[] = [
-  'tsq-protocol',
-  'controller',
-  'librarian',
-  'coding', 'testing', 'typescript',
-  'planning', 'architecture',
-  'retrospective', 'prompt-engineering',
-  'tsq-cli', 'spec', 'audit', 'review',
-  'main-session-constraints',
+  'tsq-protocol', 'tsq-controller', 'tsq-librarian',
+  'tsq-coding', 'tsq-testing', 'tsq-typescript',
+  'tsq-planning', 'tsq-architecture',
+  'tsq-retro', 'tsq-prompt',
+  'tsq-spec', 'tsq-audit',
+  'tsq-start', 'tsq-status', 'tsq-log',
+  'tsq-update', 'tsq-delete',
 ];
 
 /**
@@ -267,12 +266,12 @@ export const BASE_KNOWLEDGE: string[] = [
  * Merged with SKILL_PRESETS[type] during init
  */
 export const DOMAIN_SKILL_MAP: Partial<Record<Domain, string[]>> = {
-  'general-web': [],  // web 스킬은 SKILL_PRESETS[type]에서 이미 커버
+  'general-web': [],
   'ml-engineering': [],
-  'fintech': [],      // security는 type에서 커버
-  'mobile': ['mobile/flutter', 'mobile/dart'],
+  'fintech': [],
+  'mobile': ['tsq-flutter', 'tsq-dart'],
   'gamedev': [],
-  'systems': [],      // security는 type에서 커버
+  'systems': [],
 };
 
 /**
@@ -293,15 +292,16 @@ export const DOMAIN_KNOWLEDGE_MAP: Partial<Record<Domain, string[]>> = {
  * Auto-selects skills based on detected/configured stack
  */
 export const STACK_SKILL_MAP: Record<string, string[]> = {
-  'react': ['frontend/react'],
-  'nextjs': ['frontend/nextjs'],
-  'node': ['backend/node'],
-  'prisma': ['database/prisma'],
-  'typescript': ['typescript'],
-  'postgresql': ['database'],
-  'mysql': ['database'],
-  'flutter': ['mobile/flutter'],
-  'dart': ['mobile/dart'],
+  'react': ['tsq-react'],
+  'nextjs': ['tsq-nextjs'],
+  'hono': ['tsq-hono'],
+  'node': ['tsq-hono'],
+  'prisma': ['tsq-prisma'],
+  'typescript': ['tsq-typescript'],
+  'postgresql': ['tsq-database'],
+  'mysql': ['tsq-database'],
+  'flutter': ['tsq-flutter'],
+  'dart': ['tsq-dart'],
 };
 
 /**

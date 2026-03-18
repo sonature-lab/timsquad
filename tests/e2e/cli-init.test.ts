@@ -125,12 +125,12 @@ describe('tsq init - Composition Layer (v4.0)', () => {
 
     expect(exitCode).toBe(0);
 
-    // Stack skills should be deployed
+    // Stack skills should be deployed as tsq-* flat dirs
     const skillsDir = path.join(tmpDir, '.claude', 'skills');
     if (existsSync(skillsDir)) {
       const entries = readdirSync(skillsDir);
-      expect(entries).toContain('frontend');
-      expect(entries).toContain('database');
+      expect(entries).toContain('tsq-react');
+      expect(entries).toContain('tsq-prisma');
     }
   });
 
@@ -187,9 +187,9 @@ describe('tsq init - Generated File Quality', () => {
   });
 });
 
-describe('tsq status - Error Handling', () => {
-  it('should fail gracefully in non-timsquad directory', () => {
-    const { exitCode } = runTsq(['status'], tmpDir);
+describe('tsq init - Error Handling', () => {
+  it('should reject invalid project name', () => {
+    const { exitCode } = runTsq(['init', '-n', 'INVALID NAME!', '-t', 'web-service', '-l', '1', '-y'], tmpDir);
     expect(exitCode).not.toBe(0);
   });
 });
@@ -199,7 +199,7 @@ describe('tsq --help', () => {
     const { stdout, exitCode } = runTsq(['--help'], tmpDir);
     expect(exitCode).toBe(0);
     expect(stdout).toContain('init');
-    expect(stdout).toContain('status');
+    expect(stdout).toContain('update');
   });
 
   it('should show version', () => {

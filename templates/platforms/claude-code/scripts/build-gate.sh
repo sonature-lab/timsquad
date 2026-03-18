@@ -30,7 +30,12 @@ fi
 
 # ── 1. Get changed TypeScript files ──
 cd "$PROJECT_ROOT"
-CHANGED_TS=$(git diff --name-only --diff-filter=ACMR HEAD -- '*.ts' '*.tsx' 2>/dev/null || echo "")
+CHANGED_TS=$(git diff --cached --name-only --diff-filter=ACMR -- '*.ts' '*.tsx' 2>/dev/null || echo "")
+# Include unstaged changes too
+CHANGED_TS_UNSTAGED=$(git diff --name-only --diff-filter=ACMR -- '*.ts' '*.tsx' 2>/dev/null || echo "")
+if [ -n "$CHANGED_TS_UNSTAGED" ]; then
+  CHANGED_TS=$(printf '%s\n%s' "$CHANGED_TS" "$CHANGED_TS_UNSTAGED" | sort -u)
+fi
 
 # No TypeScript files changed → pass
 if [ -z "$CHANGED_TS" ]; then
