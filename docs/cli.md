@@ -98,7 +98,8 @@ v3.7부터 아래 CLI 명령어는 모두 삭제되었으며, Claude Code 슬래
 
 | 삭제된 CLI | 대체 스킬/기능 | 설명 |
 |-----------|---------------|------|
-| `tsq q` / `tsq f` | `/tsq-start` | 작업 시작 (Quick/Full 통합) |
+| `tsq q` | `/tsq-quick` | 단일 태스크 실행 (Controller 경유) |
+| `tsq f` | `/tsq-full` | 풀 파이프라인 실행 (Controller 경유) |
 | `tsq status` | `/tsq-status` | 프로젝트 상태 확인 |
 | `tsq log` | `/tsq-log` | 로그 관리 |
 | `tsq feedback` | `/tsq-retro feedback` | 피드백 L1/L2/L3 분류 및 기록 |

@@ -108,13 +108,11 @@ claude                                    # Claude Code 실행
 
 # 슬래시 커맨드로 모든 작업 수행
 /tsq-start                               # 파이프라인 시작 + 온보딩
+/tsq-quick 로그인 버튼 색상 수정          # 단일 태스크 (Controller 경유)
+/tsq-full                                # 풀 파이프라인 (Phase-Sequence-Task)
 /tsq-status                              # 현재 상태 확인
 /tsq-grill                               # Sub-PRD 심층 인터뷰
 /tsq-decompose                           # Phase-Sequence-Task 계획 생성
-
-# PM(CLAUDE.md)이 controller를 통해 에이전트에 위임
-@tsq-developer "로그인 API 구현해줘"
-@tsq-qa "코드 리뷰해줘"
 ```
 
 ### 4. CLI 명령어
@@ -145,7 +143,7 @@ Layer 3: CLAUDE.md (역할 정의만)
   └ PM 역할 + 파이프라인 사전조건 (~15줄)
 
 Layer 4: 슬래시 커맨드 (명시적 프로세스)
-  └ /tsq-start, /tsq-status, /tsq-grill, /tsq-retro
+  └ /tsq-start, /tsq-quick, /tsq-full, /tsq-status, /tsq-grill, /tsq-retro
 
 Layer 5: 감사 (비동기 사후 추적)
   └ 데몬이 관찰 → 세션 로그, 메트릭
@@ -176,13 +174,13 @@ Layer 5: 감사 (비동기 사후 추적)
 | `@tsq-designer` | UI/UX 설계, 접근성, 디자인 토큰 |
 | `@tsq-librarian` | Phase 기록, 메모리 관리 |
 
-### 35개 스킬 (슬래시 커맨드)
+### 37개 스킬 (슬래시 커맨드)
 
 모든 스킬은 `tsq-*` flat namespace로 통일되었으며 슬래시 커맨드로 사용:
 
 | 카테고리 | 스킬 |
 |----------|------|
-| **핵심** | `tsq-protocol`, `tsq-controller`, `tsq-start`, `tsq-status` |
+| **핵심** | `tsq-protocol`, `tsq-controller`, `tsq-start`, `tsq-quick`, `tsq-full`, `tsq-status` |
 | **코딩** | `tsq-coding`, `tsq-testing`, `tsq-typescript`, `tsq-hono` |
 | **기획** | `tsq-planning`, `tsq-spec`, `tsq-grill`, `tsq-decompose` |
 | **프론트엔드** | `tsq-react`, `tsq-nextjs`, `tsq-ui` |

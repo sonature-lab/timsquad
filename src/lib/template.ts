@@ -32,11 +32,17 @@ export interface TemplateVariables {
 const TIMSQUAD_BLOCK = `<!-- tsq:start -->
 ## TimSquad
 
-### 파이프라인 사전 조건
-사용자가 구현/설계/테스트 등 작업을 지시하면 아래를 먼저 확인:
-1. **데몬 미기동**: \`.timsquad/.daemon.pid\` 없으면 → "\`/tsq-start\`로 파이프라인을 시작해주세요" 안내
-2. **SSOT 미충족**: \`.timsquad/ssot/prd.md\`가 placeholder만이면 → "\`/tsq-start\`로 온보딩을 진행해주세요 (PRD 작성 + 기능별 /tsq-grill 인터뷰)" 안내
-3. 위 조건 충족 시 정상 파이프라인 진행
+### 작업 라우팅
+사용자가 구현/설계/테스트/수정 등 작업을 지시하면:
+
+1. **파이프라인 미기동**: \`.timsquad/.daemon.pid\` 없으면 → "\`/tsq-start\`로 시작해주세요"
+2. **SSOT 미충족**: \`prd.md\`가 placeholder만이면 → "\`/tsq-start\`로 온보딩부터"
+3. **파이프라인 라우팅** (위 충족 시):
+   - 슬래시 커맨드(\`/tsq-quick\`, \`/tsq-full\` 등) → 해당 스킬 실행
+   - 자연어 지시 → 복잡도 판단 후 사용자에게 확인:
+     - 단순 (1-2파일, 오타, 스타일) → 직접 수행
+     - 단일 태스크 (버그 수정, 소기능) → "Controller 경유로 진행할까요? (\`/tsq-quick\`)"
+     - 다단계 (새 기능, 대규모) → "풀 파이프라인으로 진행할까요? (\`/tsq-full\`)"
 
 ### 작업 원칙
 - 요구사항에 여러 해석이 가능하면 선택지를 제시

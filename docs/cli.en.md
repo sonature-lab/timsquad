@@ -98,7 +98,8 @@ Since v3.7, the following CLI commands have been removed and replaced with Claud
 
 | Removed CLI | Replacement | Description |
 |-------------|-------------|-------------|
-| `tsq q` / `tsq f` | `/tsq-start` | Start work (Quick/Full unified) |
+| `tsq q` | `/tsq-quick` | Single task execution (via Controller) |
+| `tsq f` | `/tsq-full` | Full pipeline execution (via Controller) |
 | `tsq status` | `/tsq-status` | Project status check |
 | `tsq log` | `/tsq-log` | Log management |
 | `tsq feedback` | `/tsq-retro feedback` | Feedback L1/L2/L3 classification & recording |

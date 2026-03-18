@@ -108,13 +108,11 @@ claude                                    # Launch Claude Code
 
 # Use slash commands for all operations
 /tsq-start                               # Start pipeline + onboarding
+/tsq-quick fix login button color        # Single task via Controller
+/tsq-full                                # Full pipeline (Phase-Sequence-Task)
 /tsq-status                              # Check current status
 /tsq-grill                               # Deep interview for Sub-PRD
 /tsq-decompose                           # Generate Phase-Sequence-Task plan
-
-# PM (CLAUDE.md) delegates to agents via controller
-@tsq-developer "Implement the login API"
-@tsq-qa "Review the code"
 ```
 
 ### 4. CLI Commands
@@ -145,7 +143,7 @@ Layer 3: CLAUDE.md (role definition only)
   └ PM role + pipeline prerequisites (~15 lines)
 
 Layer 4: Slash Commands (explicit process)
-  └ /tsq-start, /tsq-status, /tsq-grill, /tsq-retro
+  └ /tsq-start, /tsq-quick, /tsq-full, /tsq-status, /tsq-grill, /tsq-retro
 
 Layer 5: Audit (async post-tracking)
   └ Daemon observes → session logs, metrics
@@ -176,13 +174,13 @@ Required documents are automatically determined by project level:
 | `@tsq-designer` | UI/UX design, accessibility, design tokens |
 | `@tsq-librarian` | Phase recording, memory management |
 
-### 35 Skills (Slash Commands)
+### 37 Skills (Slash Commands)
 
 All skills use `tsq-*` flat namespace and are available as slash commands:
 
 | Category | Skills |
 |----------|--------|
-| **Core** | `tsq-protocol`, `tsq-controller`, `tsq-start`, `tsq-status` |
+| **Core** | `tsq-protocol`, `tsq-controller`, `tsq-start`, `tsq-quick`, `tsq-full`, `tsq-status` |
 | **Coding** | `tsq-coding`, `tsq-testing`, `tsq-typescript`, `tsq-hono` |
 | **Planning** | `tsq-planning`, `tsq-spec`, `tsq-grill`, `tsq-decompose` |
 | **Frontend** | `tsq-react`, `tsq-nextjs`, `tsq-ui` |
