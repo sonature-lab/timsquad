@@ -5,6 +5,7 @@ import os from 'os';
 import {
   loadWorkflowState,
   findNextTask,
+  findNextWave,
   getPhaseStatus,
   markTaskComplete,
   appendPhaseMemoryProgress,
@@ -96,6 +97,94 @@ describe('findNextTask', () => {
     };
     const next = findNextTask(doc, state);
     expect(next).toBeNull();
+  });
+});
+
+// ─── findNextWave ────────────────────────────────────────────────
+
+const PLANNING_WITH_DEPS = `# TestApp
+
+## Phase 1: 구현
+
+### Sequence 1: 기반
+
+#### Task 1: DB 스키마
+- agent: dba
+
+#### Task 2: API 서버 설정
+- agent: developer
+
+#### Task 3: API 엔드포인트
+- agent: developer
+- Depends: P1-S001-T001, P1-S001-T002
+
+#### Task 4: UI 컴포넌트
+- agent: designer
+- Depends: P1-S001-T003
+`;
+
+describe('findNextWave', () => {
+  it('should return all independent tasks in a wave', () => {
+    const doc = parsePlanningContent(SAMPLE_PLANNING);
+    const result = findNextWave(doc, EMPTY_STATE);
+    expect(result).not.toBeNull();
+    // All tasks in SAMPLE_PLANNING have no dependencies, so all P1 tasks are in wave
+    expect(result!.wave.length).toBeGreaterThanOrEqual(2);
+    expect(result!.totalRemaining).toBe(5);
+  });
+
+  it('should respect dependencies', () => {
+    const doc = parsePlanningContent(PLANNING_WITH_DEPS);
+    const result = findNextWave(doc, EMPTY_STATE);
+    expect(result).not.toBeNull();
+    // T001 and T002 have no deps → parallel
+    // T003 depends on T001+T002, T004 depends on T003
+    expect(result!.wave).toHaveLength(2);
+    expect(result!.wave.map(t => t.taskId)).toContain('P1-S001-T001');
+    expect(result!.wave.map(t => t.taskId)).toContain('P1-S001-T002');
+  });
+
+  it('should unlock dependent tasks after completion', () => {
+    const doc = parsePlanningContent(PLANNING_WITH_DEPS);
+    const state: WorkflowStateV2 = {
+      ...EMPTY_STATE,
+      completed_task_ids: ['P1-S001-T001', 'P1-S001-T002'],
+    };
+    const result = findNextWave(doc, state);
+    expect(result).not.toBeNull();
+    // T003 is now unlocked (deps met), T004 still blocked
+    expect(result!.wave).toHaveLength(1);
+    expect(result!.wave[0].taskId).toBe('P1-S001-T003');
+  });
+
+  it('should unlock T004 after T003 completes', () => {
+    const doc = parsePlanningContent(PLANNING_WITH_DEPS);
+    const state: WorkflowStateV2 = {
+      ...EMPTY_STATE,
+      completed_task_ids: ['P1-S001-T001', 'P1-S001-T002', 'P1-S001-T003'],
+    };
+    const result = findNextWave(doc, state);
+    expect(result).not.toBeNull();
+    expect(result!.wave).toHaveLength(1);
+    expect(result!.wave[0].taskId).toBe('P1-S001-T004');
+  });
+
+  it('should return null when all tasks complete', () => {
+    const doc = parsePlanningContent(PLANNING_WITH_DEPS);
+    const state: WorkflowStateV2 = {
+      ...EMPTY_STATE,
+      completed_task_ids: ['P1-S001-T001', 'P1-S001-T002', 'P1-S001-T003', 'P1-S001-T004'],
+    };
+    const result = findNextWave(doc, state);
+    expect(result).toBeNull();
+  });
+
+  it('should return single task wave for no-dep planning', () => {
+    const doc = parsePlanningContent(SAMPLE_PLANNING);
+    const result = findNextWave(doc, EMPTY_STATE);
+    expect(result).not.toBeNull();
+    expect(result!.wave.length).toBeGreaterThan(0);
+    expect(result!.totalRemaining).toBe(5);
   });
 });
 

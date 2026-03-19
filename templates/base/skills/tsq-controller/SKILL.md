@@ -56,6 +56,12 @@ v3.0: 결정론적 로직(상태, 순서, 게이트)은 `tsq next` CLI로 이동
 - **balanced**: phase 적합 모델 (기본값)
 - **conservative**: 최대 opus 사용 (품질 우선, fintech 기본)
 
+## Wave Dispatch (병렬)
+
+`references/wave-dispatch.md` 참조. `tsq next --wave`로 독립 태스크를 Wave로 묶어 동시 실행.
+- `waveSize > 1` → 병렬 Task() 호출, 태스크별 Capability Token 개별 발급
+- `waveSize === 1` → 기존 순차 Protocol 따름
+
 ## Delegation Rules
 
 **Developer** — 코드 구현 + 단위 테스트. 도구: 전체. 완료: 테스트 통과 + `tsc --noEmit` 클린.

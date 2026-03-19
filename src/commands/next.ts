@@ -17,6 +17,7 @@ import { parsePlanningFile } from '../lib/planning-parser.js';
 import {
   loadWorkflowState,
   findNextTask,
+  findNextWave,
   getPhaseStatus,
   markTaskComplete,
   appendPhaseMemoryProgress,
@@ -25,6 +26,7 @@ import {
 interface NextOptions {
   complete?: string;
   phaseStatus?: string | boolean;
+  wave?: boolean;
   summary?: string;
   agent?: string;
 }
@@ -35,6 +37,7 @@ export function registerNextCommand(program: Command): void {
     .description('Show next task or manage task completion (used by Controller)')
     .option('--complete <taskId>', 'Mark task as completed')
     .option('--phase-status [phaseId]', 'Check phase completion status')
+    .option('--wave', 'Return all independent tasks as a wave (parallel dispatch)')
     .option('--summary <text>', 'Task completion summary (with --complete)')
     .option('--agent <type>', 'Agent that completed the task (with --complete)')
     .action(async (options: NextOptions) => {
@@ -60,6 +63,8 @@ async function runNext(options: NextOptions): Promise<void> {
     await handleComplete(projectRoot, options);
   } else if (options.phaseStatus !== undefined) {
     await handlePhaseStatus(projectRoot, options);
+  } else if (options.wave) {
+    await handleWave(projectRoot);
   } else {
     await handleNext(projectRoot);
   }
@@ -86,6 +91,35 @@ async function handleNext(projectRoot: string): Promise<void> {
   }
 
   console.log(JSON.stringify(next, null, 2));
+}
+
+/**
+ * tsq next --wave — 병렬 실행 가능한 독립 태스크 Wave 출력
+ */
+async function handleWave(projectRoot: string): Promise<void> {
+  const doc = await parsePlanningFile(projectRoot);
+  if (!doc) {
+    throw new Error('planning.md not found. Run /tsq-decompose to create planning.md');
+  }
+
+  const state = await loadWorkflowState(projectRoot);
+  const result = findNextWave(doc, state);
+
+  if (!result) {
+    console.log(JSON.stringify({
+      status: 'all_complete',
+      message: 'All tasks in planning.md are completed.',
+    }));
+    return;
+  }
+
+  console.log(JSON.stringify({
+    status: 'wave',
+    wave: result.wave,
+    waveSize: result.wave.length,
+    totalRemaining: result.totalRemaining,
+    parallel: result.wave.length > 1,
+  }, null, 2));
 }
 
 /**

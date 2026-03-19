@@ -271,6 +271,62 @@ export function findNextTask(
 }
 
 /**
+ * Wave result: batch of independent tasks that can run in parallel
+ */
+export interface WaveResult {
+  wave: NextTaskResult[];
+  totalRemaining: number;
+}
+
+/**
+ * Find the next wave of independent tasks (parallel dispatch)
+ * Tasks with no unmet dependencies can run simultaneously.
+ */
+export function findNextWave(
+  doc: PlanningDocument,
+  state: WorkflowState,
+): WaveResult | null {
+  const completedIds = getCompletedTaskIds(state);
+  const allTasks: Array<NextTaskResult & { dependencies?: string[] }> = [];
+
+  // Collect all incomplete tasks
+  for (const phase of doc.phases) {
+    for (const seq of phase.sequences) {
+      for (const task of seq.tasks) {
+        if (!completedIds.has(task.id)) {
+          allTasks.push({
+            taskId: task.id,
+            phaseId: phase.id,
+            sequenceId: seq.id,
+            title: task.title,
+            description: task.description,
+            agent: task.agent,
+            outputs: task.outputs,
+            dependencies: task.dependencies,
+          });
+        }
+      }
+    }
+  }
+
+  if (allTasks.length === 0) return null;
+
+  // Find tasks whose dependencies are all completed
+  const ready = allTasks.filter(task => {
+    if (!task.dependencies || task.dependencies.length === 0) return true;
+    return task.dependencies.every(dep => completedIds.has(normalizeTaskId(dep)));
+  });
+
+  // If no ready tasks (circular dep or all blocked), fall back to first task
+  const wave = ready.length > 0 ? ready : [allTasks[0]];
+
+  return {
+    wave,
+    totalRemaining: allTasks.length,
+  };
+}
+
+/**
  * Get phase status based on planning document and workflow state
  */
 export function getPhaseStatus(
