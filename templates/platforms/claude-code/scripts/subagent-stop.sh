@@ -35,7 +35,16 @@ if [ -d "$PROJECT_ROOT/.timsquad" ]; then
   fi
 fi
 
-# ── 2. Daemon에 통지 → L1 태스크 로그 자동 생성 ──
+# ── 2. Completion Report 스키마 검증 (A-2 CRITICAL) ──
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  if [ -f "$SCRIPT_DIR/validate-completion-report.sh" ]; then
+    REPORT_ERR=$(bash "$SCRIPT_DIR/validate-completion-report.sh" "$PROJECT_ROOT" 2>&1 || true)
+    if [ -n "$REPORT_ERR" ]; then
+      echo "$REPORT_ERR" >&2
+    fi
+  fi
+
+# ── 3. Daemon에 통지 → L1 태스크 로그 자동 생성 ──
 echo "$INPUT" | tsq daemon notify subagent-stop --agent "$AGENT" 2>/dev/null || true
 
 exit 0
