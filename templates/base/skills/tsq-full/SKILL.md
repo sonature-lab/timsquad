@@ -30,23 +30,26 @@ planning.md 기반으로 체계적 구현, 게이트 검증, Librarian 기록까
 
 ## Protocol
 
-1. **상태 복원**: `.timsquad/state/workflow.json` → 진행 중인 Phase/Sequence/Task 확인
-2. **planning.md 로드**: Phase-Sequence-Task DAG 파싱
-3. **Controller 풀 실행** (tsq-controller Protocol 전체 수행):
-   - Phase 단위 순차 진행
+1. **다음 태스크 조회**: `tsq next` CLI 실행 → 다음 미완료 태스크 JSON 확인
+   - `all_complete` → 모든 태스크 완료. 사용자에게 안내
+   - `error: planning.md not found` → `/tsq-decompose` 안내
+2. **Controller 풀 실행** (tsq-controller Protocol 전체 수행):
+   - `tsq next`가 반환한 태스크부터 순차 진행
    - Sequence 내 Task 위임 (Developer → QA)
    - 게이트 검증: unit → integration → e2e
    - Librarian 호출 (Phase 완료 시)
    - Phase Memory carry-over
-4. **진행 상태 저장**: `workflow.json` 갱신 (세션 재개 대비)
-5. **Phase 완료 안내**: "`/tsq-retro` 회고 → `/clear` 컨텍스트 초기화"
+3. **Phase 완료 안내**: "`/tsq-retro` 회고 → `/clear` 컨텍스트 초기화"
+
+> workflow.json 갱신은 SubagentStop hook이 `tsq next --complete`를 자동 호출하여 처리.
+> Phase 완료 감지는 completion-guard hook이 `tsq next --phase-status`를 호출하여 처리.
 
 ## Resumption
 
 세션이 끊긴 후 `/tsq-full`을 다시 실행하면:
-- `workflow.json`에서 마지막 완료 Task 확인
-- 이미 완료된 Task는 스킵 (산출물 존재 여부로 판정)
-- 다음 미완료 Task부터 재개
+- `tsq next`가 workflow.json 기반으로 다음 미완료 Task를 자동 결정
+- 이미 완료된 Task는 자동 스킵
+- 컨텍스트 압축 후에도 phase-memory.md의 Progress 섹션에서 진행 상황 복원
 
 ## vs /tsq-quick
 

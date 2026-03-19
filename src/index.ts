@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import { registerInitCommand } from './commands/init.js';
 import { registerUpdateCommand } from './commands/update.js';
 import { registerDaemonCommand } from './commands/daemon.js';
+import { registerNextCommand } from './commands/next.js';
 import { checkForUpdates } from './lib/update-check.js';
 import { getInstalledVersion } from './lib/version.js';
 
@@ -16,10 +17,11 @@ program
   .description('TimSquad - AI Agent Development Process Framework')
   .version(VERSION);
 
-// Register commands (init, update, daemon — everything else is skills)
+// Register commands (init, update, daemon, next — everything else is skills)
 registerInitCommand(program);
 registerUpdateCommand(program);
 registerDaemonCommand(program);
+registerNextCommand(program);
 
 // Default action (show help)
 program.action(() => {

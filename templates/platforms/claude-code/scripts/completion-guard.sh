@@ -126,6 +126,22 @@ if [ -f "$NOTES_FILE" ]; then
   fi
 fi
 
+# ── 3b. Phase completion gate (Hybrid Controller) ──
+# tsq next --phase-status로 현재 Phase 완료 여부 확인
+PHASE_GATE_MSG=""
+if command -v tsq &>/dev/null && [ -d "$PROJECT_ROOT/.timsquad" ]; then
+  PHASE_STATUS=$(timeout 5 tsq next --phase-status 2>/dev/null || echo "")
+  if [ -n "$PHASE_STATUS" ]; then
+    ACTION_REQ=$(echo "$PHASE_STATUS" | jq -r '.actionRequired // ""' 2>/dev/null || echo "")
+    if [ "$ACTION_REQ" = "phase-complete" ]; then
+      PHASE_ID=$(echo "$PHASE_STATUS" | jq -r '.phaseId // ""' 2>/dev/null || echo "")
+      COMPLETED=$(echo "$PHASE_STATUS" | jq -r '.completedTasks // 0' 2>/dev/null || echo "0")
+      TOTAL=$(echo "$PHASE_STATUS" | jq -r '.totalTasks // 0' 2>/dev/null || echo "0")
+      PHASE_GATE_MSG="[Phase Gate] $PHASE_ID 완료 ($COMPLETED/$TOTAL tasks). Librarian 호출 → phase-memory 갱신 → /tsq-retro 회고 실행 필요."
+    fi
+  fi
+fi
+
 # ── 4. SSOT readiness check ──
 SSOT_WARNING=""
 PRD_FILE="$PROJECT_ROOT/.timsquad/ssot/prd.md"
@@ -192,7 +208,7 @@ $SSOT_WARNING"
   [ -n "$VERIFICATION" ] && FULL_REASON="$FULL_REASON
 $VERIFICATION"
   jq -n --arg reason "$FULL_REASON" '{"decision": "block", "reason": $reason}'
-elif [ -n "$SESSION_CTX" ] || [ -n "$VERIFICATION" ] || [ -n "$TEST_WARNING" ] || [ -n "$SSOT_WARNING" ]; then
+elif [ -n "$SESSION_CTX" ] || [ -n "$VERIFICATION" ] || [ -n "$TEST_WARNING" ] || [ -n "$SSOT_WARNING" ] || [ -n "$PHASE_GATE_MSG" ]; then
   FULL_MSG=""
   [ -n "$SESSION_CTX" ] && FULL_MSG="$SESSION_CTX"
   if [ -n "$SSOT_WARNING" ]; then
@@ -202,6 +218,10 @@ $SSOT_WARNING" || FULL_MSG="$SSOT_WARNING"
   if [ -n "$TEST_WARNING" ]; then
     [ -n "$FULL_MSG" ] && FULL_MSG="$FULL_MSG
 $TEST_WARNING" || FULL_MSG="$TEST_WARNING"
+  fi
+  if [ -n "$PHASE_GATE_MSG" ]; then
+    [ -n "$FULL_MSG" ] && FULL_MSG="$FULL_MSG
+$PHASE_GATE_MSG" || FULL_MSG="$PHASE_GATE_MSG"
   fi
   if [ -n "$VERIFICATION" ]; then
     [ -n "$FULL_MSG" ] && FULL_MSG="$FULL_MSG
