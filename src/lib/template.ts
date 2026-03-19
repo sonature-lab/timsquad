@@ -311,6 +311,13 @@ export async function initializeProject(
     await copyDirectoryWithSubstitution(srcScriptsDir, destScriptsDir, variables);
   }
 
+  // 2.6. Deploy .timsquad/scripts/ (automation scripts)
+  const baseScriptsDir = path.join(templatesDir, 'base', 'scripts');
+  const destTsqScriptsDir = path.join(projectRoot, '.timsquad', 'scripts');
+  if (await fs.pathExists(baseScriptsDir)) {
+    await copyDirectoryWithSubstitution(baseScriptsDir, destTsqScriptsDir, variables);
+  }
+
   // 3. Config 기반 에이전트 동적 생성 (활성 에이전트만 배치)
   if (config) {
     const activeAgents = getActiveAgents(config);

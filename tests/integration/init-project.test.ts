@@ -33,6 +33,26 @@ describe('initializeProject - Common Structure', () => {
     expect(existsSync(path.join(tmpDir, '.timsquad', 'logs'))).toBe(true);
   });
 
+  it('should deploy automation scripts to .timsquad/scripts/', async () => {
+    const config = createDefaultConfig('test', 'web-service', 2);
+    await initializeProject(tmpDir, 'test', 'web-service', 2, config);
+
+    const scriptsDir = path.join(tmpDir, '.timsquad', 'scripts');
+    expect(existsSync(scriptsDir)).toBe(true);
+
+    const expectedScripts = [
+      'check-circular-deps.sh',
+      'calculate-retro-metrics.sh',
+      'generate-prd-traceability.sh',
+      'manage-fp-registry.sh',
+      'cleanup-trails.sh',
+      'validate-gherkin.sh',
+    ];
+    for (const script of expectedScripts) {
+      expect(existsSync(path.join(scriptsDir, script)), `${script} should exist`).toBe(true);
+    }
+  });
+
   it('should create .claude directory', async () => {
     const config = createDefaultConfig('test', 'web-service', 2);
     await initializeProject(tmpDir, 'test', 'web-service', 2, config);
