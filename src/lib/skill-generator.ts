@@ -27,9 +27,12 @@ import { substituteVariables } from './template.js';
  * Dynamically includes methodology/tdd, methodology/bdd etc. based on config.methodology.development.
  */
 function getMethodologySkills(config: TimsquadConfig): string[] {
+  const skills: string[] = [];
   const dev = config.methodology?.development;
-  if (!dev || dev === 'none') return [];
-  return [`tsq-${dev}`];
+  if (dev && dev !== 'none') skills.push(`tsq-${dev}`);
+  const arch = config.methodology?.architecture;
+  if (arch && arch !== 'none') skills.push(`tsq-${arch}`);
+  return skills;
 }
 
 /**

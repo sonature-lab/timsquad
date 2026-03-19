@@ -230,3 +230,38 @@ describe('getActiveSkills — stack normalization', () => {
     expect(skills).toContain('tsq-react');
   });
 });
+
+describe('getActiveSkills — methodology skills', () => {
+  it('should include tsq-tdd when methodology.development is tdd', () => {
+    const config = createDefaultConfig('test', 'web-service', 2);
+    const skills = getActiveSkills(config);
+    expect(skills).toContain('tsq-tdd');
+  });
+
+  it('should include tsq-bdd when methodology.development is bdd', () => {
+    const config = createDefaultConfig('test', 'web-service', 2, { methodology: 'bdd' });
+    const skills = getActiveSkills(config);
+    expect(skills).toContain('tsq-bdd');
+    expect(skills).not.toContain('tsq-tdd');
+  });
+
+  it('should not include methodology skill when development is none', () => {
+    const config = createDefaultConfig('test', 'web-service', 2, { methodology: 'none' });
+    const skills = getActiveSkills(config);
+    expect(skills).not.toContain('tsq-tdd');
+    expect(skills).not.toContain('tsq-bdd');
+    expect(skills).not.toContain('tsq-none');
+  });
+
+  it('should include architecture skill for fintech (layered)', () => {
+    const config = createDefaultConfig('test', 'fintech', 3);
+    const skills = getActiveSkills(config);
+    expect(skills).toContain('tsq-layered');
+  });
+
+  it('should not include architecture skill when architecture is none', () => {
+    const config = createDefaultConfig('test', 'web-service', 2);
+    const skills = getActiveSkills(config);
+    expect(skills).not.toContain('tsq-none');
+  });
+});

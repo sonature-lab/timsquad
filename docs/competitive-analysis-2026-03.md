@@ -105,7 +105,7 @@
   - 회고: tsq-retro (3모드: feedback/retro/improve)
   - 슬래시: tsq-start, tsq-status, tsq-spec, tsq-quick, tsq-full, tsq-grill(PRD/Reinforce/Sub-PRD 3모드), tsq-update, tsq-delete
   - 유틸: tsq-librarian, tsq-log, tsq-prompt
-- **Hook**: 14개 (Fail-closed 7 + Fail-open 7) — v3.7.1에서 8→14 확장
+- **Hook**: 13개 (Fail-closed 7 + Fail-open 6) — v3.7.1에서 8→13 확장
   - PreToolUse(Write/Edit): phase-guard → check-capability(+Agent Gate) → change-scope-guard → tdd-guard → stale-guard
   - PreToolUse(Bash): safe-guard
   - Stop: completion-guard(+Phase Gate, SSOT Gate, Decision Log 검증) → build-gate(모노레포)
@@ -126,7 +126,7 @@
 - **템플릿**: 7 project-type (web-service, api-backend, web-app, platform, fintech, mobile-app, infra)
 - **fintech**: 멀티모델 합의 강제 (고위험 결정)
 - **CLI**: 10개 커맨드 (init, update, daemon, next, plan, spec, log, status, retro, audit)
-- **테스트**: 680 테스트 (vitest)
+- **테스트**: 777+ 테스트 (vitest)
 - **실전**: dugout-tours.jp — 일본 대상 한국여행 스타트업, 결제 포함, Lighthouse 95/96/100/100
 
 ---
@@ -184,7 +184,7 @@
 | 커뮤니티 | **94k stars** | 35k stars | 10.3k stars | 소규모 | 비공개 |
 | 실사용 | Amazon/Google/Shopify | 동일 | 활발 | 미공개 | **dugout-tours.jp** |
 | 벤치마크 | chardet v7.0 (41x 속도) | 없음 | 없음 | 없음 | **Lighthouse 95/96/100/100** |
-| 테스트 수 | 미공개 | 미공개 | 미공개 | 미공개 | **669 테스트** |
+| 테스트 수 | 미공개 | 미공개 | 미공개 | 미공개 | **777+ 테스트** |
 | 프로덕션 서비스 | 미공개 | 미공개 | 미공개 | 미공개 | **결제 포함 일본 여행 사이트** |
 | 도그푸딩 | Superpowers 자체 | GSD 자체 | OMC 자체 | 자체 | **외부 실서비스 구축** |
 | 프로젝트 타입 | 범용 | 범용 | 범용 | 범용 | **7 project-type 템플릿** |
