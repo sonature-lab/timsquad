@@ -33,14 +33,15 @@ v3.0: 결정론적 로직(상태, 순서, 게이트)은 `tsq next` CLI로 이동
 6. **에이전트 파일 확인**: `.claude/agents/{agent}.md` 읽기
 7. **Prerequisites 파싱**: `<prerequisites>` 태그에서 SSOT 목록 추출
 8. **Spec Resolve**: `references/`에서 해당 compiled spec 로드
-9. **Stale 체크**: `.compile-manifest.json` hash 비교
-10. **방법론 참조**: `config.yaml`의 `methodology.development` → 해당 스킬 Protocol 로드
-11. **프롬프트 조합**: tsq-protocol + **phase-memory carry-over** + memory + specs + methodology + phase 제약 + 지시
+9. **Meta Index 쿼리**: `.timsquad/.daemon/task-context.json` 읽기 → scope 파일 구조를 프롬프트에 주입 (Daemon이 자동 갱신)
+10. **Stale 체크**: `.compile-manifest.json` hash 비교
+11. **방법론 참조**: `config.yaml`의 `methodology.development` → 해당 스킬 Protocol 로드
+12. **프롬프트 조합**: tsq-protocol + **phase-memory carry-over** + memory + specs + meta-index scope + methodology + phase 제약 + 지시
     - `.timsquad/state/phase-memory.md` 존재 시 carry-over/주의 섹션을 프롬프트 앞에 강제 삽입
-12. **Model Routing → Task() 호출**: 아래 Model Routing 테이블에 따라 최종 모델을 결정한 뒤, 조합된 프롬프트로 서브에이전트 실행. 결정된 모델을 Task()의 model 파라미터로 전달
-13. **Completion Report 검증**: 5개 필드(Task, Status, Files, Tests, Notes) 확인 — 누락 시 재요청
-14. **Capability Token 회수**: `controller-active` + `allowed-paths.txt` 삭제
-15. **다음 태스크**: Step 1로 돌아가서 반복 (또는 Phase 완료 시 Librarian 호출)
+13. **Model Routing → Task() 호출**: Model Routing 테이블에 따라 최종 모델을 결정한 뒤, 조합된 프롬프트로 서브에이전트 실행. 결정된 모델을 Task()의 model 파라미터로 전달
+14. **Completion Report 검증**: 5개 필드(Task, Status, Files, Tests, Notes) 확인 — 누락 시 재요청
+15. **Capability Token 회수**: `controller-active` + `allowed-paths.txt` 삭제
+16. **다음 태스크**: Step 1로 돌아가서 반복 (또는 Phase 완료 시 Librarian 호출)
 
 > 이전(v2.1)에서 Controller가 직접 하던 작업의 코드 이동:
 > - ~~planning.md 파싱~~ → `tsq next` CLI (결정론적)

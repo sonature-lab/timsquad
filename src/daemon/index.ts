@@ -91,13 +91,13 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
   // 4. 메타 캐시
   const metaCache = new MetaCache(projectRoot);
 
-  // 메타인덱스 로드 (비활성화 — 스킬 레이어 미연결 상태, IPC notify만 유지)
-  // try {
-  //   await metaCache.load();
-  //   log(`Meta cache loaded: ${metaCache.totalFiles} files, ${metaCache.totalMethods} methods`, 'meta_cache', { files: metaCache.totalFiles, methods: metaCache.totalMethods });
-  // } catch (err) {
-  //   log(`Meta cache load failed: ${(err as Error).message}`, 'error', { error: (err as Error).message });
-  // }
+  // 메타인덱스 로드
+  try {
+    await metaCache.load();
+    log(`Meta cache loaded: ${metaCache.totalFiles} files, ${metaCache.totalMethods} methods`, 'meta_cache', { files: metaCache.totalFiles, methods: metaCache.totalMethods });
+  } catch (err) {
+    log(`Meta cache load failed: ${(err as Error).message}`, 'error', { error: (err as Error).message });
+  }
 
   // IPC 서버 시작
   metaCache.startIPC();
@@ -228,9 +228,10 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
     }
   };
 
-  // 소스 변경 로깅 (메타인덱스 갱신 비활성화)
+  // 소스 변경 → 메타 캐시 갱신
   eventQueue.onSourceChanged = (paths: string[]) => {
     log(`Source changed: ${paths.join(', ')}`, 'info', { paths });
+    metaCache.updateFiles(paths);
   };
 
   // JSONL 워처 이벤트 바인딩 (있을 때만)
@@ -298,8 +299,8 @@ export async function runDaemon(options: DaemonOptions): Promise<void> {
       }
     }
 
-    // 2. 메타 캐시 디스크 flush (비활성화 — 메타인덱스 미사용)
-    // await metaCache.flushToDisk();
+    // 2. 메타 캐시 디스크 flush
+    await metaCache.flushToDisk();
 
     // 3. 정리
     await fileWatcher.stop();

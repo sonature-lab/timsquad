@@ -7,7 +7,7 @@
 import path from 'path';
 import net from 'net';
 import fs from 'fs-extra';
-import { getMetaIndexDir } from '../lib/meta-index.js';
+import { getMetaIndexDir, updateIndex } from '../lib/meta-index.js';
 import type { ModuleIndex } from '../types/meta-index.js';
 
 export interface SearchResult {
@@ -34,6 +34,7 @@ interface ScopedFileEntry {
 
 export class MetaCache {
   private modules: Record<string, ModuleIndex> = {};
+  private dirtyFiles: Set<string> = new Set();
   private socketPath: string;
   private server: net.Server | null = null;
   private projectRoot: string;
@@ -177,12 +178,27 @@ export class MetaCache {
     return context;
   }
 
-  updateFiles(_changedPaths: string[]): void {
-    // 변경된 파일 마킹 — 실제 AST 재파싱은 flushToDisk 시 일괄 처리
-    // (인메모리 업데이트는 IPC 응답 정확도를 위해 향후 추가 가능)
+  updateFiles(changedPaths: string[]): void {
+    for (const p of changedPaths) {
+      this.dirtyFiles.add(p);
+    }
   }
 
   async flushToDisk(): Promise<void> {
+    // dirty 파일이 있으면 증분 업데이트 후 인메모리 캐시 리로드
+    if (this.dirtyFiles.size > 0) {
+      const changedPaths = [...this.dirtyFiles];
+      try {
+        await updateIndex(this.projectRoot, changedPaths);
+        this.dirtyFiles.clear();
+        await this.load();
+      } catch {
+        // 실패 시 dirty 상태 유지 → 다음 flush에서 재시도
+      }
+      return;
+    }
+
+    // dirty 파일 없으면 현재 인메모리 상태 그대로 디스크에 기록
     const metaDir = getMetaIndexDir(this.projectRoot);
     if (!await fs.pathExists(metaDir)) return;
 
