@@ -34,13 +34,26 @@ fi
 
 BLOCK_REASON=""
 
+# ── 0b. Load environment detection utilities ──
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/detect-env.sh" ]; then
+  # shellcheck source=detect-env.sh
+  source "$SCRIPT_DIR/detect-env.sh"
+fi
+
 # ── 1. Test execution gate ──
 # 변경된 소스 파일에 대한 테스트 실행 여부 확인
-# implementation phase에서만 block, 그 외에는 warning
+# 테스트 프레임워크 미설치 시 warning 다운그레이드 (#25)
 PHASE_FILE="$PROJECT_ROOT/.timsquad/state/current-phase.json"
 PHASE="unknown"
 if [ -f "$PHASE_FILE" ]; then
   PHASE=$(jq -r '.current // .current_phase // .phase // "unknown"' "$PHASE_FILE" 2>/dev/null || echo "unknown")
+fi
+
+# 테스트 프레임워크 감지
+HAS_TESTS=true
+if type has_test_framework &>/dev/null; then
+  TEST_FW=$(has_test_framework "$PROJECT_ROOT" 2>/dev/null) || HAS_TESTS=false
 fi
 
 TEST_WARNING=""
@@ -71,7 +84,12 @@ if [ -f "$SESSION_STATE" ]; then
       fi
 
       if [ "$PHASE" = "implementation" ]; then
-        BLOCK_REASON="$TEST_WARNING 테스트를 실행한 후 완료하세요."
+        if [ "$HAS_TESTS" = true ]; then
+          BLOCK_REASON="$TEST_WARNING 테스트를 실행한 후 완료하세요."
+        else
+          # 테스트 프레임워크 미설치 — block 대신 warning + 설치 안내 (#25)
+          TEST_WARNING="$TEST_WARNING 테스트 프레임워크가 설치되어 있지 않습니다. /tsq-start Step 0으로 설치하세요."
+        fi
       fi
     fi
   fi
@@ -126,7 +144,37 @@ if [ -f "$NOTES_FILE" ]; then
   fi
 fi
 
-# ── 3b. Phase completion gate (Hybrid Controller) ──
+# ── 3b. SSOT 스펙 존재 게이트 (HIGH #5) ──
+# implementation phase에서 필수 스펙(prd, requirements) 미존재 시 경고
+SPEC_WARNING=""
+if [ "$PHASE" = "implementation" ] && [ -d "$PROJECT_ROOT/.timsquad/ssot" ]; then
+  MISSING_SPECS=""
+  for SPEC in prd requirements; do
+    SPEC_FILE="$PROJECT_ROOT/.timsquad/ssot/${SPEC}.md"
+    if [ ! -f "$SPEC_FILE" ] || [ "$(wc -c < "$SPEC_FILE" 2>/dev/null || echo 0)" -lt 200 ]; then
+      MISSING_SPECS="${MISSING_SPECS}${SPEC}, "
+    fi
+  done
+  if [ -n "$MISSING_SPECS" ]; then
+    MISSING_SPECS="${MISSING_SPECS%, }"
+    SPEC_WARNING="[SSOT Gate] 필수 스펙 미작성: $MISSING_SPECS. /tsq-start로 작성하세요."
+  fi
+fi
+
+# ── 3c. Decision Log JSONL 검증 (HIGH #7) ──
+DECISION_WARNING=""
+DECISIONS_FILE="$PROJECT_ROOT/.timsquad/state/decisions.jsonl"
+if [ -f "$DECISIONS_FILE" ]; then
+  # 마지막 줄이 유효한 JSON인지 확인
+  LAST_LINE=$(tail -1 "$DECISIONS_FILE" 2>/dev/null || echo "")
+  if [ -n "$LAST_LINE" ]; then
+    if ! echo "$LAST_LINE" | jq empty 2>/dev/null; then
+      DECISION_WARNING="[Decision Log] decisions.jsonl의 마지막 항목이 유효한 JSON이 아닙니다. 형식: {\"agent\":\"...\",\"decision\":\"...\",\"reason\":\"...\"}"
+    fi
+  fi
+fi
+
+# ── 3d. Phase completion gate (Hybrid Controller) ──
 # tsq next --phase-status로 현재 Phase 완료 여부 확인
 PHASE_GATE_MSG=""
 if command -v tsq &>/dev/null && [ -d "$PROJECT_ROOT/.timsquad" ]; then
@@ -208,7 +256,7 @@ $SSOT_WARNING"
   [ -n "$VERIFICATION" ] && FULL_REASON="$FULL_REASON
 $VERIFICATION"
   jq -n --arg reason "$FULL_REASON" '{"decision": "block", "reason": $reason}'
-elif [ -n "$SESSION_CTX" ] || [ -n "$VERIFICATION" ] || [ -n "$TEST_WARNING" ] || [ -n "$SSOT_WARNING" ] || [ -n "$PHASE_GATE_MSG" ]; then
+elif [ -n "$SESSION_CTX" ] || [ -n "$VERIFICATION" ] || [ -n "$TEST_WARNING" ] || [ -n "$SSOT_WARNING" ] || [ -n "$PHASE_GATE_MSG" ] || [ -n "$SPEC_WARNING" ] || [ -n "$DECISION_WARNING" ]; then
   FULL_MSG=""
   [ -n "$SESSION_CTX" ] && FULL_MSG="$SESSION_CTX"
   if [ -n "$SSOT_WARNING" ]; then
@@ -218,6 +266,14 @@ $SSOT_WARNING" || FULL_MSG="$SSOT_WARNING"
   if [ -n "$TEST_WARNING" ]; then
     [ -n "$FULL_MSG" ] && FULL_MSG="$FULL_MSG
 $TEST_WARNING" || FULL_MSG="$TEST_WARNING"
+  fi
+  if [ -n "$SPEC_WARNING" ]; then
+    [ -n "$FULL_MSG" ] && FULL_MSG="$FULL_MSG
+$SPEC_WARNING" || FULL_MSG="$SPEC_WARNING"
+  fi
+  if [ -n "$DECISION_WARNING" ]; then
+    [ -n "$FULL_MSG" ] && FULL_MSG="$FULL_MSG
+$DECISION_WARNING" || FULL_MSG="$DECISION_WARNING"
   fi
   if [ -n "$PHASE_GATE_MSG" ]; then
     [ -n "$FULL_MSG" ] && FULL_MSG="$FULL_MSG

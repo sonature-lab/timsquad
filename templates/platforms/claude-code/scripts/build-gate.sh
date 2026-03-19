@@ -42,8 +42,31 @@ if [ -z "$CHANGED_TS" ]; then
   exit 0
 fi
 
-# ── 2. Run tsc --noEmit ──
-TSC_OUTPUT=$(npx tsc --noEmit 2>&1 || true)
+# ── 1b. Support local override (tsq update 덮어쓰기 방지) ──
+LOCAL_GATE="$PROJECT_ROOT/.claude/scripts/build-gate.local.sh"
+if [ -f "$LOCAL_GATE" ]; then
+  exec bash "$LOCAL_GATE"
+fi
+
+# ── 2. Run tsc --noEmit (모노레포 지원) ──
+# detect-env.sh의 find_tsc()로 정확한 경로 탐색 (#23)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/detect-env.sh" ]; then
+  # shellcheck source=detect-env.sh
+  source "$SCRIPT_DIR/detect-env.sh"
+fi
+
+TSC_CMD=""
+if type find_tsc &>/dev/null; then
+  TSC_CMD=$(find_tsc "$PROJECT_ROOT" 2>/dev/null) || TSC_CMD=""
+fi
+
+if [ -z "$TSC_CMD" ]; then
+  # tsc를 찾을 수 없으면 스킵 (TypeScript 프로젝트가 아닐 수 있음)
+  exit 0
+fi
+
+TSC_OUTPUT=$($TSC_CMD --noEmit 2>&1 || true)
 
 # tsc passed → allow stop
 if [ -z "$TSC_OUTPUT" ]; then

@@ -18,6 +18,16 @@
             "type": "command",
             "command": "bash .claude/scripts/change-scope-guard.sh 2>/dev/null || true",
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/tdd-guard.sh 2>/dev/null || true",
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/stale-guard.sh 2>/dev/null || true",
+            "timeout": 3
           }
         ]
       },
