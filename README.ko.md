@@ -68,7 +68,7 @@ tsq init -n my-app -t web-service -l 2 -y     # 비대화형
 my-app/
 ├── CLAUDE.md                      # PM 역할 (자동 주입 ~15줄)
 ├── .claude/
-│   ├── settings.json              # Claude Code 설정 (8개 Hook)
+│   ├── settings.json              # Claude Code 설정 (13개 Hook)
 │   ├── rules/                     # 경로별 규칙 (15개)
 │   ├── agents/                    # 7개 전문 에이전트
 │   │   ├── tsq-architect.md       # 아키텍처 설계
@@ -96,6 +96,7 @@ my-app/
     ├── ssot/                      # SSOT 문서 (레벨별 5~14개)
     ├── process/                   # 워크플로우 정의
     ├── state/                     # 상태 관리
+    ├── scripts/                   # 자동화 스크립트 (6개)
     ├── trails/                    # Phase 사고과정 아카이브
     ├── logs/                      # 3계층 로그 (L1→L2→L3)
     └── retrospective/             # 회고 데이터
@@ -190,7 +191,7 @@ Layer 5: 감사 (비동기 사후 추적)
 | **방법론** | `tsq-tdd`, `tsq-bdd`, `tsq-ddd`, `tsq-debugging` |
 | **운영** | `tsq-librarian`, `tsq-log`, `tsq-retro`, `tsq-prompt` |
 
-### 8개 Hook Gate
+### 13개 Hook Gate
 
 | Hook | 스크립트 | 역할 | 전략 |
 |------|---------|------|------|

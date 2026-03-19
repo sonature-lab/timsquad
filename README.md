@@ -68,7 +68,7 @@ tsq init -n my-app -t web-service -l 2 -y     # Non-interactive
 my-app/
 ├── CLAUDE.md                      # PM role (auto-injected ~15 lines)
 ├── .claude/
-│   ├── settings.json              # Claude Code settings (8 hooks)
+│   ├── settings.json              # Claude Code settings (13 hooks)
 │   ├── rules/                     # Path-specific rules (15)
 │   ├── agents/                    # 7 specialized agents
 │   │   ├── tsq-architect.md       # Architecture design
@@ -96,6 +96,7 @@ my-app/
     ├── ssot/                      # SSOT documents (5–14 per level)
     ├── process/                   # Workflow definitions
     ├── state/                     # State management
+    ├── scripts/                   # Automation scripts (6)
     ├── trails/                    # Phase thinking archives
     ├── logs/                      # 3-tier logs (L1→L2→L3)
     └── retrospective/             # Retrospective data
@@ -121,6 +122,13 @@ claude                                    # Launch Claude Code
 tsq init                          # Initialize project
 tsq update                        # Update skills/agents to latest
 tsq daemon start                  # Start background daemon
+tsq next                          # Next task (Controller internal)
+tsq next --wave                   # Parallel-dispatchable task batch
+tsq plan validate                 # Validate planning.md
+tsq spec check                    # Check SSOT freshness
+tsq status                        # Project status summary
+tsq retro                         # Retrospective metrics
+tsq audit score                   # 7-area audit score
 ```
 
 > All other operations use Claude Code slash commands. See [CLI Reference](docs/cli.en.md).
@@ -190,7 +198,29 @@ All skills use `tsq-*` flat namespace and are available as slash commands:
 | **Methodology** | `tsq-tdd`, `tsq-bdd`, `tsq-ddd`, `tsq-debugging` |
 | **Operations** | `tsq-librarian`, `tsq-log`, `tsq-retro`, `tsq-prompt` |
 
-### 8 Hook Gates
+### Model Routing
+
+Controller dynamically selects the optimal model per task based on complexity:
+
+| Strategy | Use Case | Cost Impact |
+|----------|----------|-------------|
+| `aggressive` | Maximize haiku usage | Highest savings |
+| `balanced` | Phase-appropriate selection (default) | Moderate savings |
+| `conservative` | Maximize opus usage (fintech default) | Quality priority |
+
+### Wave Dispatch (Parallel Execution)
+
+Controller groups independent tasks into Waves for parallel execution:
+
+```bash
+tsq next --wave    # Returns batch of independent tasks
+```
+
+- Tasks with no unmet dependencies run simultaneously
+- 3-5x speed improvement on multi-task sequences
+- Capability Token issued per task for isolation
+
+### 13 Hook Gates
 
 | Hook | Script | Role | Strategy |
 |------|--------|------|----------|
@@ -198,10 +228,15 @@ All skills use `tsq-*` flat namespace and are available as slash commands:
 | PreToolUse (Write\|Edit) | `phase-guard.sh` | Phase file restrictions | Fail-closed |
 | PreToolUse (Write\|Edit) | `check-capability.sh` | Capability Token verification | Fail-closed |
 | PreToolUse (Write\|Edit) | `change-scope-guard.sh` | Change scope tracking | Fail-open |
+| PreToolUse (Write\|Edit) | `tdd-guard.sh` | TDD test file existence | Fail-open |
+| PreToolUse (Write\|Edit) | `stale-guard.sh` | SSOT freshness check | Fail-open |
+| SessionStart | `tsq daemon start` | Start background daemon | Fail-open |
+| SessionStart (compact) | `context-restore.sh` | Restore context + SSOT readiness | Fail-closed |
 | Stop | `completion-guard.sh` | Test + TDD + SSOT check | Fail-closed |
 | Stop | `build-gate.sh` | TypeScript build errors | Fail-closed |
-| PreCompact | `pre-compact.sh` | Save state before compact | Fail-open |
-| SessionStart (compact) | `context-restore.sh` | Restore context + SSOT readiness | Fail-open |
+| SubagentStart | `subagent-start.sh` | Notify daemon of agent start | Fail-open |
+| SubagentStop | `subagent-stop.sh` | Auto-complete task + notify | Fail-open |
+| PreCompact | `pre-compact.sh` | Save state before compact | Fail-closed |
 
 ### Daemon-Based Automation
 

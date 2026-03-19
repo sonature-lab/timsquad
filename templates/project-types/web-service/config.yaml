@@ -4,7 +4,7 @@
 template:
   name: web-service
   description: SaaS, 웹앱을 위한 템플릿
-  version: 3.7.0
+  version: 3.8.0
 
 # ============================================================
 # 프로젝트 기본값 (덮어쓰기 가능)

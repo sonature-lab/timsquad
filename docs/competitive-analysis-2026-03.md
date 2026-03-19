@@ -105,7 +105,7 @@
   - 회고: tsq-retro (3모드: feedback/retro/improve)
   - 슬래시: tsq-start, tsq-status, tsq-spec, tsq-quick, tsq-full, tsq-grill(PRD/Reinforce/Sub-PRD 3모드), tsq-update, tsq-delete
   - 유틸: tsq-librarian, tsq-log, tsq-prompt
-- **Hook**: 13개 (Fail-closed 7 + Fail-open 6) — v3.7.1에서 8→13 확장
+- **Hook**: 13개 (Fail-closed 7 + Fail-open 6) — v3.8.0 기준
   - PreToolUse(Write/Edit): phase-guard → check-capability(+Agent Gate) → change-scope-guard → tdd-guard → stale-guard
   - PreToolUse(Bash): safe-guard
   - Stop: completion-guard(+Phase Gate, SSOT Gate, Decision Log 검증) → build-gate(모노레포)

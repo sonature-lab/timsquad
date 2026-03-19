@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.0] - 2026-03-19
+
+### Added
+- **모델 라우팅** (#31 #4): Controller가 태스크 복잡도/phase에 따라 모델 동적 선택
+  - `ModelRoutingConfig` 타입 (aggressive/balanced/conservative 전략)
+  - fintech → conservative 기본, librarian → haiku 기본
+  - `validateConfig()`에 model_routing 런타임 검증 추가
+- **Meta Index 스킬 연결** (#31 #5): Daemon 인메모리 캐시 활성화
+  - `metaCache.load()` / `flushToDisk()` 활성화
+  - `updateFiles()` dirty 추적 + 증분 업데이트 구현
+  - Controller step 9에 Meta Index 쿼리 단계 추가
+- **Script 자동화 6건** (#31 #6): `.timsquad/scripts/`로 자동 배포
+  - `check-circular-deps.sh` — DAG 순환 의존성 탐지 (위상 정렬)
+  - `calculate-retro-metrics.sh` — L1 로그 → metrics.json 집계
+  - `generate-prd-traceability.sh` — planning.md ↔ PRD 추적성 매트릭스
+  - `manage-fp-registry.sh` — audit FP 자동 필터링 (scan/add/exclude)
+  - `cleanup-trails.sh` — trail 아카이브 10개 초과 자동 정리
+  - `validate-gherkin.sh` — BDD feature 파일 구문 검증
+- **병렬 서브에이전트 + Wave 패턴** (#31 #7): Controller 병렬 디스패치
+  - `findNextWave()` — 의존성 분석 기반 독립 태스크 Wave 그룹화
+  - `tsq next --wave` — 병렬 실행 가능한 태스크 배치 JSON 출력
+  - Wave Dispatch 프로토콜 + references/wave-dispatch.md
+- **/inspect 스킬**: 프레임워크 개발용 파이프라인 종합 건강 점검
+  - 7영역 RAG 리포트 (Hook/스킬/CLI/문서/테스트/설정/의존성)
+  - 40+ 상세 체크리스트, Hook 자동 점검 스크립트
+
+### Changed
+- `getMethodologySkills()`에 architecture 기반 스킬 매핑 추가 (tsq-ddd 등)
+
+### Fixed
+- 문서 drift: 테스트 수 680/669 → 777+, Hook 수 14 → 13 (실제 카운트)
+- MEMORY.md 보완계획 상태 동기화
+
 ## [3.7.0] - 2026-03-18
 
 ### Breaking Changes
