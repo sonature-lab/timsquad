@@ -37,7 +37,7 @@ v3.0: 결정론적 로직(상태, 순서, 게이트)은 `tsq next` CLI로 이동
 10. **방법론 참조**: `config.yaml`의 `methodology.development` → 해당 스킬 Protocol 로드
 11. **프롬프트 조합**: tsq-protocol + **phase-memory carry-over** + memory + specs + methodology + phase 제약 + 지시
     - `.timsquad/state/phase-memory.md` 존재 시 carry-over/주의 섹션을 프롬프트 앞에 강제 삽입
-12. **Task() 호출**: 조합된 프롬프트로 서브에이전트 실행. 에이전트 파일의 `model` 필드가 있으면 Task()의 model 파라미터로 전달
+12. **Model Routing → Task() 호출**: 아래 Model Routing 테이블에 따라 최종 모델을 결정한 뒤, 조합된 프롬프트로 서브에이전트 실행. 결정된 모델을 Task()의 model 파라미터로 전달
 13. **Completion Report 검증**: 5개 필드(Task, Status, Files, Tests, Notes) 확인 — 누락 시 재요청
 14. **Capability Token 회수**: `controller-active` + `allowed-paths.txt` 삭제
 15. **다음 태스크**: Step 1로 돌아가서 반복 (또는 Phase 완료 시 Librarian 호출)
@@ -47,6 +47,13 @@ v3.0: 결정론적 로직(상태, 순서, 게이트)은 `tsq next` CLI로 이동
 > - ~~workflow.json 갱신~~ → SubagentStop hook이 `tsq next --complete` 자동 호출
 > - ~~Phase 완료 판정~~ → completion-guard hook이 `tsq next --phase-status` 호출
 > - ~~phase-memory append~~ → SubagentStop hook이 자동 append
+
+## Model Routing
+
+`references/model-routing.md` 참조. `config.yaml`의 `model_routing` 설정(enabled, strategy)에 따라 태스크 복잡도 기반 모델 동적 선택.
+- **aggressive**: 최대 haiku 사용 (비용 최적화)
+- **balanced**: phase 적합 모델 (기본값)
+- **conservative**: 최대 opus 사용 (품질 우선, fintech 기본)
 
 ## Delegation Rules
 

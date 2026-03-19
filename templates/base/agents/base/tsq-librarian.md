@@ -3,7 +3,7 @@ name: tsq-librarian
 description: |
   Phase 종합 기록 전담 에이전트. 문서 작성/갱신만 수행하고 소스 코드를 수정하지 않습니다.
   Use when: "기록해줘", "리포트 작성", "Phase 정리", "문서 갱신"
-model: sonnet
+model: haiku
 tools: [Read, Write, Edit, Grep, Glob, Bash]
 skills: [tsq-protocol, tsq-librarian]
 ---

@@ -36,6 +36,17 @@ export interface AgentConfig {
 }
 
 /**
+ * Model routing configuration
+ * Controller가 태스크 복잡도/phase에 따라 모델을 동적 선택
+ */
+export type ModelRoutingStrategy = 'aggressive' | 'balanced' | 'conservative';
+
+export interface ModelRoutingConfig {
+  enabled: boolean;
+  strategy: ModelRoutingStrategy;
+}
+
+/**
  * Quality settings
  */
 export interface QualityConfig {
@@ -142,6 +153,7 @@ export interface TimsquadConfig {
   methodology: MethodologyConfig;
   stack: StackConfig;
   agents: Partial<Record<AgentType, AgentConfig>>;
+  model_routing?: ModelRoutingConfig;
   knowledge: KnowledgeConfig;
   quality: QualityConfig;
   naming?: NamingConfig;
@@ -317,7 +329,15 @@ const AGENT_MODELS: Record<AgentType, 'opus' | 'sonnet' | 'haiku'> = {
   security: 'sonnet',
   dba: 'sonnet',
   designer: 'sonnet',
-  librarian: 'sonnet',
+  librarian: 'haiku',
+};
+
+/**
+ * Default model routing configuration
+ */
+export const DEFAULT_MODEL_ROUTING: ModelRoutingConfig = {
+  enabled: true,
+  strategy: 'balanced',
 };
 
 /**
@@ -382,6 +402,10 @@ export const FINTECH_CONFIG_OVERRIDES: Partial<TimsquadConfig> = {
     process: 'agile',
     branching: 'gitflow',
     review: 'required',
+  },
+  model_routing: {
+    enabled: true,
+    strategy: 'conservative',
   },
   quality: {
     test_coverage: {

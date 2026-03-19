@@ -1,7 +1,7 @@
 import path from 'path';
 import type { TimsquadConfig, ProjectType, ProjectLevel, Platform, Domain } from '../types/index.js';
 import type { DevelopmentMethodology, ArchitecturePattern } from '../types/config.js';
-import { DEFAULT_CONFIG, FINTECH_CONFIG_OVERRIDES, buildAgentsConfig, DEFAULT_NAMING } from '../types/config.js';
+import { DEFAULT_CONFIG, FINTECH_CONFIG_OVERRIDES, buildAgentsConfig, DEFAULT_NAMING, DEFAULT_MODEL_ROUTING } from '../types/config.js';
 import { exists } from '../utils/fs.js';
 import { loadYaml, saveYaml } from '../utils/yaml.js';
 import { getInstalledVersion } from './version.js';
@@ -71,6 +71,7 @@ export function createDefaultConfig(
       ...(options?.architecture && { architecture: options.architecture }),
     },
     agents: buildAgentsConfig(type),
+    model_routing: { ...DEFAULT_MODEL_ROUTING },
     naming: { ...DEFAULT_NAMING },
   };
 
@@ -123,6 +124,13 @@ export function validateConfig(config: unknown): config is TimsquadConfig {
   if (project.stack !== undefined && !Array.isArray(project.stack)) return false;
   if (project.workspaces !== undefined && !Array.isArray(project.workspaces)) return false;
 
+  // Validate model_routing (optional)
+  if (c.model_routing !== undefined) {
+    const mr = c.model_routing as Record<string, unknown>;
+    if (typeof mr.enabled !== 'boolean') return false;
+    if (!isValidModelRoutingStrategy(mr.strategy)) return false;
+  }
+
   return true;
 }
 
@@ -144,6 +152,11 @@ function isValidProjectLevel(value: unknown): value is ProjectLevel {
 function isValidPlatform(value: unknown): value is Platform {
   const valid: Platform[] = ['claude-code', 'cursor', 'windsurf', 'mcp', 'gemini'];
   return typeof value === 'string' && valid.includes(value as Platform);
+}
+
+function isValidModelRoutingStrategy(value: unknown): boolean {
+  const valid: string[] = ['aggressive', 'balanced', 'conservative'];
+  return typeof value === 'string' && valid.includes(value);
 }
 
 function isValidDomain(value: unknown): value is Domain {

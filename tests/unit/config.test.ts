@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createDefaultConfig, validateConfig } from '../../src/lib/config.js';
-import { buildAgentsConfig, AGENT_PRESETS, SKILL_PRESETS, KNOWLEDGE_PRESETS, BASE_SKILLS, BASE_KNOWLEDGE } from '../../src/types/config.js';
+import { buildAgentsConfig, AGENT_PRESETS, SKILL_PRESETS, KNOWLEDGE_PRESETS, BASE_SKILLS, BASE_KNOWLEDGE, DEFAULT_MODEL_ROUTING } from '../../src/types/config.js';
 import type { ProjectType, ProjectLevel } from '../../src/types/project.js';
 
 const ALL_TYPES: ProjectType[] = ['web-service', 'web-app', 'api-backend', 'platform', 'fintech', 'infra', 'mobile-app'];
@@ -99,6 +99,47 @@ describe('buildAgentsConfig', () => {
   it('should assign opus to architect', () => {
     const agents = buildAgentsConfig('web-service');
     expect(agents.architect?.model).toBe('opus');
+  });
+
+  it('should assign haiku to librarian', () => {
+    const agents = buildAgentsConfig('web-service');
+    expect(agents.librarian?.model).toBe('haiku');
+  });
+});
+
+describe('model_routing', () => {
+  it('should include model_routing in default config', () => {
+    const config = createDefaultConfig('test', 'web-service', 2);
+    expect(config.model_routing).toBeDefined();
+    expect(config.model_routing?.enabled).toBe(true);
+    expect(config.model_routing?.strategy).toBe('balanced');
+  });
+
+  it('should use conservative strategy for fintech', () => {
+    const config = createDefaultConfig('bank', 'fintech', 3);
+    expect(config.model_routing?.strategy).toBe('conservative');
+  });
+
+  it.each(ALL_TYPES)('should include model_routing for type: %s', (type) => {
+    const config = createDefaultConfig('test', type, 2);
+    expect(config.model_routing).toBeDefined();
+    expect(config.model_routing?.enabled).toBe(true);
+  });
+
+  it('DEFAULT_MODEL_ROUTING should have balanced strategy', () => {
+    expect(DEFAULT_MODEL_ROUTING.enabled).toBe(true);
+    expect(DEFAULT_MODEL_ROUTING.strategy).toBe('balanced');
+  });
+
+  it('should reject invalid model_routing strategy', () => {
+    const config = createDefaultConfig('test', 'web-service', 2);
+    (config as Record<string, unknown>).model_routing = { enabled: true, strategy: 'yolo' };
+    expect(validateConfig(config)).toBe(false);
+  });
+
+  it('should accept valid model_routing', () => {
+    const config = createDefaultConfig('test', 'web-service', 2);
+    expect(validateConfig(config)).toBe(true);
   });
 });
 
