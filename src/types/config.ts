@@ -219,7 +219,7 @@ export const BASE_SKILLS: string[] = [
   'tsq-update', 'tsq-delete',
   'tsq-grill', 'tsq-decompose',
   'tsq-product-audit', 'tsq-debugging', 'tsq-stability',
-  'tsq-quick', 'tsq-full',
+  'tsq-quick', 'tsq-full', 'tsq-inspect',
 ];
 
 /**
