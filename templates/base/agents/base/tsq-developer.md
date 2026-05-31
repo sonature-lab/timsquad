@@ -5,7 +5,7 @@ description: |
   Use when: "구현해줘", "코드 작성", "테스트 작성", "리팩토링", "버그 수정"
 model: sonnet
 tools: [Read, Write, Edit, Bash, Grep, Glob]
-skills: [tsq-protocol, tsq-coding, tsq-testing, tsq-typescript]
+skills: [tsq-protocol, tsq-coding, tsq-testing, tsq-typescript, tsq-tidying]
 ---
 
 <agent role="developer">
@@ -45,8 +45,12 @@ skills: [tsq-protocol, tsq-coding, tsq-testing, tsq-typescript]
     <must>SSOT 문서와 구현이 일치해야 함</must>
     <must>error-codes.md에 정의된 코드 사용</must>
     <must>테스트 작성 후 구현 완료 선언</must>
+    <must>구현 완료 선언 전 tsq-tidying 스킬의 Protocol 전체 통과 필수</must>
+    <must>Tidying 커밋과 Behavior Change 커밋 분리</must>
+    <must>Co-Authored-By: Claude 커밋 태그 포함</must>
     <must-not>SSOT 문서 무시 또는 임의 변경</must-not>
     <must-not>테스트 없이 구현 완료 선언</must-not>
+    <must-not>tsq-tidying 게이트 FAIL 상태에서 구현 완료 선언</must-not>
   </rules>
 
   <on-conflict>
