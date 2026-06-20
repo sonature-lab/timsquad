@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ODD 시각 개요 — L0 로그 · ① ObjectId · ② Provenance</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root { --bg:#0f1419; --panel:#1a2029; --ink:#e6edf3; --muted:#8b96a5; --accent:#39d0d8; --accent2:#f0a868; --line:#2d3543; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","Apple SD Gothic Neo","Noto Sans KR",sans-serif; line-height:1.65; }
+  header { padding:32px 24px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,#131a23,#0f1419); }
+  header h1 { margin:0 0 6px; font-size:24px; letter-spacing:-0.3px; }
+  header h1 .i { color:var(--accent); }
+  header p { margin:0; color:var(--muted); font-size:14px; }
+  .wrap { max-width:1100px; margin:0 auto; padding:0 24px 80px; }
+  nav { position:sticky; top:0; background:rgba(15,20,25,0.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); padding:10px 24px; font-size:13px; z-index:10; display:flex; gap:14px; flex-wrap:wrap; }
+  nav a { color:var(--muted); text-decoration:none; }
+  nav a:hover { color:var(--accent); }
+  section { margin:44px 0; }
+  h2 { font-size:19px; border-left:3px solid var(--accent); padding-left:12px; margin:0 0 6px; }
+  h2 .tag { font-size:12px; color:var(--accent2); margin-left:8px; font-weight:400; }
+  .lead { color:var(--muted); font-size:14px; margin:0 0 18px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px; margin:14px 0; overflow-x:auto; }
+  .mermaid { display:flex; justify-content:center; }
+  .note { background:#16202b; border:1px solid var(--line); border-left:3px solid var(--accent2); border-radius:8px; padding:12px 16px; font-size:13.5px; color:#cdd6e0; margin:12px 0; }
+  .note b { color:var(--accent2); }
+  table { width:100%; border-collapse:collapse; font-size:13px; margin:8px 0; }
+  th,td { border:1px solid var(--line); padding:8px 10px; text-align:left; }
+  th { background:#161d26; color:var(--accent); }
+  code { background:#0d1117; padding:2px 6px; border-radius:4px; font-size:12.5px; color:#a5d6ff; }
+  footer { color:var(--muted); font-size:12px; text-align:center; padding:30px; border-top:1px solid var(--line); }
+</style>
+</head>
+<body>
+<header>
+  <h1>ODD 시각 개요 <span class="i">— L0 로그 · ① 대상 노드 · ② Provenance</span></h1>
+  <p>Ontology-Driven Development · 데이터 모델링 ①②까지 (2026-06-20) · 로그=진실, 그 위는 전부 파생</p>
+</header>
+<nav>
+  <a href="#stack">레이어 스택</a>
+  <a href="#truth">진실/파생</a>
+  <a href="#types">① 7종</a>
+  <a href="#id">식별 ULID</a>
+  <a href="#identity">정체성 어휘</a>
+  <a href="#resolve">② resolve</a>
+  <a href="#evid">evidence-gate</a>
+  <a href="#gate">freshness</a>
+  <a href="#cache">캐시</a>
+  <a href="#uml">UML</a>
+</nav>
+<div class="wrap">
+
+<section id="stack">
+  <h2>1. 레이어 스택 <span class="tag">로그 → 파생</span></h2>
+  <p class="lead">로그(L0)만 진실. ①②③④는 전부 L0에서 파생되며 regenerate 가능. ①(식별·정체성)만 신중, ② 위로는 가볍다.</p>
+  <div class="card"><div class="mermaid">
+flowchart TB
+  L0["L0 로그 레인&lt;br/&gt;append-only 진실&lt;br/&gt;Intent / Action / Observation / Verification"]
+  N1["① 대상 노드 ObjectId&lt;br/&gt;타입 · 식별 · 정체성 계약"]
+  N2["② Provenance&lt;br/&gt;resolve fold · 이력 · alias · 캐시"]
+  N3["③ analyzer 구조 그래프&lt;br/&gt;코드 파싱 · 별도 id공간"]
+  N4["④ OKG / 프로젝트맵&lt;br/&gt;② + ③ 합성 (file 축 조인)"]
+  L0 -->|"targets ObjectId"| N1
+  N1 -->|"계약 실행"| N2
+  N2 --> N4
+  N3 -->|"코드 구조"| N4
+  classDef truth fill:#13303a,stroke:#39d0d8,color:#e6edf3
+  class L0 truth
+  </div></div>
+  <div class="note"><b>핵심:</b> 코드 구조(import/calls)는 ③ analyzer(별도 id공간), 의도·이력은 L0+② — 둘은 <code>file:</code> 경로를 공유 축으로 ④에서 조인.</div>
+</section>
+
+<section id="truth">
+  <h2>2. 진실(L0) vs 파생(②③④) <span class="tag">regenerate</span></h2>
+  <div class="card"><div class="mermaid">
+flowchart LR
+  subgraph T["진실 (보존)"]
+    LOG["L0 로그&lt;br/&gt;append-only&lt;br/&gt;retract 금지"]
+  end
+  subgraph D["파생 (regenerate)"]
+    PV["② Provenance"]
+    AN["③ analyzer 캐시"]
+    OKG["④ OKG"]
+  end
+  LOG -->|"fold"| PV
+  LOG -.->|"dirty"| AN
+  PV --> OKG
+  AN --> OKG
+  classDef truth fill:#13303a,stroke:#39d0d8,color:#e6edf3
+  class LOG truth
+  </div></div>
+  <div class="note">파생은 날아가도 L0 재fold로 복원 — 그래서 정확성만 신경 쓰면 되고 진실은 안 흔들림.</div>
+</section>
+
+<section id="types">
+  <h2>3. ① 대상 노드 — 7종 <span class="tag">file + 로그네이티브 6</span></h2>
+  <p class="lead">로그의 <code>targets</code>가 가리키는 대상. 저장 엔티티가 아니라 식별 규약(런타임 = 문자열 하나). 격하 기준 = regenerate 가능성.</p>
+  <div class="card"><div class="mermaid">
+flowchart TB
+  OID["ObjectId&lt;br/&gt;type : canonical-id&lt;br/&gt;(런타임 = 문자열 1개)"]
+  subgraph EXT["외부 소유 — 진실은 디스크/git"]
+    F["file&lt;br/&gt;repo경로 · NFC · git sha"]
+  end
+  subgraph LN["로그 네이티브 — 진실은 로그 (ULID)"]
+    T["task&lt;br/&gt;evidence-gated done 표적"]
+    D["decision&lt;br/&gt;독립 추적 · supersede"]
+    C["concept&lt;br/&gt;+ alias (도메인 용어)"]
+    K["constraint&lt;br/&gt;DDD invariant"]
+    CH["check&lt;br/&gt;+ verifies 대상"]
+    I["issue&lt;br/&gt;level gate · filed_as&lt;br/&gt;(정합 반영 예정)"]
+  end
+  OID --> EXT
+  OID --> LN
+  </div></div>
+  <div class="note"><b>제외:</b> <code>method</code> = 약참조(③ analyzer regenerate) · <code>adr</code> = file + decision 분해.</div>
+</section>
+
+<section id="id">
+  <h2>4. 식별 — ULID 발급 ↔ 조회 분리 <span class="tag">v3.1 핵심 교정</span></h2>
+  <p class="lead">ULID는 불변 <b>앵커</b>로는 견고하나 <b>조회 키</b>로는 못 써 → 두 역할 분리.</p>
+  <div class="card"><div class="mermaid">
+flowchart TB
+  subgraph ISSUE["발급 (앵커)"]
+    A["태어나는 로그가 ULID 발급&lt;br/&gt;decision.made → decision:01J…"]
+    A2["✅ 결정적 · 불변 · 같은 ULID = 같은 대상"]
+    A --> A2
+  end
+  subgraph LOOKUP["조회 (수렴)"]
+    B["라벨(payload.title) / alias 매칭"]
+    B2["⚠️ best-effort · 비결정&lt;br/&gt;못 찾으면 새 발급 → 분기"]
+    B --> B2
+  end
+  ISSUE -.->|"두 역할 분리"| LOOKUP
+  </div></div>
+  <div class="note"><b>목표 축소:</b> "멀티 writer 키 일치"(불가) → <b>"식별자 안정 + best-effort 수렴"</b>. <code>check</code>가 모범 — verifies 대상 좌표를 상속해 부분 수렴.</div>
+</section>
+
+<section id="identity">
+  <h2>5. 정체성 연속 어휘 <span class="tag">방향=payload</span></h2>
+  <p class="lead">ObjectId는 그 시점 이름표. 변경도 명시 로그(자동추론 금지). 방향은 payload, targets는 순서 없는 집합.</p>
+  <div class="card"><div class="mermaid">
+flowchart LR
+  v1["decision v1"] -->|"superseded"| v2["decision v2"] -->|"superseded"| v3["decision v3 ⭐tip"]
+  ca["concept a"] -->|"merged"| cc["concept c (canonical)"]
+  cb["concept b"] -->|"merged"| cc
+  t0["task"] -->|"retired"| tR["⊘ retired"] -->|"resumed"| tA["task ⭐재개"]
+  k0["constraint P0"] -->|"strengthened"| k1["constraint P1 ⭐tip"]
+  classDef tip fill:#13303a,stroke:#39d0d8
+  classDef dead fill:#2a1a1a,stroke:#aa8855
+  class v3,tA,k1,cc tip
+  class tR dead
+  </div></div>
+  <table>
+    <tr><th>어휘</th><th>성격</th><th>적용 타입</th></tr>
+    <tr><td>renamed</td><td>정체성</td><td>file</td></tr>
+    <tr><td>superseded</td><td>정체성 (라인 종료)</td><td>decision · task</td></tr>
+    <tr><td>merged / split</td><td>정체성 (합류/분기)</td><td>concept</td></tr>
+    <tr><td>weakened / strengthened</td><td>정체성 + predicate 변경</td><td>constraint</td></tr>
+    <tr><td>amended</td><td>비정체성 (내용 진화)</td><td>전 로그네이티브</td></tr>
+    <tr><td>retired / resumed</td><td>정체성 (종료/재개)</td><td>task · check · issue</td></tr>
+    <tr><td>aliased</td><td>비정체성 (라벨 lookup)</td><td>concept</td></tr>
+  </table>
+</section>
+
+<section id="resolve">
+  <h2>6. ② resolve() — 정체성 fold <span class="tag">①§4 실행</span></h2>
+  <p class="lead">L0 로그를 fold해 "현재 유효한 tip"을 결정론적으로 도출. tip = <b>종료 어휘에 소비 안 된 follows-DAG leaf</b>.</p>
+  <div class="card"><div class="mermaid">
+flowchart TB
+  IN["resolve(ObjectId 또는 label)"]
+  ALIAS{"라벨인가?"}
+  CAND["alias-index 조회&lt;br/&gt;다대다 → 각 후보 walk"]
+  WALK["정체성 walk&lt;br/&gt;follows DAG · 방문 기록 → 사이클 차단"]
+  TIPS["tips = 종료어휘(superseded / merged_from /&lt;br/&gt;split-consumed / retired)에 소비 안 된 leaf"]
+  FORK{"tips ≥ 2 ?"}
+  CONF["forked = identity_conflict&lt;br/&gt;canonical = null · per-tip view&lt;br/&gt;→ self-heal 위임"]
+  OK["단일 tip&lt;br/&gt;payload = 기여 갖는 모든 이벤트 fold&lt;br/&gt;(amended.field + weakened.to_predicate)"]
+  IN --> ALIAS
+  ALIAS -->|"yes"| CAND --> WALK
+  ALIAS -->|"no"| WALK
+  WALK --> TIPS --> FORK
+  FORK -->|"yes"| CONF
+  FORK -->|"no"| OK
+  classDef warn fill:#2a1a1a,stroke:#aa8855
+  classDef ok fill:#13303a,stroke:#39d0d8
+  class CONF warn
+  class OK ok
+  </div></div>
+  <div class="note"><b>v1 버그 수정:</b> tip을 "전진 어휘 열거(amended/resumed)"로 정의했더니 weakened/strengthened가 빠졌음 → "종료 안 된 leaf"로 일반화해 자동 포함.</div>
+</section>
+
+<section id="evid">
+  <h2>7. end-to-end — evidence-gated completion <span class="tag">시퀀스</span></h2>
+  <div class="card"><div class="mermaid">
+sequenceDiagram
+  participant A as 에이전트
+  participant L0 as L0 로그 (진실)
+  participant G as task.done 게이트
+  A->>L0: task.created targets task X
+  A->>L0: file.modified targets file foo.ts (Action)
+  A->>L0: decision.made (Intent)
+  A->>L0: test.passed +evidence (Verification)
+  A->>G: task X 완료 선언 요청
+  G->>L0: resolve(task X) — 직접 필터 (캐시 우회)
+  L0-->>G: Verification AND pass AND evidence 존재?
+  alt 존재 + not forked
+    G-->>A: 통과 (done)
+  else 없음 또는 forked
+    G-->>A: 거부 (미해소 우선)
+  end
+  </div></div>
+</section>
+
+<section id="gate">
+  <h2>8. 게이트 freshness <span class="tag">★ 안전 최우선</span></h2>
+  <p class="lead">② 집계 캐시는 "진실 아님". 게이트가 그걸 믿으면 stale truth가 판정으로 부활 → 판정 입력은 항상 L0 직접 재fold.</p>
+  <div class="card"><div class="mermaid">
+flowchart LR
+  LOG["L0 로그 (진실)"]
+  FOLD["② fold"]
+  CACHE["집계 캐시&lt;br/&gt;재생성 가능 · 진실 아님"]
+  UX["탐색 · 표시 (UX)"]
+  GATE{"게이트&lt;br/&gt;task.done / phase"}
+  DIRECT["L0 직접 재fold&lt;br/&gt;(또는 frontier watermark) ⭐"]
+  LOG --> FOLD --> CACHE -->|"best-effort"| UX
+  GATE -->|"판정 입력 ✅"| DIRECT --> LOG
+  CACHE -.->|"❌ 신뢰 금지"| GATE
+  classDef good fill:#13303a,stroke:#39d0d8
+  class DIRECT good
+  </div></div>
+</section>
+
+<section id="cache">
+  <h2>9. 캐시 2-plane <span class="tag">file vs ULID</span></h2>
+  <div class="card"><div class="mermaid">
+flowchart TB
+  DIRTY["dirty = targets ∪ payload의 ObjectId(canonical 등) ∪ reverse-dep 폐포"]
+  subgraph FP["file-plane"]
+    F1["디렉토리 2단 샤딩"]
+    F2["content-hash merkle&lt;br/&gt;파일 → 샤드 → 조상 (early cutoff)"]
+    F1 --> F2
+  end
+  subgraph LP["log-native-plane (ULID)"]
+    L1["ULID prefix(timestamp) 버킷"]
+    L2["dirty-set 무효화만&lt;br/&gt;(merkle 아님 — L0 로그 도착이 트리거)"]
+    L1 --> L2
+  end
+  DIRTY --> FP
+  DIRTY --> LP
+  </div></div>
+</section>
+
+<section id="uml">
+  <h2>10. UML — 스키마 (classDiagram) <span class="tag">정밀화 대상</span></h2>
+  <p class="lead">위 흐름이 확정되면 여기를 관계·다중도까지 정교화.</p>
+
+  <h3 style="font-size:15px;color:var(--accent2)">10.1 L0 LogEntry</h3>
+  <div class="card"><div class="mermaid">
+classDiagram
+  class LogEntry {
+    +int v
+    +ULID id
+    +ISO8601 ts
+    +string writer
+    +string actor
+    +string ctx
+    +Lane lane
+    +string activity
+    +ObjectId[] targets
+    +Rel rel
+    +object payload
+    +Evidence[] evidence
+  }
+  class Lane {
+    &lt;&lt;enumeration&gt;&gt;
+    Intent
+    Action
+    Observation
+    Verification
+  }
+  class Rel {
+    +LogId[] follows
+    +LogId[] part_of
+    +LogId[] cause
+  }
+  class Evidence {
+    +string ref
+  }
+  LogEntry --> Lane
+  LogEntry --> Rel
+  LogEntry "1" --> "*" Evidence
+  </div></div>
+
+  <h3 style="font-size:15px;color:var(--accent2)">10.2 ① ObjectId 타입 계층</h3>
+  <div class="card"><div class="mermaid">
+classDiagram
+  class ObjectId {
+    +string type
+    +string canonicalId
+  }
+  class file {
+    +path canonicalId
+  }
+  class task {
+    +ULID canonicalId
+  }
+  class decision {
+    +ULID canonicalId
+  }
+  class concept {
+    +ULID canonicalId
+    +string[] aliases
+  }
+  class constraint {
+    +ULID canonicalId
+  }
+  class check {
+    +ObjectId verifies
+  }
+  class issue {
+    +int level
+    +string filedAs
+  }
+  ObjectId <|-- file
+  ObjectId <|-- task
+  ObjectId <|-- decision
+  ObjectId <|-- concept
+  ObjectId <|-- constraint
+  ObjectId <|-- check
+  ObjectId <|-- issue
+  </div></div>
+
+  <h3 style="font-size:15px;color:var(--accent2)">10.3 ② ProvenanceView (resolve 반환)</h3>
+  <div class="card"><div class="mermaid">
+classDiagram
+  class ProvenanceView {
+    +ObjectId canonical
+    +ObjectId[] tips
+    +bool forked
+    +Status status
+    +Provenance provenance
+  }
+  class TipView {
+    +Status status
+    +object payload
+    +LogRef[] history
+  }
+  class Status {
+    &lt;&lt;enumeration&gt;&gt;
+    active
+    retired
+    open
+  }
+  class Provenance {
+    +LogRef generatedBy
+    +LogRef[] derivedFrom
+    +LogRef[] used
+  }
+  ProvenanceView --> Status
+  ProvenanceView "1" --> "*" TipView
+  ProvenanceView --> Provenance
+  </div></div>
+</section>
+
+</div>
+<footer>
+  ODD 데이터 모델링 ①②까지 · L0 로그 / ① ObjectId v3.1 / ② Provenance v2 ·
+  상세: <code>docs/rfc/odd-log-schema-L0.md</code> · <code>odd-object-model.md</code> · <code>odd-l1-provenance.md</code> · 소스: <code>docs/odd-diagrams.md</code>
+</footer>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: { fontFamily: 'inherit', fontSize: '13px' },
+    flowchart: { curve: 'basis', htmlLabels: true },
+    securityLevel: 'loose'
+  });
+</script>
+</body>
+</html>
